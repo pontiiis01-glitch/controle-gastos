@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Controle Financeiro 2.0</title>
+    <title>Controle Financeiro 3.0</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -17,6 +17,7 @@
             --success: #10b981;
             --danger: #ef4444;
             --warning: #f59e0b;
+            --purple: #8b5cf6;
         }
 
         body {
@@ -29,7 +30,7 @@
         }
 
         .container {
-            max-width: 900px;
+            max-width: 1000px; /* Aumentei um pouco para caber as parcelas */
             margin: 0 auto;
             padding-bottom: 50px;
         }
@@ -42,28 +43,39 @@
             font-size: 1.8rem;
             color: var(--primary-dark);
             margin: 0;
+            font-weight: 800;
         }
         header p { color: var(--text-muted); margin-top: 5px; }
 
         /* --- Cards de Resumo --- */
         .dashboard {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
             gap: 20px;
             margin-bottom: 40px;
         }
 
         .card-summary {
             background: var(--bg-card);
-            padding: 20px;
-            border-radius: 12px;
+            padding: 25px;
+            border-radius: 16px;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            border-left: 5px solid var(--primary);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .card-summary::before {
+            content: '';
+            position: absolute;
+            left: 0; top: 0; bottom: 0;
+            width: 6px;
         }
 
-        .card-summary.success { border-left-color: var(--success); }
-        .card-summary.danger { border-left-color: var(--danger); }
-        .card-summary.warning { border-left-color: var(--warning); }
+        .card-summary.success::before { background-color: var(--success); }
+        .card-summary.danger::before { background-color: var(--danger); }
+        .card-summary.info::before { background-color: var(--primary); }
+        .card-summary.warning::before { background-color: var(--warning); }
+        .card-summary.purple::before { background-color: var(--purple); }
 
         .card-summary h3 {
             margin: 0 0 10px 0;
@@ -71,11 +83,12 @@
             text-transform: uppercase;
             letter-spacing: 0.05em;
             color: var(--text-muted);
+            font-weight: 600;
         }
 
         .card-summary .value {
-            font-size: 1.8rem;
-            font-weight: 700;
+            font-size: 2rem;
+            font-weight: 800;
             color: var(--text-main);
             display: flex;
             align-items: center;
@@ -83,13 +96,13 @@
         }
 
         .input-salary {
-            font-size: 1.8rem;
-            font-weight: 700;
+            font-size: 2rem;
+            font-weight: 800;
             border: none;
             background: transparent;
             color: var(--success);
-            width: 140px;
-            border-bottom: 2px solid transparent;
+            width: 160px;
+            border-bottom: 2px dashed #ccc;
             transition: border-color 0.2s;
         }
         .input-salary:focus {
@@ -97,154 +110,167 @@
             border-bottom-color: var(--success);
         }
 
-        /* --- Seções Principais --- */
+        /* --- Seções --- */
         .section-card {
             background: var(--bg-card);
-            border-radius: 16px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-            margin-bottom: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+            margin-bottom: 40px;
+            border: 1px solid rgba(0,0,0,0.02);
             overflow: hidden;
         }
 
         .section-header {
-            background-color: #f9fafb;
-            padding: 20px 25px;
+            padding: 25px 30px;
             border-bottom: 1px solid var(--border);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            flex-wrap: wrap;
-            gap: 10px;
+            background: #fff;
         }
 
         .section-header h2 {
             margin: 0;
-            font-size: 1.25rem;
-            color: var(--primary-dark);
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
-        .total-badge {
-            background-color: var(--primary-dark);
-            color: white;
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            font-weight: 600;
-        }
-
-        .content-padding { padding: 25px; }
+        .content-padding { padding: 30px; }
 
         /* --- Tabelas --- */
         .table-responsive { overflow-x: auto; }
         
         table {
             width: 100%;
-            border-collapse: collapse;
-            min-width: 600px; /* Garante layout em telas pequenas */
+            border-collapse: separate;
+            border-spacing: 0 8px; /* Espaço entre linhas */
+            min-width: 700px;
         }
 
         th {
             text-align: left;
-            padding: 12px 15px;
+            padding: 0 15px 10px 15px;
             color: var(--text-muted);
             font-weight: 600;
-            font-size: 0.9rem;
-            border-bottom: 2px solid var(--border);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
 
         td {
-            padding: 12px 15px;
+            padding: 10px 15px;
+            background: #fff;
+            border-top: 1px solid var(--border);
             border-bottom: 1px solid var(--border);
             vertical-align: middle;
         }
+        
+        td:first-child { border-left: 1px solid var(--border); border-top-left-radius: 8px; border-bottom-left-radius: 8px; }
+        td:last-child { border-right: 1px solid var(--border); border-top-right-radius: 8px; border-bottom-right-radius: 8px; }
 
-        tr:last-child td { border-bottom: none; }
-
-        /* --- Inputs e Controles --- */
+        /* --- Inputs --- */
         input[type="text"], input[type="number"] {
             width: 100%;
-            padding: 10px;
-            border: 1px solid #d1d5db;
-            border-radius: 6px;
+            padding: 10px 12px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
             font-size: 0.95rem;
-            box-sizing: border-box;
-            transition: border-color 0.2s;
+            background: #f9fafb;
+            transition: all 0.2s;
         }
         input:focus {
             outline: none;
             border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+            background: #fff;
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
         }
 
-        input[type="checkbox"] {
-            width: 20px;
-            height: 20px;
-            cursor: pointer;
-            accent-color: var(--primary);
+        .input-val { font-family: 'Courier New', monospace; font-weight: 600; }
+
+        /* --- Parcelas & Progresso --- */
+        .installment-wrapper {
+            position: relative;
+        }
+        .progress-bar-bg {
+            height: 4px;
+            background: #e5e7eb;
+            border-radius: 2px;
+            margin-top: 6px;
+            overflow: hidden;
+        }
+        .progress-bar-fill {
+            height: 100%;
+            background: var(--primary);
+            width: 0%;
+            transition: width 0.5s ease;
         }
 
+        /* --- Botões --- */
         .btn-add {
-            background-color: #ecfdf5;
-            color: #059669;
-            border: 1px dashed #10b981;
+            background-color: #f0fdf4;
+            color: #166534;
+            border: 2px dashed #bbf7d0;
             width: 100%;
-            padding: 12px;
-            border-radius: 8px;
+            padding: 15px;
+            border-radius: 12px;
             cursor: pointer;
             font-weight: 600;
-            margin-top: 15px;
+            margin-top: 20px;
             transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
         }
-        .btn-add:hover { background-color: #d1fae5; }
+        .btn-add:hover { background-color: #dcfce7; border-color: #86efac; }
 
         .btn-remove {
-            background-color: transparent;
-            color: #ef4444;
-            border: 1px solid #fecaca;
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
+            background: #fee2e2;
+            color: #b91c1c;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.2rem;
-            line-height: 1;
+            font-size: 1.1rem;
             transition: all 0.2s;
         }
-        .btn-remove:hover { background-color: #fef2f2; border-color: #ef4444; }
-
-        .locked-input {
-            background-color: #f3f4f6;
-            color: #6b7280;
-            cursor: not-allowed;
-            font-weight: 600;
-        }
+        .btn-remove:hover { background: #fecaca; }
 
         /* --- Resumo de Dívidas --- */
         .debt-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-            gap: 15px;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 20px;
         }
         .debt-card {
-            background-color: #eff6ff;
-            border: 1px solid #bfdbfe;
-            border-radius: 8px;
-            padding: 15px;
+            background-color: #fff;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
             text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
-        .debt-name { font-weight: 600; color: #1e40af; margin-bottom: 5px; text-transform: capitalize; }
-        .debt-value { font-size: 1.2rem; font-weight: 700; color: var(--primary); }
+        .debt-name { font-weight: 700; color: var(--primary-dark); font-size: 1.1rem; margin-bottom: 5px; text-transform: capitalize; }
+        .debt-value { font-size: 1.4rem; font-weight: 800; color: var(--primary); }
+        .debt-future { font-size: 0.85rem; color: var(--text-muted); margin-top: 5px; }
+        .debt-future strong { color: var(--purple); }
 
-        /* Rodapé */
         footer {
             text-align: center;
             color: var(--text-muted);
             font-size: 0.8rem;
-            margin-top: 50px;
+            margin-top: 60px;
+            border-top: 1px solid var(--border);
+            padding-top: 30px;
         }
-
     </style>
 </head>
 <body>
@@ -252,7 +278,7 @@
 <div class="container">
     <header>
         <h1>Meus Gastos</h1>
-        <p>Controle Financeiro Integrado</p>
+        <p>Gestão Financeira Inteligente & Controle de Parcelas</p>
     </header>
 
     <div class="dashboard">
@@ -266,20 +292,19 @@
             <h3>Total Saídas</h3>
             <div class="value" id="totalExpenses">R$ 0,00</div>
         </div>
-        <div class="card-summary">
-            <h3>Resta</h3>
+        <div class="card-summary info">
+            <h3>Resta (Saldo)</h3>
             <div class="value" id="remaining" style="color: var(--primary);">R$ 0,00</div>
         </div>
         <div class="card-summary warning">
-            <h3>Só Meus Gastos</h3>
+            <h3>Meu Custo Real</h3>
             <div class="value" id="myRealExpenses" style="color: #d97706;">R$ 0,00</div>
         </div>
     </div>
 
     <div class="section-card">
         <div class="section-header">
-            <h2>Gastos Fixos & Cartões</h2>
-            <div class="total-badge" id="totalFixosBadge">R$ 0,00</div>
+            <h2>📉 Gastos Fixos & Cartões</h2>
         </div>
         <div class="content-padding">
             <div class="table-responsive">
@@ -295,47 +320,47 @@
                     <tbody></tbody>
                 </table>
             </div>
-            <button class="btn-add" onclick="addMainRow()">+ Adicionar Gasto Fixo</button>
+            <button class="btn-add" onclick="addMainRow()">+ Adicionar Gasto</button>
         </div>
     </div>
 
-    <div class="section-card">
-        <div class="section-header" style="background-color: #fffbeb; border-bottom-color: #fcd34d;">
-            <h2 style="color: #b45309;">Divisão: Banco do Brasil</h2>
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <span style="font-size: 0.9rem; color: #b45309;">Fatura Total:</span>
-                <input type="number" id="bbTotalBill" value="1820" oninput="calculateAll()" style="width: 100px; padding: 5px;">
+    <div class="section-card" style="border-left: 5px solid #fbbf24;">
+        <div class="section-header" style="background: #fffbeb;">
+            <h2 style="color: #b45309;">💳 Banco do Brasil</h2>
+            <div style="text-align: right;">
+                <small style="display:block; color:#92400e; font-weight:600;">Fatura Total</small>
+                <input type="number" id="bbTotalBill" value="1820" oninput="calculateAll()" style="width: 120px; text-align:right; font-weight:bold; color:#b45309; border-color:#fcd34d;">
             </div>
         </div>
         <div class="content-padding">
-            <p style="font-size: 0.9rem; color: #666; margin-bottom: 15px;">Adicione abaixo os gastos das outras pessoas. O sistema calculará a sua parte automaticamente.</p>
             <div class="table-responsive">
                 <table id="bbTable">
                     <thead>
                         <tr>
-                            <th style="width: 25%;">Quem</th>
-                            <th style="width: 40%;">Descrição do Gasto</th>
-                            <th style="width: 25%;">Valor (R$)</th>
+                            <th style="width: 20%;">Quem</th>
+                            <th style="width: 35%;">Descrição</th>
+                            <th style="width: 15%;">Parcela (ex: 1/10)</th>
+                            <th style="width: 20%;">Valor Parcela</th>
                             <th style="width: 10%;"></th>
                         </tr>
                     </thead>
                     <tbody></tbody>
                 </table>
             </div>
-            <button class="btn-add" onclick="addSplitRow('bbTable')">+ Adicionar Pessoa/Gasto</button>
+            <button class="btn-add" style="background-color: #fff7ed; border-color: #fed7aa; color: #9a3412;" onclick="addSplitRow('bbTable')">+ Adicionar Pessoa/Compra</button>
             
-            <div style="margin-top: 20px; text-align: right; padding-top: 15px; border-top: 1px solid #eee;">
-                Minha Parte no BB: <strong id="bbMyShareDisplay" style="font-size: 1.2rem; color: #b45309;">R$ 0,00</strong>
+            <div style="margin-top: 25px; text-align: right; font-size: 1.1rem; color: #78350f;">
+                Minha parte neste cartão: <strong id="bbMyShareDisplay">R$ 0,00</strong>
             </div>
         </div>
     </div>
 
-    <div class="section-card">
-        <div class="section-header" style="background-color: #eff6ff; border-bottom-color: #bfdbfe;">
-            <h2 style="color: #1e40af;">Divisão: Mercado Pago</h2>
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <span style="font-size: 0.9rem; color: #1e40af;">Fatura Total:</span>
-                <input type="number" id="mpTotalBill" value="2211" oninput="calculateAll()" style="width: 100px; padding: 5px;">
+    <div class="section-card" style="border-left: 5px solid #3b82f6;">
+        <div class="section-header" style="background: #eff6ff;">
+            <h2 style="color: #1e40af;">💳 Mercado Pago</h2>
+            <div style="text-align: right;">
+                <small style="display:block; color:#1e3a8a; font-weight:600;">Fatura Total</small>
+                <input type="number" id="mpTotalBill" value="2211" oninput="calculateAll()" style="width: 120px; text-align:right; font-weight:bold; color:#1e40af; border-color:#93c5fd;">
             </div>
         </div>
         <div class="content-padding">
@@ -343,45 +368,49 @@
                 <table id="mpTable">
                     <thead>
                         <tr>
-                            <th style="width: 25%;">Quem</th>
-                            <th style="width: 40%;">Descrição do Gasto</th>
-                            <th style="width: 25%;">Valor (R$)</th>
+                            <th style="width: 20%;">Quem</th>
+                            <th style="width: 35%;">Descrição</th>
+                            <th style="width: 15%;">Parcela (ex: 1/10)</th>
+                            <th style="width: 20%;">Valor Parcela</th>
                             <th style="width: 10%;"></th>
                         </tr>
                     </thead>
                     <tbody></tbody>
                 </table>
             </div>
-            <button class="btn-add" onclick="addSplitRow('mpTable')">+ Adicionar Pessoa/Gasto</button>
+            <button class="btn-add" style="background-color: #eff6ff; border-color: #bfdbfe; color: #1e40af;" onclick="addSplitRow('mpTable')">+ Adicionar Pessoa/Compra</button>
 
-            <div style="margin-top: 20px; text-align: right; padding-top: 15px; border-top: 1px solid #eee;">
-                Minha Parte no MP: <strong id="mpMyShareDisplay" style="font-size: 1.2rem; color: #1e40af;">R$ 0,00</strong>
+            <div style="margin-top: 25px; text-align: right; font-size: 1.1rem; color: #1e3a8a;">
+                Minha parte neste cartão: <strong id="mpMyShareDisplay">R$ 0,00</strong>
             </div>
         </div>
     </div>
 
-    <div class="section-card">
+    <div class="section-card" style="border-left: 5px solid #8b5cf6;">
         <div class="section-header">
-            <h2>💰 Quem me deve (Total Geral)</h2>
+            <h2 style="color: #5b21b6;">💰 Controle de Devedores</h2>
         </div>
         <div class="content-padding">
             <div id="debtorsList" class="debt-grid">
                 </div>
+            <p style="text-align: center; color: #9ca3af; font-size: 0.85rem; margin-top: 20px;">
+                * "A Receber Futuro" é a soma de todas as parcelas restantes.
+            </p>
         </div>
     </div>
 
     <footer>
-        <p>Baseado na planilha original • Versão 2.0</p>
+        <p>Controle Financeiro Pessoal • Versão 3.0</p>
     </footer>
 </div>
 
 <script>
-    // --- DADOS INICIAIS (Baseado na sua planilha) ---
+    // --- DADOS INICIAIS ---
     
     // Tabela Principal
     let mainExpenses = [
-        { id: 'bb_auto', name: 'Cartão BB (Minha Parte)', value: 0, isMine: true, locked: true }, // Automático
-        { id: 'mp_auto', name: 'Cartão Mercado Pago (Minha Parte)', value: 0, isMine: true, locked: true }, // Automático
+        { id: 'bb_auto', name: 'Cartão BB (Minha Parte)', value: 0, isMine: true, locked: true },
+        { id: 'mp_auto', name: 'Mercado Pago (Minha Parte)', value: 0, isMine: true, locked: true },
         { name: 'Academia', value: 95.00, isMine: true },
         { name: 'Luz', value: 150.00, isMine: true },
         { name: 'Cartão NU', value: 96.00, isMine: true },
@@ -397,22 +426,22 @@
         { name: 'Cartão Assaí', value: 720.00, isMine: true }
     ];
 
-    // Gastos de Outros no BB
+    // Dados Cartão BB (Adicione a parcela na propriedade 'inst')
     let bbSplitData = [
-        { name: 'Disney', desc: 'Assinatura', value: 35.16 },
-        { name: 'Léo', desc: 'Parcela', value: 300.00 },
-        { name: 'Kayssa', desc: 'Diversos', value: 181.43 },
-        { name: 'Dani', desc: 'Compra 1', value: 209.00 },
-        { name: 'Dani', desc: 'Compra 2', value: 98.00 },
-        { name: 'Dani', desc: 'Compra 3', value: 109.00 },
-        { name: 'Dani', desc: 'Compra 4', value: 65.00 }
+        { name: 'Disney', desc: 'Assinatura', inst: '', value: 35.16 },
+        { name: 'Léo', desc: 'Televisão', inst: '1/10', value: 300.00 },
+        { name: 'Kayssa', desc: 'Uber', inst: '', value: 181.43 },
+        { name: 'Dani', desc: 'Compra A', inst: '3/5', value: 209.00 },
+        { name: 'Dani', desc: 'Compra B', inst: '', value: 98.00 },
+        { name: 'Dani', desc: 'Compra C', inst: '', value: 109.00 },
+        { name: 'Dani', desc: 'Compra D', inst: '', value: 65.00 }
     ];
 
-    // Gastos de Outros no Mercado Pago
+    // Dados Mercado Pago
     let mpSplitData = [
-        { name: 'Léo', desc: 'Compra MP', value: 167.00 },
-        { name: 'Dani', desc: 'Item A', value: 55.00 },
-        { name: 'Dani', desc: 'Item B', value: 155.00 }
+        { name: 'Léo', desc: 'Peças PC', inst: '8/12', value: 167.00 },
+        { name: 'Dani', desc: 'Farmácia', inst: '', value: 55.00 },
+        { name: 'Dani', desc: 'Mercado', inst: '1/2', value: 155.00 }
     ];
 
     // --- INICIALIZAÇÃO ---
@@ -431,13 +460,13 @@
         
         mainExpenses.forEach((item, index) => {
             const tr = document.createElement("tr");
-            const isLocked = item.locked ? 'readonly class="locked-input"' : '';
+            const isLocked = item.locked ? 'readonly style="background-color:#f3f4f6; color:#6b7280; font-weight:600;"' : '';
             const btnDelete = item.locked ? '' : '<button class="btn-remove" onclick="removeMainRow(this)">×</button>';
             
             tr.innerHTML = `
-                <td><input type="text" value="${item.name}" ${isLocked} class="input-name"></td>
+                <td><input type="text" value="${item.name}" ${isLocked}></td>
                 <td><input type="number" value="${item.value}" step="0.01" oninput="calculateAll()" class="input-val" ${isLocked} id="${item.id || ''}"></td>
-                <td style="text-align: center;"><input type="checkbox" ${item.isMine ? "checked" : ""} onchange="calculateAll()" class="input-mine"></td>
+                <td style="text-align: center;"><input type="checkbox" ${item.isMine ? "checked" : ""} onchange="calculateAll()" style="width:20px; height:20px; accent-color:var(--primary);"></td>
                 <td>${btnDelete}</td>
             `;
             tbody.appendChild(tr);
@@ -447,79 +476,90 @@
     function renderSplitTable(tableId, data) {
         const tbody = document.querySelector(`#${tableId} tbody`);
         tbody.innerHTML = "";
-
-        data.forEach(item => {
-            addSplitRowHTML(tbody, item);
-        });
+        data.forEach(item => addSplitRowHTML(tbody, item));
     }
 
-    // --- ADICIONAR / REMOVER LINHAS ---
+    // --- ADICIONAR / REMOVER ---
 
     function addMainRow() {
         const tbody = document.querySelector("#mainTable tbody");
         const tr = document.createElement("tr");
         tr.innerHTML = `
-            <td><input type="text" placeholder="Nome do gasto" class="input-name"></td>
+            <td><input type="text" placeholder="Nome do gasto"></td>
             <td><input type="number" placeholder="0.00" step="0.01" oninput="calculateAll()" class="input-val"></td>
-            <td style="text-align: center;"><input type="checkbox" checked onchange="calculateAll()" class="input-mine"></td>
+            <td style="text-align: center;"><input type="checkbox" checked onchange="calculateAll()" style="width:20px; height:20px;"></td>
             <td><button class="btn-remove" onclick="removeMainRow(this)">×</button></td>
         `;
         tbody.appendChild(tr);
         calculateAll();
     }
 
-    function removeMainRow(btn) {
-        btn.closest("tr").remove();
-        calculateAll();
-    }
+    function removeMainRow(btn) { btn.closest("tr").remove(); calculateAll(); }
 
     function addSplitRow(tableId) {
         const tbody = document.querySelector(`#${tableId} tbody`);
-        addSplitRowHTML(tbody, { name: '', desc: '', value: '' });
+        addSplitRowHTML(tbody, { name: '', desc: '', inst: '', value: '' });
     }
 
     function addSplitRowHTML(tbody, item) {
         const tr = document.createElement("tr");
         tr.innerHTML = `
-            <td><input type="text" value="${item.name}" placeholder="Nome (ex: Dani)" class="split-name" oninput="calculateAll()"></td>
-            <td><input type="text" value="${item.desc}" placeholder="O que foi?" class="split-desc"></td>
+            <td><input type="text" value="${item.name}" placeholder="Nome" class="split-name" oninput="calculateAll()"></td>
+            <td><input type="text" value="${item.desc}" placeholder="Item" class="split-desc"></td>
+            <td>
+                <div class="installment-wrapper">
+                    <input type="text" value="${item.inst}" placeholder="Ex: 1/10" class="split-inst" oninput="updateProgress(this); calculateAll();">
+                    <div class="progress-bar-bg"><div class="progress-bar-fill"></div></div>
+                </div>
+            </td>
             <td><input type="number" value="${item.value}" placeholder="0.00" step="0.01" class="split-val" oninput="calculateAll()"></td>
             <td><button class="btn-remove" onclick="removeSplitRow(this)">×</button></td>
         `;
         tbody.appendChild(tr);
+        // Atualiza a barra de progresso inicial
+        const input = tr.querySelector('.split-inst');
+        updateProgress(input);
     }
 
-    function removeSplitRow(btn) {
-        btn.closest("tr").remove();
-        calculateAll();
-    }
+    function removeSplitRow(btn) { btn.closest("tr").remove(); calculateAll(); }
 
-    // --- CÁLCULOS CENTRAIS ---
+    // --- LÓGICA E CÁLCULOS ---
+
+    function updateProgress(input) {
+        const val = input.value;
+        const bar = input.nextElementSibling.querySelector('.progress-bar-fill');
+        
+        if (val.includes('/')) {
+            const parts = val.split('/');
+            const current = parseFloat(parts[0]);
+            const total = parseFloat(parts[1]);
+            
+            if (total > 0 && current <= total) {
+                const percent = (current / total) * 100;
+                bar.style.width = percent + '%';
+                
+                // Cores baseadas no progresso
+                if (percent < 30) bar.style.backgroundColor = '#10b981'; // Verde (Começo)
+                else if (percent < 70) bar.style.backgroundColor = '#f59e0b'; // Laranja (Meio)
+                else bar.style.backgroundColor = '#ef4444'; // Vermelho (Fim)
+                return;
+            }
+        }
+        bar.style.width = '0%';
+    }
 
     function calculateAll() {
-        // 1. Calcula Divisão BB
-        const bbTotal = parseFloat(document.getElementById('bbTotalBill').value) || 0;
-        const bbOthers = sumSplitTable('bbTable');
-        const bbMyShare = bbTotal - bbOthers.total;
-        
-        document.getElementById('bbMyShareDisplay').innerText = formatMoney(bbMyShare);
-        updateMainTableValue('bb_auto', bbMyShare);
+        // 1. Calcula Cartões e Futuro
+        const bbData = processCardTable('bbTable', 'bbTotalBill', 'bbMyShareDisplay', 'bb_auto');
+        const mpData = processCardTable('mpTable', 'mpTotalBill', 'mpMyShareDisplay', 'mp_auto');
 
-        // 2. Calcula Divisão MP
-        const mpTotal = parseFloat(document.getElementById('mpTotalBill').value) || 0;
-        const mpOthers = sumSplitTable('mpTable');
-        const mpMyShare = mpTotal - mpOthers.total;
-
-        document.getElementById('mpMyShareDisplay').innerText = formatMoney(mpMyShare);
-        updateMainTableValue('mp_auto', mpMyShare);
-
-        // 3. Calcula Totais Gerais
+        // 2. Calcula Totais Gerais
         let totalExpenses = 0;
         let myRealExpenses = 0;
         
         document.querySelectorAll("#mainTable tbody tr").forEach(tr => {
             const val = parseFloat(tr.querySelector(".input-val").value) || 0;
-            const isMine = tr.querySelector(".input-mine").checked;
+            const isMine = tr.querySelector("input[type='checkbox']").checked;
             
             totalExpenses += val;
             if (isMine) myRealExpenses += val;
@@ -527,72 +567,91 @@
 
         const salary = parseFloat(document.getElementById('salary').value) || 0;
         
-        // Atualiza Cards
         document.getElementById('totalExpenses').innerText = formatMoney(totalExpenses);
         document.getElementById('remaining').innerText = formatMoney(salary - totalExpenses);
         document.getElementById('myRealExpenses').innerText = formatMoney(myRealExpenses);
-        document.getElementById('totalFixosBadge').innerText = formatMoney(totalExpenses);
 
-        // 4. Gera Resumo de Dívidas (Soma BB + MP)
-        generateDebtorsList(bbOthers.byPerson, mpOthers.byPerson);
+        // 3. Resumo de Devedores
+        generateDebtorsList(bbData, mpData);
     }
 
-    function sumSplitTable(tableId) {
-        let total = 0;
-        let byPerson = {};
+    function processCardTable(tableId, totalBillId, displayId, mainInputId) {
+        const totalBill = parseFloat(document.getElementById(totalBillId).value) || 0;
+        let othersSum = 0;
+        let debtors = {};
 
         document.querySelectorAll(`#${tableId} tbody tr`).forEach(tr => {
             const name = tr.querySelector(".split-name").value.trim();
             const val = parseFloat(tr.querySelector(".split-val").value) || 0;
+            const instStr = tr.querySelector(".split-inst").value.trim();
             
             if (val > 0) {
-                total += val;
+                othersSum += val;
+                
                 if (name) {
-                    // Normaliza nome (dani = Dani)
                     const key = name.toLowerCase();
-                    if (!byPerson[key]) byPerson[key] = { name: name, total: 0 };
-                    byPerson[key].total += val;
+                    if (!debtors[key]) debtors[key] = { name: name, current: 0, future: 0 };
+                    
+                    debtors[key].current += val;
+
+                    // Cálculo do Futuro (Parcelas)
+                    if (instStr.includes('/')) {
+                        const parts = instStr.split('/');
+                        const currentInst = parseFloat(parts[0]) || 0;
+                        const totalInst = parseFloat(parts[1]) || 0;
+                        
+                        if (totalInst > currentInst) {
+                            const remaining = totalInst - currentInst;
+                            debtors[key].future += (remaining * val);
+                        }
+                    }
                 }
             }
         });
-        return { total, byPerson };
+
+        const myShare = totalBill - othersSum;
+        document.getElementById(displayId).innerText = formatMoney(myShare);
+        
+        const mainInput = document.getElementById(mainInputId);
+        if (mainInput) mainInput.value = myShare.toFixed(2);
+
+        return debtors;
     }
 
-    function updateMainTableValue(id, value) {
-        const input = document.getElementById(id);
-        if (input) input.value = value.toFixed(2);
-    }
-
-    function generateDebtorsList(bbData, mpData) {
+    function generateDebtorsList(bbDebtors, mpDebtors) {
         const container = document.getElementById('debtorsList');
         container.innerHTML = "";
         
-        // Combina os objetos
-        const allDebtors = {};
-        
-        // Helper para merge
+        // Merge
+        const all = {};
         const merge = (source) => {
             for (let key in source) {
-                if (!allDebtors[key]) allDebtors[key] = { name: source[key].name, total: 0 };
-                allDebtors[key].total += source[key].total;
+                if (!all[key]) all[key] = { name: source[key].name, current: 0, future: 0 };
+                all[key].current += source[key].current;
+                all[key].future += source[key].future;
             }
         };
+        merge(bbDebtors);
+        merge(mpDebtors);
 
-        merge(bbData);
-        merge(mpData);
-
-        if (Object.keys(allDebtors).length === 0) {
-            container.innerHTML = "<p style='grid-column: 1/-1; text-align: center; color: #999;'>Ninguém te deve nada (por enquanto).</p>";
+        if (Object.keys(all).length === 0) {
+            container.innerHTML = "<div style='grid-column:1/-1; text-align:center; color:#9ca3af;'>Nenhuma dívida cadastrada.</div>";
             return;
         }
 
-        for (let key in allDebtors) {
-            const p = allDebtors[key];
+        for (let key in all) {
+            const p = all[key];
             const div = document.createElement("div");
             div.className = "debt-card";
             div.innerHTML = `
                 <div class="debt-name">${p.name}</div>
-                <div class="debt-value">${formatMoney(p.total)}</div>
+                <div style="font-size:0.8rem; color:#6b7280; text-transform:uppercase; margin-bottom:5px;">Deve pagar este mês</div>
+                <div class="debt-value">${formatMoney(p.current)}</div>
+                ${p.future > 0 ? `
+                    <div class="debt-future">
+                        + <strong>${formatMoney(p.future)}</strong> a receber parcelado
+                    </div>
+                ` : ''}
             `;
             container.appendChild(div);
         }
