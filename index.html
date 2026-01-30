@@ -3,325 +3,605 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Controle de Gastos - Fevereiro 26</title>
+    <title>Controle Financeiro 2.0</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #2c3e50;
-            --accent: #27ae60;
-            --bg: #f4f7f6;
-            --card-bg: #ffffff;
-            --border: #dfe6e9;
+            --primary: #2563eb;
+            --primary-dark: #1e40af;
+            --bg-body: #f3f4f6;
+            --bg-card: #ffffff;
+            --text-main: #1f2937;
+            --text-muted: #6b7280;
+            --border: #e5e7eb;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
         }
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg);
-            color: var(--primary);
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
             margin: 0;
             padding: 20px;
+            line-height: 1.5;
         }
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-        }
-        h1, h2 { text-align: center; }
-        
-        /* Cards de Resumo */
-        .summary-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 15px;
-            margin-bottom: 30px;
-        }
-        .card {
-            background: var(--card-bg);
-            padding: 15px;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-            text-align: center;
-        }
-        .card h3 { margin: 0 0 10px 0; font-size: 0.9em; color: #7f8c8d; }
-        .card .value { font-size: 1.4em; font-weight: bold; }
-        .green { color: #27ae60; }
-        .red { color: #c0392b; }
-        .blue { color: #2980b9; }
 
-        /* Tabelas */
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding-bottom: 50px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        header h1 {
+            font-size: 1.8rem;
+            color: var(--primary-dark);
+            margin: 0;
+        }
+        header p { color: var(--text-muted); margin-top: 5px; }
+
+        /* --- Cards de Resumo --- */
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .card-summary {
+            background: var(--bg-card);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            border-left: 5px solid var(--primary);
+        }
+
+        .card-summary.success { border-left-color: var(--success); }
+        .card-summary.danger { border-left-color: var(--danger); }
+        .card-summary.warning { border-left-color: var(--warning); }
+
+        .card-summary h3 {
+            margin: 0 0 10px 0;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .card-summary .value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .input-salary {
+            font-size: 1.8rem;
+            font-weight: 700;
+            border: none;
+            background: transparent;
+            color: var(--success);
+            width: 140px;
+            border-bottom: 2px solid transparent;
+            transition: border-color 0.2s;
+        }
+        .input-salary:focus {
+            outline: none;
+            border-bottom-color: var(--success);
+        }
+
+        /* --- Seções Principais --- */
+        .section-card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+
+        .section-header {
+            background-color: #f9fafb;
+            padding: 20px 25px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .section-header h2 {
+            margin: 0;
+            font-size: 1.25rem;
+            color: var(--primary-dark);
+        }
+
+        .total-badge {
+            background-color: var(--primary-dark);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .content-padding { padding: 25px; }
+
+        /* --- Tabelas --- */
+        .table-responsive { overflow-x: auto; }
+        
         table {
             width: 100%;
             border-collapse: collapse;
-            background: var(--card-bg);
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-            margin-bottom: 30px;
-        }
-        th, td {
-            padding: 12px 15px;
-            text-align: left;
-            border-bottom: 1px solid var(--border);
-        }
-        th { background-color: #ecf0f1; font-weight: 600; }
-        input[type="number"], input[type="text"] {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #bdc3c7;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-        input[type="checkbox"] { transform: scale(1.2); cursor: pointer; }
-        
-        .section-title {
-            margin-top: 40px;
-            margin-bottom: 15px;
-            border-bottom: 2px solid var(--accent);
-            padding-bottom: 5px;
-            display: inline-block;
+            min-width: 600px; /* Garante layout em telas pequenas */
         }
 
-        button.add-btn {
-            background-color: var(--accent);
-            color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.9em;
-            margin-top: 10px;
+        th {
+            text-align: left;
+            padding: 12px 15px;
+            color: var(--text-muted);
+            font-weight: 600;
+            font-size: 0.9rem;
+            border-bottom: 2px solid var(--border);
         }
-        button.add-btn:hover { background-color: #219150; }
-        
-        button.remove-btn {
-            background-color: #e74c3c;
-            color: white;
-            border: none;
-            padding: 5px 10px;
-            border-radius: 4px;
-            cursor: pointer;
+
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid var(--border);
+            vertical-align: middle;
         }
+
+        tr:last-child td { border-bottom: none; }
+
+        /* --- Inputs e Controles --- */
+        input[type="text"], input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            box-sizing: border-box;
+            transition: border-color 0.2s;
+        }
+        input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: var(--primary);
+        }
+
+        .btn-add {
+            background-color: #ecfdf5;
+            color: #059669;
+            border: 1px dashed #10b981;
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-top: 15px;
+            transition: all 0.2s;
+        }
+        .btn-add:hover { background-color: #d1fae5; }
+
+        .btn-remove {
+            background-color: transparent;
+            color: #ef4444;
+            border: 1px solid #fecaca;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            line-height: 1;
+            transition: all 0.2s;
+        }
+        .btn-remove:hover { background-color: #fef2f2; border-color: #ef4444; }
+
+        .locked-input {
+            background-color: #f3f4f6;
+            color: #6b7280;
+            cursor: not-allowed;
+            font-weight: 600;
+        }
+
+        /* --- Resumo de Dívidas --- */
+        .debt-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 15px;
+        }
+        .debt-card {
+            background-color: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+        .debt-name { font-weight: 600; color: #1e40af; margin-bottom: 5px; text-transform: capitalize; }
+        .debt-value { font-size: 1.2rem; font-weight: 700; color: var(--primary); }
+
+        /* Rodapé */
+        footer {
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            margin-top: 50px;
+        }
+
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>Meus Gastos - Fev 26</h1>
+    <header>
+        <h1>Meus Gastos</h1>
+        <p>Controle Financeiro Integrado</p>
+    </header>
 
-    <div class="summary-grid">
-        <div class="card">
+    <div class="dashboard">
+        <div class="card-summary success">
             <h3>Salário</h3>
-            <div class="value green">R$ <input type="number" id="salary" value="10000" oninput="calculateAll()" style="width: 80px; font-size: 1rem; border:none; border-bottom:1px solid #ccc; text-align:center;"></div>
+            <div class="value">
+                R$ <input type="number" id="salary" value="10000" class="input-salary" oninput="calculateAll()">
+            </div>
         </div>
-        <div class="card">
-            <h3>Total Gastos</h3>
-            <div class="value red" id="totalExpenses">R$ 0,00</div>
+        <div class="card-summary danger">
+            <h3>Total Saídas</h3>
+            <div class="value" id="totalExpenses">R$ 0,00</div>
         </div>
-        <div class="card">
+        <div class="card-summary">
             <h3>Resta</h3>
-            <div class="value blue" id="remaining">R$ 0,00</div>
+            <div class="value" id="remaining" style="color: var(--primary);">R$ 0,00</div>
         </div>
-        <div class="card">
-            <h3>Meus Gastos Reais</h3>
-            <div class="value" id="myExpenses" style="color: #8e44ad;">R$ 0,00</div>
-            <small style="font-size:0.7em; color:#999;">(Exclui itens desmarcados)</small>
+        <div class="card-summary warning">
+            <h3>Só Meus Gastos</h3>
+            <div class="value" id="myRealExpenses" style="color: #d97706;">R$ 0,00</div>
+        </div>
+    </div>
+
+    <div class="section-card">
+        <div class="section-header">
+            <h2>Gastos Fixos & Cartões</h2>
+            <div class="total-badge" id="totalFixosBadge">R$ 0,00</div>
+        </div>
+        <div class="content-padding">
+            <div class="table-responsive">
+                <table id="mainTable">
+                    <thead>
+                        <tr>
+                            <th style="width: 40%;">Item</th>
+                            <th style="width: 30%;">Valor (R$)</th>
+                            <th style="width: 20%; text-align: center;">É meu?</th>
+                            <th style="width: 10%;"></th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            <button class="btn-add" onclick="addMainRow()">+ Adicionar Gasto Fixo</button>
         </div>
     </div>
 
-    <h2 class="section-title">Gastos Fixos</h2>
-    <table id="expensesTable">
-        <thead>
-            <tr>
-                <th>Item</th>
-                <th style="width: 120px;">Valor (R$)</th>
-                <th style="width: 50px; text-align: center;" title="Marque se for SEU gasto pessoal">Meu?</th>
-                <th style="width: 40px;"></th>
-            </tr>
-        </thead>
-        <tbody>
-            </tbody>
-    </table>
-    <button class="add-btn" onclick="addExpenseRow()">+ Adicionar Item</button>
-
-    <h2 class="section-title">Divisão de Cartão (BB)</h2>
-    <div class="card">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-            <label><strong>Valor Total da Fatura:</strong></label>
-            <input type="number" id="bbTotalBill" value="1820" oninput="calculateBBCard()" style="width: 120px;">
+    <div class="section-card">
+        <div class="section-header" style="background-color: #fffbeb; border-bottom-color: #fcd34d;">
+            <h2 style="color: #b45309;">Divisão: Banco do Brasil</h2>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 0.9rem; color: #b45309;">Fatura Total:</span>
+                <input type="number" id="bbTotalBill" value="1820" oninput="calculateAll()" style="width: 100px; padding: 5px;">
+            </div>
         </div>
-        
-        <table id="bbSplitTable">
-            <thead>
-                <tr>
-                    <th>Quem (Outros)</th>
-                    <th>Valor (R$)</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody>
-                </tbody>
-        </table>
-        <button class="add-btn" onclick="addBBSplitRow()">+ Adicionar Pessoa</button>
-
-        <div style="margin-top: 20px; padding-top: 10px; border-top: 1px solid #eee; text-align: right;">
-            <strong>Minha Parte (Calculada): </strong>
-            <span id="bbMyShare" style="font-size: 1.2em; color: var(--accent);">R$ 0,00</span>
-            <br><small>Isso atualiza automaticamente o "Cartão BB" na tabela acima.</small>
+        <div class="content-padding">
+            <p style="font-size: 0.9rem; color: #666; margin-bottom: 15px;">Adicione abaixo os gastos das outras pessoas. O sistema calculará a sua parte automaticamente.</p>
+            <div class="table-responsive">
+                <table id="bbTable">
+                    <thead>
+                        <tr>
+                            <th style="width: 25%;">Quem</th>
+                            <th style="width: 40%;">Descrição do Gasto</th>
+                            <th style="width: 25%;">Valor (R$)</th>
+                            <th style="width: 10%;"></th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            <button class="btn-add" onclick="addSplitRow('bbTable')">+ Adicionar Pessoa/Gasto</button>
+            
+            <div style="margin-top: 20px; text-align: right; padding-top: 15px; border-top: 1px solid #eee;">
+                Minha Parte no BB: <strong id="bbMyShareDisplay" style="font-size: 1.2rem; color: #b45309;">R$ 0,00</strong>
+            </div>
         </div>
     </div>
-    
-    <div style="margin-top: 30px; color: #7f8c8d; font-size: 0.8em; text-align: center;">
-        Baseado na planilha "Meus Gastos fevereiro 26.xlsx"
+
+    <div class="section-card">
+        <div class="section-header" style="background-color: #eff6ff; border-bottom-color: #bfdbfe;">
+            <h2 style="color: #1e40af;">Divisão: Mercado Pago</h2>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 0.9rem; color: #1e40af;">Fatura Total:</span>
+                <input type="number" id="mpTotalBill" value="2211" oninput="calculateAll()" style="width: 100px; padding: 5px;">
+            </div>
+        </div>
+        <div class="content-padding">
+            <div class="table-responsive">
+                <table id="mpTable">
+                    <thead>
+                        <tr>
+                            <th style="width: 25%;">Quem</th>
+                            <th style="width: 40%;">Descrição do Gasto</th>
+                            <th style="width: 25%;">Valor (R$)</th>
+                            <th style="width: 10%;"></th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            <button class="btn-add" onclick="addSplitRow('mpTable')">+ Adicionar Pessoa/Gasto</button>
+
+            <div style="margin-top: 20px; text-align: right; padding-top: 15px; border-top: 1px solid #eee;">
+                Minha Parte no MP: <strong id="mpMyShareDisplay" style="font-size: 1.2rem; color: #1e40af;">R$ 0,00</strong>
+            </div>
+        </div>
     </div>
 
+    <div class="section-card">
+        <div class="section-header">
+            <h2>💰 Quem me deve (Total Geral)</h2>
+        </div>
+        <div class="content-padding">
+            <div id="debtorsList" class="debt-grid">
+                </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>Baseado na planilha original • Versão 2.0</p>
+    </footer>
 </div>
 
 <script>
-    // Dados iniciais baseados na planilha
-    const initialExpenses = [
-        { name: "Cartão BB", value: 822.41, isMine: true, id: "cartao_bb" }, // Vinculado ao BB Splitter
-        { name: "academia", value: 95.00, isMine: true },
-        { name: "Luz", value: 150.00, isMine: true },
-        { name: "Cartão NU", value: 96.00, isMine: true },
-        { name: "Água", value: 100.00, isMine: false }, // Excluído da lógica "Meus Gastos"
-        { name: "Muay Thay", value: 130.00, isMine: true },
-        { name: "Emergencia", value: 4000.00, isMine: false }, // Excluído da lógica "Meus Gastos"
-        { name: "Cartão Mercado Pago", value: 1343.00, isMine: true },
-        { name: "Internet", value: 65.00, isMine: true },
-        { name: "gasolina", value: 600.00, isMine: true },
-        { name: "cabelo", value: 40.00, isMine: true },
-        { name: "Senhas/ mamae", value: 300.00, isMine: true },
-        { name: "lavagem carro", value: 50.00, isMine: true },
-        { name: "tim", value: 40.00, isMine: true },
-        { name: "Cartão assai", value: 720.00, isMine: true }
+    // --- DADOS INICIAIS (Baseado na sua planilha) ---
+    
+    // Tabela Principal
+    let mainExpenses = [
+        { id: 'bb_auto', name: 'Cartão BB (Minha Parte)', value: 0, isMine: true, locked: true }, // Automático
+        { id: 'mp_auto', name: 'Cartão Mercado Pago (Minha Parte)', value: 0, isMine: true, locked: true }, // Automático
+        { name: 'Academia', value: 95.00, isMine: true },
+        { name: 'Luz', value: 150.00, isMine: true },
+        { name: 'Cartão NU', value: 96.00, isMine: true },
+        { name: 'Água', value: 100.00, isMine: false },
+        { name: 'Muay Thay', value: 130.00, isMine: true },
+        { name: 'Emergência', value: 4000.00, isMine: false },
+        { name: 'Internet', value: 65.00, isMine: true },
+        { name: 'Gasolina', value: 600.00, isMine: true },
+        { name: 'Cabelo', value: 40.00, isMine: true },
+        { name: 'Senhas/Mãe', value: 300.00, isMine: true },
+        { name: 'Lavagem Carro', value: 50.00, isMine: true },
+        { name: 'Tim', value: 40.00, isMine: true },
+        { name: 'Cartão Assaí', value: 720.00, isMine: true }
     ];
 
-    const initialBBSplit = [
-        { name: "Disney", value: 35.16 },
-        { name: "Léo", value: 300.00 },
-        { name: "kayssa", value: 181.43 },
-        { name: "Dani (parte 1)", value: 209.00 },
-        { name: "Dani (parte 2)", value: 98.00 },
-        { name: "Dani (parte 3)", value: 109.00 },
-        { name: "Dani (parte 4)", value: 65.00 }
+    // Gastos de Outros no BB
+    let bbSplitData = [
+        { name: 'Disney', desc: 'Assinatura', value: 35.16 },
+        { name: 'Léo', desc: 'Parcela', value: 300.00 },
+        { name: 'Kayssa', desc: 'Diversos', value: 181.43 },
+        { name: 'Dani', desc: 'Compra 1', value: 209.00 },
+        { name: 'Dani', desc: 'Compra 2', value: 98.00 },
+        { name: 'Dani', desc: 'Compra 3', value: 109.00 },
+        { name: 'Dani', desc: 'Compra 4', value: 65.00 }
     ];
 
-    // Inicialização
+    // Gastos de Outros no Mercado Pago
+    let mpSplitData = [
+        { name: 'Léo', desc: 'Compra MP', value: 167.00 },
+        { name: 'Dani', desc: 'Item A', value: 55.00 },
+        { name: 'Dani', desc: 'Item B', value: 155.00 }
+    ];
+
+    // --- INICIALIZAÇÃO ---
     window.onload = function() {
-        renderExpenses();
-        renderBBSplit();
-        calculateBBCard(); // Calcula BB primeiro
-        calculateAll();    // Depois calcula o geral
+        renderMainTable();
+        renderSplitTable('bbTable', bbSplitData);
+        renderSplitTable('mpTable', mpSplitData);
+        calculateAll();
     };
 
-    // --- Funções da Tabela Principal ---
+    // --- RENDERIZAÇÃO ---
 
-    function renderExpenses() {
-        const tbody = document.querySelector("#expensesTable tbody");
+    function renderMainTable() {
+        const tbody = document.querySelector("#mainTable tbody");
         tbody.innerHTML = "";
         
-        initialExpenses.forEach((item, index) => {
-            addExpenseRowHTML(tbody, item, index);
+        mainExpenses.forEach((item, index) => {
+            const tr = document.createElement("tr");
+            const isLocked = item.locked ? 'readonly class="locked-input"' : '';
+            const btnDelete = item.locked ? '' : '<button class="btn-remove" onclick="removeMainRow(this)">×</button>';
+            
+            tr.innerHTML = `
+                <td><input type="text" value="${item.name}" ${isLocked} class="input-name"></td>
+                <td><input type="number" value="${item.value}" step="0.01" oninput="calculateAll()" class="input-val" ${isLocked} id="${item.id || ''}"></td>
+                <td style="text-align: center;"><input type="checkbox" ${item.isMine ? "checked" : ""} onchange="calculateAll()" class="input-mine"></td>
+                <td>${btnDelete}</td>
+            `;
+            tbody.appendChild(tr);
         });
     }
 
-    function addExpenseRow() {
-        const tbody = document.querySelector("#expensesTable tbody");
-        addExpenseRowHTML(tbody, { name: "Novo Item", value: 0, isMine: true }, initialExpenses.length);
+    function renderSplitTable(tableId, data) {
+        const tbody = document.querySelector(`#${tableId} tbody`);
+        tbody.innerHTML = "";
+
+        data.forEach(item => {
+            addSplitRowHTML(tbody, item);
+        });
+    }
+
+    // --- ADICIONAR / REMOVER LINHAS ---
+
+    function addMainRow() {
+        const tbody = document.querySelector("#mainTable tbody");
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td><input type="text" placeholder="Nome do gasto" class="input-name"></td>
+            <td><input type="number" placeholder="0.00" step="0.01" oninput="calculateAll()" class="input-val"></td>
+            <td style="text-align: center;"><input type="checkbox" checked onchange="calculateAll()" class="input-mine"></td>
+            <td><button class="btn-remove" onclick="removeMainRow(this)">×</button></td>
+        `;
+        tbody.appendChild(tr);
         calculateAll();
     }
 
-    function addExpenseRowHTML(tbody, item, index) {
+    function removeMainRow(btn) {
+        btn.closest("tr").remove();
+        calculateAll();
+    }
+
+    function addSplitRow(tableId) {
+        const tbody = document.querySelector(`#${tableId} tbody`);
+        addSplitRowHTML(tbody, { name: '', desc: '', value: '' });
+    }
+
+    function addSplitRowHTML(tbody, item) {
         const tr = document.createElement("tr");
-        const isBB = item.id === "cartao_bb";
-        
         tr.innerHTML = `
-            <td><input type="text" value="${item.name}" class="exp-name"></td>
-            <td><input type="number" value="${item.value}" class="exp-value" step="0.01" oninput="calculateAll()" id="${item.id || ''}" ${isBB ? 'readonly style="background:#eee;"' : ''}></td>
-            <td style="text-align: center;"><input type="checkbox" class="exp-mine" ${item.isMine ? "checked" : ""} onchange="calculateAll()"></td>
-            <td>${!isBB ? '<button class="remove-btn" onclick="removeRow(this)">x</button>' : ''}</td>
+            <td><input type="text" value="${item.name}" placeholder="Nome (ex: Dani)" class="split-name" oninput="calculateAll()"></td>
+            <td><input type="text" value="${item.desc}" placeholder="O que foi?" class="split-desc"></td>
+            <td><input type="number" value="${item.value}" placeholder="0.00" step="0.01" class="split-val" oninput="calculateAll()"></td>
+            <td><button class="btn-remove" onclick="removeSplitRow(this)">×</button></td>
         `;
         tbody.appendChild(tr);
     }
 
-    function removeRow(btn) {
+    function removeSplitRow(btn) {
         btn.closest("tr").remove();
         calculateAll();
     }
+
+    // --- CÁLCULOS CENTRAIS ---
 
     function calculateAll() {
-        const rows = document.querySelectorAll("#expensesTable tbody tr");
-        let total = 0;
-        let myTotal = 0;
+        // 1. Calcula Divisão BB
+        const bbTotal = parseFloat(document.getElementById('bbTotalBill').value) || 0;
+        const bbOthers = sumSplitTable('bbTable');
+        const bbMyShare = bbTotal - bbOthers.total;
+        
+        document.getElementById('bbMyShareDisplay').innerText = formatMoney(bbMyShare);
+        updateMainTableValue('bb_auto', bbMyShare);
 
-        rows.forEach(row => {
-            const val = parseFloat(row.querySelector(".exp-value").value) || 0;
-            const isMine = row.querySelector(".exp-mine").checked;
+        // 2. Calcula Divisão MP
+        const mpTotal = parseFloat(document.getElementById('mpTotalBill').value) || 0;
+        const mpOthers = sumSplitTable('mpTable');
+        const mpMyShare = mpTotal - mpOthers.total;
+
+        document.getElementById('mpMyShareDisplay').innerText = formatMoney(mpMyShare);
+        updateMainTableValue('mp_auto', mpMyShare);
+
+        // 3. Calcula Totais Gerais
+        let totalExpenses = 0;
+        let myRealExpenses = 0;
+        
+        document.querySelectorAll("#mainTable tbody tr").forEach(tr => {
+            const val = parseFloat(tr.querySelector(".input-val").value) || 0;
+            const isMine = tr.querySelector(".input-mine").checked;
             
-            total += val;
-            if (isMine) {
-                myTotal += val;
+            totalExpenses += val;
+            if (isMine) myRealExpenses += val;
+        });
+
+        const salary = parseFloat(document.getElementById('salary').value) || 0;
+        
+        // Atualiza Cards
+        document.getElementById('totalExpenses').innerText = formatMoney(totalExpenses);
+        document.getElementById('remaining').innerText = formatMoney(salary - totalExpenses);
+        document.getElementById('myRealExpenses').innerText = formatMoney(myRealExpenses);
+        document.getElementById('totalFixosBadge').innerText = formatMoney(totalExpenses);
+
+        // 4. Gera Resumo de Dívidas (Soma BB + MP)
+        generateDebtorsList(bbOthers.byPerson, mpOthers.byPerson);
+    }
+
+    function sumSplitTable(tableId) {
+        let total = 0;
+        let byPerson = {};
+
+        document.querySelectorAll(`#${tableId} tbody tr`).forEach(tr => {
+            const name = tr.querySelector(".split-name").value.trim();
+            const val = parseFloat(tr.querySelector(".split-val").value) || 0;
+            
+            if (val > 0) {
+                total += val;
+                if (name) {
+                    // Normaliza nome (dani = Dani)
+                    const key = name.toLowerCase();
+                    if (!byPerson[key]) byPerson[key] = { name: name, total: 0 };
+                    byPerson[key].total += val;
+                }
             }
         });
-
-        const salary = parseFloat(document.getElementById("salary").value) || 0;
-        const remaining = salary - total;
-
-        document.getElementById("totalExpenses").innerText = formatMoney(total);
-        document.getElementById("remaining").innerText = formatMoney(remaining);
-        document.getElementById("myExpenses").innerText = formatMoney(myTotal);
+        return { total, byPerson };
     }
 
-    // --- Funções da Divisão de Cartão (BB) ---
-
-    function renderBBSplit() {
-        const tbody = document.querySelector("#bbSplitTable tbody");
-        tbody.innerHTML = "";
-        initialBBSplit.forEach(item => addBBSplitRowHTML(tbody, item));
+    function updateMainTableValue(id, value) {
+        const input = document.getElementById(id);
+        if (input) input.value = value.toFixed(2);
     }
 
-    function addBBSplitRow() {
-        const tbody = document.querySelector("#bbSplitTable tbody");
-        addBBSplitRowHTML(tbody, { name: "Nova Pessoa", value: 0 });
-    }
-
-    function addBBSplitRowHTML(tbody, item) {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-            <td><input type="text" value="${item.name}"></td>
-            <td><input type="number" value="${item.value}" class="bb-sub-val" step="0.01" oninput="calculateBBCard()"></td>
-            <td><button class="remove-btn" onclick="removeBBRow(this)">x</button></td>
-        `;
-        tbody.appendChild(tr);
-    }
-
-    function removeBBRow(btn) {
-        btn.closest("tr").remove();
-        calculateBBCard();
-    }
-
-    function calculateBBCard() {
-        const totalBill = parseFloat(document.getElementById("bbTotalBill").value) || 0;
-        let othersSum = 0;
+    function generateDebtorsList(bbData, mpData) {
+        const container = document.getElementById('debtorsList');
+        container.innerHTML = "";
         
-        document.querySelectorAll(".bb-sub-val").forEach(input => {
-            othersSum += parseFloat(input.value) || 0;
-        });
-
-        const myShare = totalBill - othersSum;
+        // Combina os objetos
+        const allDebtors = {};
         
-        // Atualiza display da calculadora
-        document.getElementById("bbMyShare").innerText = formatMoney(myShare);
+        // Helper para merge
+        const merge = (source) => {
+            for (let key in source) {
+                if (!allDebtors[key]) allDebtors[key] = { name: source[key].name, total: 0 };
+                allDebtors[key].total += source[key].total;
+            }
+        };
 
-        // Atualiza a tabela principal
-        const mainBBInput = document.getElementById("cartao_bb");
-        if (mainBBInput) {
-            mainBBInput.value = myShare.toFixed(2);
-            calculateAll(); // Recalcula o total geral
+        merge(bbData);
+        merge(mpData);
+
+        if (Object.keys(allDebtors).length === 0) {
+            container.innerHTML = "<p style='grid-column: 1/-1; text-align: center; color: #999;'>Ninguém te deve nada (por enquanto).</p>";
+            return;
+        }
+
+        for (let key in allDebtors) {
+            const p = allDebtors[key];
+            const div = document.createElement("div");
+            div.className = "debt-card";
+            div.innerHTML = `
+                <div class="debt-name">${p.name}</div>
+                <div class="debt-value">${formatMoney(p.total)}</div>
+            `;
+            container.appendChild(div);
         }
     }
 
-    // --- Utilitários ---
     function formatMoney(value) {
         return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     }
+
 </script>
 
 </body>
