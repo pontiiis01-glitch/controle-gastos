@@ -5,10 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Controle Financeiro 4.0</title>
+    <title>Controle Financeiro 5.0</title>
 
     <link rel="apple-touch-icon" href="icone.png">
     <link rel="icon" type="image/png" href="icone.png">
+
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -42,7 +43,7 @@
 
         header {
             text-align: center;
-            margin-bottom: 40px;
+            margin-bottom: 30px;
         }
         header h1 {
             font-size: 2rem;
@@ -51,7 +52,15 @@
             font-weight: 800;
             letter-spacing: -0.03em;
         }
-        header p { color: var(--text-muted); margin-top: 5px; }
+        header p { color: var(--text-muted); margin-top: 5px; font-size: 0.9rem; }
+        
+        .save-indicator {
+            font-size: 0.75rem;
+            color: var(--success);
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+        .save-indicator.visible { opacity: 1; }
 
         /* --- DASHBOARD --- */
         .dashboard {
@@ -71,7 +80,6 @@
             overflow: hidden;
             transition: transform 0.2s;
         }
-        .card-summary:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
         
         .card-summary::before {
             content: '';
@@ -186,11 +194,7 @@
             background: #f1f5f9;
             border: 2px dashed var(--primary);
         }
-        
-        /* Highlight na linha onde vai soltar */
-        tr.drag-over {
-            border-top: 2px solid var(--primary);
-        }
+        tr.drag-over { border-top: 2px solid var(--primary); }
 
         /* --- INPUTS --- */
         input[type="text"], input[type="number"] {
@@ -212,10 +216,7 @@
         
         input.input-val { font-family: 'Courier New', monospace; font-weight: 600; color: var(--text-main); }
         
-        /* Checkbox customizado */
-        .checkbox-wrapper input {
-            width: 20px; height: 20px; accent-color: var(--primary); cursor: pointer;
-        }
+        .checkbox-wrapper input { width: 20px; height: 20px; accent-color: var(--primary); cursor: pointer; }
 
         /* --- PARCELAS --- */
         .inst-container { position: relative; }
@@ -257,6 +258,17 @@
         }
         .btn-remove:hover { background: #fef2f2; border-color: #fecaca; }
 
+        .btn-reset {
+            background-color: #fee2e2;
+            color: #b91c1c;
+            border: 1px solid #fecaca;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            margin-top: 10px;
+        }
+
         /* --- DEVEDORES --- */
         .debt-grid {
             display: grid;
@@ -289,7 +301,7 @@
 <div class="container">
     <header>
         <h1>Meus Gastos</h1>
-        <p>Controle Financeiro 4.0</p>
+        <p>Dados salvos automaticamente <span id="saveStatus" class="save-indicator">✔ Salvo</span></p>
     </header>
 
     <div class="dashboard">
@@ -322,7 +334,8 @@
                 <table id="mainTable">
                     <thead>
                         <tr>
-                            <th style="width: 50px;"></th> <th style="width: 35%;">Item</th>
+                            <th style="width: 50px;"></th>
+                            <th style="width: 35%;">Item</th>
                             <th style="width: 25%;">Valor (R$)</th>
                             <th style="width: 15%; text-align: center;">Meu?</th>
                             <th style="width: 10%;"></th>
@@ -408,56 +421,135 @@
     </div>
 
     <footer>
-        Controle Financeiro • Versão 4.0 (Drag & Drop)
+        <p>Seus dados são salvos no navegador automaticamente.</p>
+        <button class="btn-reset" onclick="resetData()">⚠ Apagar tudo e começar do zero</button>
     </footer>
 </div>
 
 <script>
-    // --- DADOS INICIAIS ---
-    const initialMain = [
-        { id: 'bb_auto', name: 'Cartão BB (Minha Parte)', value: 0, isMine: true, locked: true },
-        { id: 'mp_auto', name: 'Mercado Pago (Minha Parte)', value: 0, isMine: true, locked: true },
-        { name: 'Academia', value: 95.00, isMine: true },
-        { name: 'Muay Thai', value: 130.00, isMine: true },
-        { name: 'Luz', value: 150.00, isMine: true },
-        { name: 'Cartão NU', value: 96.00, isMine: true },
-        { name: 'Água', value: 100.00, isMine: false },
-        { name: 'Emergência', value: 4000.00, isMine: false },
-        { name: 'Internet', value: 65.00, isMine: true },
-        { name: 'Gasolina', value: 600.00, isMine: true },
-        { name: 'Cabelo', value: 40.00, isMine: true },
-        { name: 'Senhas/Mãe', value: 300.00, isMine: true },
-        { name: 'Lavagem Carro', value: 50.00, isMine: true },
-        { name: 'Tim', value: 40.00, isMine: true },
-        { name: 'Cartão Assaí', value: 720.00, isMine: true }
-    ];
+    // --- STORAGE KEY ---
+    const STORAGE_KEY = "financeApp_v1_data";
 
-    const initialBB = [
-        { name: 'Disney', desc: 'Assinatura', value: 35.16 },
-        { name: 'Léo', desc: 'Televisão', value: 300.00, inst: '1/10' },
-        { name: 'Kayssa', desc: 'Uber', value: 181.43 },
-        { name: 'Dani', desc: 'Roupas', value: 209.00 },
-        { name: 'Dani', desc: 'Mercado', value: 98.00 },
-        { name: 'Dani', desc: 'Farmácia', value: 109.00 },
-        { name: 'Dani', desc: 'Ifood', value: 65.00 }
-    ];
+    // --- DADOS PADRÃO (Caso não tenha nada salvo) ---
+    const defaultData = {
+        salary: 10000,
+        bbTotal: 1820,
+        mpTotal: 2211,
+        main: [
+            { id: 'bb_auto', name: 'Cartão BB (Minha Parte)', value: 0, isMine: true, locked: true },
+            { id: 'mp_auto', name: 'Mercado Pago (Minha Parte)', value: 0, isMine: true, locked: true },
+            { name: 'Academia', value: 95.00, isMine: true },
+            { name: 'Muay Thai', value: 130.00, isMine: true },
+            { name: 'Luz', value: 150.00, isMine: true },
+            { name: 'Cartão NU', value: 96.00, isMine: true },
+            { name: 'Água', value: 100.00, isMine: false },
+            { name: 'Emergência', value: 4000.00, isMine: false },
+            { name: 'Internet', value: 65.00, isMine: true },
+            { name: 'Gasolina', value: 600.00, isMine: true },
+            { name: 'Cabelo', value: 40.00, isMine: true },
+            { name: 'Senhas/Mãe', value: 300.00, isMine: true },
+            { name: 'Lavagem Carro', value: 50.00, isMine: true },
+            { name: 'Tim', value: 40.00, isMine: true },
+            { name: 'Cartão Assaí', value: 720.00, isMine: true }
+        ],
+        bb: [
+            { name: 'Disney', desc: 'Assinatura', value: 35.16 },
+            { name: 'Léo', desc: 'Televisão', value: 300.00, inst: '1/10' },
+            { name: 'Kayssa', desc: 'Uber', value: 181.43 },
+            { name: 'Dani', desc: 'Roupas', value: 209.00 }
+        ],
+        mp: [
+            { name: 'Léo', desc: 'Peças PC', value: 167.00, inst: '8/12' },
+            { name: 'Dani', desc: 'Uber', value: 55.00 }
+        ]
+    };
 
-    const initialMP = [
-        { name: 'Léo', desc: 'Peças PC', value: 167.00, inst: '8/12' },
-        { name: 'Dani', desc: 'Uber', value: 55.00 },
-        { name: 'Dani', desc: 'Presente', value: 155.00, inst: '1/2' }
-    ];
-
-    // --- SETUP ---
+    // --- INICIALIZAÇÃO ---
     window.onload = function() {
-        renderTable('mainTable', initialMain, 'main');
-        renderTable('bbTable', initialBB, 'split');
-        renderTable('mpTable', initialMP, 'split');
-        calculateAll();
+        loadData();
         setupDragAndDrop();
     };
 
-    // --- RENDERIZAR TABELAS ---
+    // --- CARREGAR E SALVAR DADOS ---
+    function loadData() {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        let data = defaultData;
+
+        if (saved) {
+            try {
+                data = JSON.parse(saved);
+            } catch (e) {
+                console.error("Erro ao carregar dados", e);
+            }
+        }
+
+        // Preenche Inputs Globais
+        document.getElementById('salary').value = data.salary;
+        document.getElementById('bbTotalBill').value = data.bbTotal;
+        document.getElementById('mpTotalBill').value = data.mpTotal;
+
+        // Renderiza Tabelas
+        renderTable('mainTable', data.main, 'main');
+        renderTable('bbTable', data.bb, 'split');
+        renderTable('mpTable', data.mp, 'split');
+
+        // Calcula
+        calculateAll(false); // False para não salvar durante o load
+    }
+
+    function saveData() {
+        const data = {
+            salary: document.getElementById('salary').value,
+            bbTotal: document.getElementById('bbTotalBill').value,
+            mpTotal: document.getElementById('mpTotalBill').value,
+            main: [],
+            bb: [],
+            mp: []
+        };
+
+        // Scrape Main
+        document.querySelectorAll('#mainTable tbody tr').forEach(tr => {
+            data.main.push({
+                name: tr.querySelector('input[type="text"]').value,
+                value: tr.querySelector('.input-val').value,
+                isMine: tr.querySelector('input[type="checkbox"]').checked,
+                locked: tr.querySelector('.input-val').hasAttribute('readonly'),
+                id: tr.querySelector('.input-val').id || null
+            });
+        });
+
+        // Scrape Splits
+        ['bbTable', 'mpTable'].forEach(id => {
+            const key = id === 'bbTable' ? 'bb' : 'mp';
+            document.querySelectorAll(`#${id} tbody tr`).forEach(tr => {
+                const inputs = tr.querySelectorAll('input[type="text"]');
+                data[key].push({
+                    name: inputs[0].value,
+                    desc: inputs[1].value,
+                    inst: inputs[2].value,
+                    value: tr.querySelector('.split-val').value
+                });
+            });
+        });
+
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        showSaveIndicator();
+    }
+
+    function resetData() {
+        if(confirm("Tem certeza? Isso apagará todos os dados salvos e voltará ao padrão.")) {
+            localStorage.removeItem(STORAGE_KEY);
+            location.reload();
+        }
+    }
+
+    function showSaveIndicator() {
+        const el = document.getElementById('saveStatus');
+        el.classList.add('visible');
+        setTimeout(() => el.classList.remove('visible'), 1500);
+    }
+
+    // --- RENDERIZAÇÃO ---
     function renderTable(tableId, data, type) {
         const tbody = document.querySelector(`#${tableId} tbody`);
         tbody.innerHTML = "";
@@ -467,25 +559,25 @@
         });
     }
 
-    // --- FUNÇÕES DE ADICIONAR LINHA (HTML) ---
+    // --- ADICIONAR LINHAS ---
     function addMainRow() {
         const tbody = document.querySelector("#mainTable tbody");
         addMainRowHTML(tbody, { name: '', value: '', isMine: true });
         calculateAll();
-        setupDragAndDrop(); // Re-bind events
+        setupDragAndDrop();
     }
 
     function addMainRowHTML(tbody, item) {
         const tr = document.createElement("tr");
         tr.className = "draggable-row";
-        tr.draggable = true; // Habilita arrasto
+        tr.draggable = true;
         
         const lockedAttr = item.locked ? 'readonly style="background:#f1f5f9; color:#94a3b8;"' : '';
         const delBtn = item.locked ? '' : '<button class="btn-remove" onclick="removeRow(this)">×</button>';
 
         tr.innerHTML = `
             <td class="drag-handle">☰</td>
-            <td><input type="text" value="${item.name}" ${lockedAttr}></td>
+            <td><input type="text" value="${item.name}" ${lockedAttr} oninput="calculateAll()"></td>
             <td><input type="number" value="${item.value}" step="0.01" class="input-val" oninput="calculateAll()" id="${item.id || ''}" ${lockedAttr}></td>
             <td style="text-align: center;" class="checkbox-wrapper">
                 <input type="checkbox" ${item.isMine ? "checked" : ""} onchange="calculateAll()">
@@ -510,7 +602,7 @@
         tr.innerHTML = `
             <td class="drag-handle">☰</td>
             <td><input type="text" value="${item.name}" placeholder="Nome" class="split-name" oninput="calculateAll()"></td>
-            <td><input type="text" value="${item.desc}" placeholder="Descrição"></td>
+            <td><input type="text" value="${item.desc}" placeholder="Descrição" oninput="calculateAll()"></td>
             <td class="inst-container">
                 <input type="text" value="${item.inst || ''}" placeholder="1/10" class="split-inst" oninput="updateBar(this); calculateAll()">
                 <div class="progress-mini"><div class="progress-fill" style="width:0%"></div></div>
@@ -527,7 +619,7 @@
         calculateAll();
     }
 
-    // --- DRAG AND DROP LOGIC (ARRASTAR) ---
+    // --- DRAG & DROP ---
     function setupDragAndDrop() {
         const rows = document.querySelectorAll('.draggable-row');
         rows.forEach(row => {
@@ -550,38 +642,20 @@
     function dragOver(e) {
         if (e.preventDefault) e.preventDefault();
         e.dataTransfer.dropEffect = 'move';
-        
-        // Efeito visual simples: se estiver sobre outra linha
         const targetRow = e.target.closest('tr');
-        if (targetRow && targetRow !== dragSrcEl) {
-            targetRow.classList.add('drag-over');
-        }
+        if (targetRow && targetRow !== dragSrcEl) targetRow.classList.add('drag-over');
         return false;
     }
 
     function dragDrop(e) {
         if (e.stopPropagation) e.stopPropagation();
-        
-        const targetRow = this; // 'this' é a linha onde soltou
-        
+        const targetRow = this;
         if (dragSrcEl !== targetRow) {
-            // Lógica de troca de posição no DOM
-            // Verifica se arrastou de cima pra baixo ou baixo pra cima
             const tbody = targetRow.parentNode;
             const rows = Array.from(tbody.querySelectorAll('tr'));
-            const srcIndex = rows.indexOf(dragSrcEl);
-            const targetIndex = rows.indexOf(targetRow);
-
-            if (srcIndex < targetIndex) {
-                // Arrastou para baixo: insere DEPOIS do alvo
-                tbody.insertBefore(dragSrcEl, targetRow.nextSibling);
-            } else {
-                // Arrastou para cima: insere ANTES do alvo
-                tbody.insertBefore(dragSrcEl, targetRow);
-            }
-            
-            // Recalcula tudo caso a ordem importasse (aqui não importa pro cálculo, mas é bom)
-            calculateAll();
+            if (rows.indexOf(dragSrcEl) < rows.indexOf(targetRow)) tbody.insertBefore(dragSrcEl, targetRow.nextSibling);
+            else tbody.insertBefore(dragSrcEl, targetRow);
+            calculateAll(); // Salva a nova ordem
         }
         return false;
     }
@@ -591,8 +665,7 @@
         document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
     }
 
-
-    // --- CÁLCULOS E AUXILIARES ---
+    // --- CÁLCULOS ---
     function updateBar(input) {
         const val = input.value;
         const bar = input.nextElementSibling.querySelector('.progress-fill');
@@ -604,13 +677,13 @@
         }
     }
 
-    function calculateAll() {
-        // Processa BB
+    function calculateAll(shouldSave = true) {
+        // BB
         const bb = processSplit('bbTable', 'bbTotalBill', 'bbMyShareDisplay', 'bb_auto');
-        // Processa MP
+        // MP
         const mp = processSplit('mpTable', 'mpTotalBill', 'mpMyShareDisplay', 'mp_auto');
 
-        // Processa Geral
+        // Main
         let total = 0, myReal = 0;
         document.querySelectorAll('#mainTable tbody tr').forEach(tr => {
             const val = parseFloat(tr.querySelector('.input-val').value) || 0;
@@ -625,8 +698,9 @@
         document.getElementById('remaining').innerText = fmt(salary - total);
         document.getElementById('myRealExpenses').innerText = fmt(myReal);
 
-        // Devedores
         updateDebtors(bb.debtors, mp.debtors);
+
+        if(shouldSave) saveData();
     }
 
     function processSplit(tableId, totalId, displayId, inputId) {
@@ -644,8 +718,6 @@
                 if (name) {
                     if (!debtors[name]) debtors[name] = { total: 0, future: 0, display: tr.querySelector('.split-name').value };
                     debtors[name].total += val;
-                    
-                    // Futuro
                     if (inst.includes('/')) {
                         const [cur, tot] = inst.split('/').map(Number);
                         if (tot > cur) debtors[name].future += (tot - cur) * val;
