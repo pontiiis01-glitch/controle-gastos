@@ -3,17 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Controle Financeiro 3.0</title>
+    <title>Controle Financeiro 4.0</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
             --primary: #2563eb;
             --primary-dark: #1e40af;
-            --bg-body: #f3f4f6;
+            --bg-body: #f8fafc;
             --bg-card: #ffffff;
-            --text-main: #1f2937;
-            --text-muted: #6b7280;
-            --border: #e5e7eb;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
             --success: #10b981;
             --danger: #ef4444;
             --warning: #f59e0b;
@@ -30,9 +30,9 @@
         }
 
         .container {
-            max-width: 1000px; /* Aumentei um pouco para caber as parcelas */
+            max-width: 1100px;
             margin: 0 auto;
-            padding-bottom: 50px;
+            padding-bottom: 80px;
         }
 
         header {
@@ -40,17 +40,18 @@
             margin-bottom: 40px;
         }
         header h1 {
-            font-size: 1.8rem;
+            font-size: 2rem;
             color: var(--primary-dark);
             margin: 0;
             font-weight: 800;
+            letter-spacing: -0.03em;
         }
         header p { color: var(--text-muted); margin-top: 5px; }
 
-        /* --- Cards de Resumo --- */
+        /* --- DASHBOARD --- */
         .dashboard {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
             gap: 20px;
             margin-bottom: 40px;
         }
@@ -59,27 +60,29 @@
             background: var(--bg-card);
             padding: 25px;
             border-radius: 16px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border);
             position: relative;
             overflow: hidden;
+            transition: transform 0.2s;
         }
+        .card-summary:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
         
         .card-summary::before {
             content: '';
             position: absolute;
             left: 0; top: 0; bottom: 0;
-            width: 6px;
+            width: 5px;
         }
 
         .card-summary.success::before { background-color: var(--success); }
         .card-summary.danger::before { background-color: var(--danger); }
         .card-summary.info::before { background-color: var(--primary); }
         .card-summary.warning::before { background-color: var(--warning); }
-        .card-summary.purple::before { background-color: var(--purple); }
 
         .card-summary h3 {
             margin: 0 0 10px 0;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             text-transform: uppercase;
             letter-spacing: 0.05em;
             color: var(--text-muted);
@@ -92,7 +95,6 @@
             color: var(--text-main);
             display: flex;
             align-items: center;
-            gap: 5px;
         }
 
         .input-salary {
@@ -101,27 +103,25 @@
             border: none;
             background: transparent;
             color: var(--success);
-            width: 160px;
-            border-bottom: 2px dashed #ccc;
+            width: 100%;
+            border-bottom: 2px dashed #cbd5e1;
             transition: border-color 0.2s;
+            padding: 0;
         }
-        .input-salary:focus {
-            outline: none;
-            border-bottom-color: var(--success);
-        }
+        .input-salary:focus { outline: none; border-bottom-color: var(--success); }
 
-        /* --- Seções --- */
+        /* --- SEÇÕES --- */
         .section-card {
             background: var(--bg-card);
             border-radius: 20px;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
             margin-bottom: 40px;
-            border: 1px solid rgba(0,0,0,0.02);
+            border: 1px solid var(--border);
             overflow: hidden;
         }
 
         .section-header {
-            padding: 25px 30px;
+            padding: 20px 30px;
             border-bottom: 1px solid var(--border);
             display: flex;
             justify-content: space-between;
@@ -131,145 +131,151 @@
 
         .section-header h2 {
             margin: 0;
-            font-size: 1.3rem;
+            font-size: 1.2rem;
             font-weight: 700;
             color: var(--text-main);
-            display: flex;
-            align-items: center;
-            gap: 10px;
         }
 
-        .content-padding { padding: 30px; }
+        .content-padding { padding: 20px 30px 30px 30px; }
 
-        /* --- Tabelas --- */
+        /* --- TABELAS --- */
         .table-responsive { overflow-x: auto; }
         
         table {
             width: 100%;
-            border-collapse: separate;
-            border-spacing: 0 8px; /* Espaço entre linhas */
-            min-width: 700px;
+            border-collapse: collapse;
+            min-width: 800px;
         }
 
         th {
             text-align: left;
-            padding: 0 15px 10px 15px;
+            padding: 15px 10px;
             color: var(--text-muted);
             font-weight: 600;
             font-size: 0.85rem;
             text-transform: uppercase;
             letter-spacing: 0.05em;
+            border-bottom: 2px solid var(--border);
         }
 
         td {
-            padding: 10px 15px;
-            background: #fff;
-            border-top: 1px solid var(--border);
+            padding: 10px;
             border-bottom: 1px solid var(--border);
             vertical-align: middle;
+            background: #fff;
+        }
+
+        /* --- ARRASTAR E SOLTAR (DRAG & DROP) --- */
+        .drag-handle {
+            cursor: grab;
+            color: #cbd5e1;
+            font-size: 1.5rem;
+            width: 30px;
+            text-align: center;
+            user-select: none;
+        }
+        .drag-handle:active { cursor: grabbing; color: var(--primary); }
+        
+        tr.dragging {
+            opacity: 0.5;
+            background: #f1f5f9;
+            border: 2px dashed var(--primary);
         }
         
-        td:first-child { border-left: 1px solid var(--border); border-top-left-radius: 8px; border-bottom-left-radius: 8px; }
-        td:last-child { border-right: 1px solid var(--border); border-top-right-radius: 8px; border-bottom-right-radius: 8px; }
+        /* Highlight na linha onde vai soltar */
+        tr.drag-over {
+            border-top: 2px solid var(--primary);
+        }
 
-        /* --- Inputs --- */
+        /* --- INPUTS --- */
         input[type="text"], input[type="number"] {
             width: 100%;
             padding: 10px 12px;
-            border: 1px solid #e5e7eb;
+            border: 1px solid #e2e8f0;
             border-radius: 8px;
             font-size: 0.95rem;
-            background: #f9fafb;
+            background: #f8fafc;
             transition: all 0.2s;
+            box-sizing: border-box;
         }
         input:focus {
             outline: none;
             border-color: var(--primary);
             background: #fff;
-            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+        
+        input.input-val { font-family: 'Courier New', monospace; font-weight: 600; color: var(--text-main); }
+        
+        /* Checkbox customizado */
+        .checkbox-wrapper input {
+            width: 20px; height: 20px; accent-color: var(--primary); cursor: pointer;
         }
 
-        .input-val { font-family: 'Courier New', monospace; font-weight: 600; }
-
-        /* --- Parcelas & Progresso --- */
-        .installment-wrapper {
-            position: relative;
-        }
-        .progress-bar-bg {
+        /* --- PARCELAS --- */
+        .inst-container { position: relative; }
+        .progress-mini {
             height: 4px;
-            background: #e5e7eb;
+            background: #e2e8f0;
             border-radius: 2px;
-            margin-top: 6px;
+            margin-top: 4px;
             overflow: hidden;
         }
-        .progress-bar-fill {
-            height: 100%;
-            background: var(--primary);
-            width: 0%;
-            transition: width 0.5s ease;
-        }
+        .progress-fill { height: 100%; background: var(--primary); width: 0; transition: width 0.3s; }
 
-        /* --- Botões --- */
+        /* --- BOTÕES --- */
         .btn-add {
             background-color: #f0fdf4;
-            color: #166534;
-            border: 2px dashed #bbf7d0;
+            color: #15803d;
+            border: 2px dashed #86efac;
             width: 100%;
-            padding: 15px;
-            border-radius: 12px;
+            padding: 12px;
+            border-radius: 10px;
             cursor: pointer;
             font-weight: 600;
-            margin-top: 20px;
+            margin-top: 15px;
             transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
         }
-        .btn-add:hover { background-color: #dcfce7; border-color: #86efac; }
+        .btn-add:hover { background-color: #dcfce7; border-color: #22c55e; }
 
         .btn-remove {
-            background: #fee2e2;
-            color: #b91c1c;
-            border: none;
+            background: transparent;
+            color: #ef4444;
+            border: 1px solid transparent;
             width: 32px;
             height: 32px;
             border-radius: 8px;
             cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.1rem;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.2rem;
             transition: all 0.2s;
         }
-        .btn-remove:hover { background: #fecaca; }
+        .btn-remove:hover { background: #fef2f2; border-color: #fecaca; }
 
-        /* --- Resumo de Dívidas --- */
+        /* --- DEVEDORES --- */
         .debt-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
         }
         .debt-card {
-            background-color: #fff;
+            background: #fff;
             border: 1px solid var(--border);
             border-radius: 12px;
             padding: 20px;
             text-align: center;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
-        .debt-name { font-weight: 700; color: var(--primary-dark); font-size: 1.1rem; margin-bottom: 5px; text-transform: capitalize; }
-        .debt-value { font-size: 1.4rem; font-weight: 800; color: var(--primary); }
-        .debt-future { font-size: 0.85rem; color: var(--text-muted); margin-top: 5px; }
-        .debt-future strong { color: var(--purple); }
+        .debt-name { font-weight: 700; color: var(--primary-dark); font-size: 1.1rem; text-transform: capitalize; }
+        .debt-amount { font-size: 1.5rem; font-weight: 800; color: var(--text-main); margin: 5px 0; }
+        .debt-future { font-size: 0.8rem; color: var(--text-muted); background: #f1f5f9; padding: 4px 8px; border-radius: 4px; display: inline-block; }
 
         footer {
             text-align: center;
             color: var(--text-muted);
-            font-size: 0.8rem;
-            margin-top: 60px;
+            font-size: 0.85rem;
+            margin-top: 50px;
+            padding-top: 20px;
             border-top: 1px solid var(--border);
-            padding-top: 30px;
         }
     </style>
 </head>
@@ -278,7 +284,7 @@
 <div class="container">
     <header>
         <h1>Meus Gastos</h1>
-        <p>Gestão Financeira Inteligente & Controle de Parcelas</p>
+        <p>Controle Financeiro 4.0</p>
     </header>
 
     <div class="dashboard">
@@ -289,11 +295,11 @@
             </div>
         </div>
         <div class="card-summary danger">
-            <h3>Total Saídas</h3>
+            <h3>Total Gastos</h3>
             <div class="value" id="totalExpenses">R$ 0,00</div>
         </div>
         <div class="card-summary info">
-            <h3>Resta (Saldo)</h3>
+            <h3>Resta</h3>
             <div class="value" id="remaining" style="color: var(--primary);">R$ 0,00</div>
         </div>
         <div class="card-summary warning">
@@ -311,25 +317,25 @@
                 <table id="mainTable">
                     <thead>
                         <tr>
-                            <th style="width: 40%;">Item</th>
-                            <th style="width: 30%;">Valor (R$)</th>
-                            <th style="width: 20%; text-align: center;">É meu?</th>
+                            <th style="width: 50px;"></th> <th style="width: 35%;">Item</th>
+                            <th style="width: 25%;">Valor (R$)</th>
+                            <th style="width: 15%; text-align: center;">Meu?</th>
                             <th style="width: 10%;"></th>
                         </tr>
                     </thead>
                     <tbody></tbody>
                 </table>
             </div>
-            <button class="btn-add" onclick="addMainRow()">+ Adicionar Gasto</button>
+            <button class="btn-add" onclick="addMainRow()">+ Adicionar Item</button>
         </div>
     </div>
 
-    <div class="section-card" style="border-left: 5px solid #fbbf24;">
+    <div class="section-card" style="border-left: 5px solid #f59e0b;">
         <div class="section-header" style="background: #fffbeb;">
             <h2 style="color: #b45309;">💳 Banco do Brasil</h2>
             <div style="text-align: right;">
-                <small style="display:block; color:#92400e; font-weight:600;">Fatura Total</small>
-                <input type="number" id="bbTotalBill" value="1820" oninput="calculateAll()" style="width: 120px; text-align:right; font-weight:bold; color:#b45309; border-color:#fcd34d;">
+                <small style="color: #92400e; font-weight: 600; font-size: 0.75rem;">FATURA TOTAL</small><br>
+                <input type="number" id="bbTotalBill" value="1820" oninput="calculateAll()" style="width: 120px; text-align: right; border-color: #fcd34d; font-weight: bold; color: #b45309;">
             </div>
         </div>
         <div class="content-padding">
@@ -337,30 +343,30 @@
                 <table id="bbTable">
                     <thead>
                         <tr>
+                            <th style="width: 50px;"></th>
                             <th style="width: 20%;">Quem</th>
-                            <th style="width: 35%;">Descrição</th>
-                            <th style="width: 15%;">Parcela (ex: 1/10)</th>
-                            <th style="width: 20%;">Valor Parcela</th>
+                            <th style="width: 30%;">Descrição</th>
+                            <th style="width: 15%;">Parcela</th>
+                            <th style="width: 20%;">Valor</th>
                             <th style="width: 10%;"></th>
                         </tr>
                     </thead>
                     <tbody></tbody>
                 </table>
             </div>
-            <button class="btn-add" style="background-color: #fff7ed; border-color: #fed7aa; color: #9a3412;" onclick="addSplitRow('bbTable')">+ Adicionar Pessoa/Compra</button>
-            
-            <div style="margin-top: 25px; text-align: right; font-size: 1.1rem; color: #78350f;">
-                Minha parte neste cartão: <strong id="bbMyShareDisplay">R$ 0,00</strong>
+            <button class="btn-add" style="border-color: #fcd34d; color: #b45309; background: #fff7ed;" onclick="addSplitRow('bbTable')">+ Adicionar no BB</button>
+            <div style="margin-top: 20px; text-align: right; color: #b45309;">
+                Minha parte: <strong id="bbMyShareDisplay" style="font-size: 1.2rem;">R$ 0,00</strong>
             </div>
         </div>
     </div>
 
     <div class="section-card" style="border-left: 5px solid #3b82f6;">
         <div class="section-header" style="background: #eff6ff;">
-            <h2 style="color: #1e40af;">💳 Mercado Pago</h2>
+            <h2 style="color: #1d4ed8;">💳 Mercado Pago</h2>
             <div style="text-align: right;">
-                <small style="display:block; color:#1e3a8a; font-weight:600;">Fatura Total</small>
-                <input type="number" id="mpTotalBill" value="2211" oninput="calculateAll()" style="width: 120px; text-align:right; font-weight:bold; color:#1e40af; border-color:#93c5fd;">
+                <small style="color: #1e40af; font-weight: 600; font-size: 0.75rem;">FATURA TOTAL</small><br>
+                <input type="number" id="mpTotalBill" value="2211" oninput="calculateAll()" style="width: 120px; text-align: right; border-color: #93c5fd; font-weight: bold; color: #1e40af;">
             </div>
         </div>
         <div class="content-padding">
@@ -368,54 +374,49 @@
                 <table id="mpTable">
                     <thead>
                         <tr>
+                            <th style="width: 50px;"></th>
                             <th style="width: 20%;">Quem</th>
-                            <th style="width: 35%;">Descrição</th>
-                            <th style="width: 15%;">Parcela (ex: 1/10)</th>
-                            <th style="width: 20%;">Valor Parcela</th>
+                            <th style="width: 30%;">Descrição</th>
+                            <th style="width: 15%;">Parcela</th>
+                            <th style="width: 20%;">Valor</th>
                             <th style="width: 10%;"></th>
                         </tr>
                     </thead>
                     <tbody></tbody>
                 </table>
             </div>
-            <button class="btn-add" style="background-color: #eff6ff; border-color: #bfdbfe; color: #1e40af;" onclick="addSplitRow('mpTable')">+ Adicionar Pessoa/Compra</button>
-
-            <div style="margin-top: 25px; text-align: right; font-size: 1.1rem; color: #1e3a8a;">
-                Minha parte neste cartão: <strong id="mpMyShareDisplay">R$ 0,00</strong>
+            <button class="btn-add" style="border-color: #93c5fd; color: #1d4ed8; background: #eff6ff;" onclick="addSplitRow('mpTable')">+ Adicionar no MP</button>
+            <div style="margin-top: 20px; text-align: right; color: #1d4ed8;">
+                Minha parte: <strong id="mpMyShareDisplay" style="font-size: 1.2rem;">R$ 0,00</strong>
             </div>
         </div>
     </div>
 
     <div class="section-card" style="border-left: 5px solid #8b5cf6;">
         <div class="section-header">
-            <h2 style="color: #5b21b6;">💰 Controle de Devedores</h2>
+            <h2 style="color: #6d28d9;">💰 Controle de Devedores</h2>
         </div>
         <div class="content-padding">
             <div id="debtorsList" class="debt-grid">
                 </div>
-            <p style="text-align: center; color: #9ca3af; font-size: 0.85rem; margin-top: 20px;">
-                * "A Receber Futuro" é a soma de todas as parcelas restantes.
-            </p>
         </div>
     </div>
 
     <footer>
-        <p>Controle Financeiro Pessoal • Versão 3.0</p>
+        Controle Financeiro • Versão 4.0 (Drag & Drop)
     </footer>
 </div>
 
 <script>
     // --- DADOS INICIAIS ---
-    
-    // Tabela Principal
-    let mainExpenses = [
+    const initialMain = [
         { id: 'bb_auto', name: 'Cartão BB (Minha Parte)', value: 0, isMine: true, locked: true },
         { id: 'mp_auto', name: 'Mercado Pago (Minha Parte)', value: 0, isMine: true, locked: true },
         { name: 'Academia', value: 95.00, isMine: true },
+        { name: 'Muay Thai', value: 130.00, isMine: true },
         { name: 'Luz', value: 150.00, isMine: true },
         { name: 'Cartão NU', value: 96.00, isMine: true },
         { name: 'Água', value: 100.00, isMine: false },
-        { name: 'Muay Thay', value: 130.00, isMine: true },
         { name: 'Emergência', value: 4000.00, isMine: false },
         { name: 'Internet', value: 65.00, isMine: true },
         { name: 'Gasolina', value: 600.00, isMine: true },
@@ -426,240 +427,272 @@
         { name: 'Cartão Assaí', value: 720.00, isMine: true }
     ];
 
-    // Dados Cartão BB (Adicione a parcela na propriedade 'inst')
-    let bbSplitData = [
-        { name: 'Disney', desc: 'Assinatura', inst: '', value: 35.16 },
-        { name: 'Léo', desc: 'Televisão', inst: '1/10', value: 300.00 },
-        { name: 'Kayssa', desc: 'Uber', inst: '', value: 181.43 },
-        { name: 'Dani', desc: 'Compra A', inst: '3/5', value: 209.00 },
-        { name: 'Dani', desc: 'Compra B', inst: '', value: 98.00 },
-        { name: 'Dani', desc: 'Compra C', inst: '', value: 109.00 },
-        { name: 'Dani', desc: 'Compra D', inst: '', value: 65.00 }
+    const initialBB = [
+        { name: 'Disney', desc: 'Assinatura', value: 35.16 },
+        { name: 'Léo', desc: 'Televisão', value: 300.00, inst: '1/10' },
+        { name: 'Kayssa', desc: 'Uber', value: 181.43 },
+        { name: 'Dani', desc: 'Roupas', value: 209.00 },
+        { name: 'Dani', desc: 'Mercado', value: 98.00 },
+        { name: 'Dani', desc: 'Farmácia', value: 109.00 },
+        { name: 'Dani', desc: 'Ifood', value: 65.00 }
     ];
 
-    // Dados Mercado Pago
-    let mpSplitData = [
-        { name: 'Léo', desc: 'Peças PC', inst: '8/12', value: 167.00 },
-        { name: 'Dani', desc: 'Farmácia', inst: '', value: 55.00 },
-        { name: 'Dani', desc: 'Mercado', inst: '1/2', value: 155.00 }
+    const initialMP = [
+        { name: 'Léo', desc: 'Peças PC', value: 167.00, inst: '8/12' },
+        { name: 'Dani', desc: 'Uber', value: 55.00 },
+        { name: 'Dani', desc: 'Presente', value: 155.00, inst: '1/2' }
     ];
 
-    // --- INICIALIZAÇÃO ---
+    // --- SETUP ---
     window.onload = function() {
-        renderMainTable();
-        renderSplitTable('bbTable', bbSplitData);
-        renderSplitTable('mpTable', mpSplitData);
+        renderTable('mainTable', initialMain, 'main');
+        renderTable('bbTable', initialBB, 'split');
+        renderTable('mpTable', initialMP, 'split');
         calculateAll();
+        setupDragAndDrop();
     };
 
-    // --- RENDERIZAÇÃO ---
-
-    function renderMainTable() {
-        const tbody = document.querySelector("#mainTable tbody");
+    // --- RENDERIZAR TABELAS ---
+    function renderTable(tableId, data, type) {
+        const tbody = document.querySelector(`#${tableId} tbody`);
         tbody.innerHTML = "";
-        
-        mainExpenses.forEach((item, index) => {
-            const tr = document.createElement("tr");
-            const isLocked = item.locked ? 'readonly style="background-color:#f3f4f6; color:#6b7280; font-weight:600;"' : '';
-            const btnDelete = item.locked ? '' : '<button class="btn-remove" onclick="removeMainRow(this)">×</button>';
-            
-            tr.innerHTML = `
-                <td><input type="text" value="${item.name}" ${isLocked}></td>
-                <td><input type="number" value="${item.value}" step="0.01" oninput="calculateAll()" class="input-val" ${isLocked} id="${item.id || ''}"></td>
-                <td style="text-align: center;"><input type="checkbox" ${item.isMine ? "checked" : ""} onchange="calculateAll()" style="width:20px; height:20px; accent-color:var(--primary);"></td>
-                <td>${btnDelete}</td>
-            `;
-            tbody.appendChild(tr);
+        data.forEach(item => {
+            if (type === 'main') addMainRowHTML(tbody, item);
+            else addSplitRowHTML(tbody, item);
         });
     }
 
-    function renderSplitTable(tableId, data) {
-        const tbody = document.querySelector(`#${tableId} tbody`);
-        tbody.innerHTML = "";
-        data.forEach(item => addSplitRowHTML(tbody, item));
-    }
-
-    // --- ADICIONAR / REMOVER ---
-
+    // --- FUNÇÕES DE ADICIONAR LINHA (HTML) ---
     function addMainRow() {
         const tbody = document.querySelector("#mainTable tbody");
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-            <td><input type="text" placeholder="Nome do gasto"></td>
-            <td><input type="number" placeholder="0.00" step="0.01" oninput="calculateAll()" class="input-val"></td>
-            <td style="text-align: center;"><input type="checkbox" checked onchange="calculateAll()" style="width:20px; height:20px;"></td>
-            <td><button class="btn-remove" onclick="removeMainRow(this)">×</button></td>
-        `;
-        tbody.appendChild(tr);
+        addMainRowHTML(tbody, { name: '', value: '', isMine: true });
         calculateAll();
+        setupDragAndDrop(); // Re-bind events
     }
 
-    function removeMainRow(btn) { btn.closest("tr").remove(); calculateAll(); }
+    function addMainRowHTML(tbody, item) {
+        const tr = document.createElement("tr");
+        tr.className = "draggable-row";
+        tr.draggable = true; // Habilita arrasto
+        
+        const lockedAttr = item.locked ? 'readonly style="background:#f1f5f9; color:#94a3b8;"' : '';
+        const delBtn = item.locked ? '' : '<button class="btn-remove" onclick="removeRow(this)">×</button>';
+
+        tr.innerHTML = `
+            <td class="drag-handle">☰</td>
+            <td><input type="text" value="${item.name}" ${lockedAttr}></td>
+            <td><input type="number" value="${item.value}" step="0.01" class="input-val" oninput="calculateAll()" id="${item.id || ''}" ${lockedAttr}></td>
+            <td style="text-align: center;" class="checkbox-wrapper">
+                <input type="checkbox" ${item.isMine ? "checked" : ""} onchange="calculateAll()">
+            </td>
+            <td>${delBtn}</td>
+        `;
+        tbody.appendChild(tr);
+    }
 
     function addSplitRow(tableId) {
         const tbody = document.querySelector(`#${tableId} tbody`);
-        addSplitRowHTML(tbody, { name: '', desc: '', inst: '', value: '' });
+        addSplitRowHTML(tbody, { name: '', desc: '', value: '', inst: '' });
+        calculateAll();
+        setupDragAndDrop();
     }
 
     function addSplitRowHTML(tbody, item) {
         const tr = document.createElement("tr");
+        tr.className = "draggable-row";
+        tr.draggable = true;
+
         tr.innerHTML = `
+            <td class="drag-handle">☰</td>
             <td><input type="text" value="${item.name}" placeholder="Nome" class="split-name" oninput="calculateAll()"></td>
-            <td><input type="text" value="${item.desc}" placeholder="Item" class="split-desc"></td>
-            <td>
-                <div class="installment-wrapper">
-                    <input type="text" value="${item.inst}" placeholder="Ex: 1/10" class="split-inst" oninput="updateProgress(this); calculateAll();">
-                    <div class="progress-bar-bg"><div class="progress-bar-fill"></div></div>
-                </div>
+            <td><input type="text" value="${item.desc}" placeholder="Descrição"></td>
+            <td class="inst-container">
+                <input type="text" value="${item.inst || ''}" placeholder="1/10" class="split-inst" oninput="updateBar(this); calculateAll()">
+                <div class="progress-mini"><div class="progress-fill" style="width:0%"></div></div>
             </td>
-            <td><input type="number" value="${item.value}" placeholder="0.00" step="0.01" class="split-val" oninput="calculateAll()"></td>
-            <td><button class="btn-remove" onclick="removeSplitRow(this)">×</button></td>
+            <td><input type="number" value="${item.value}" step="0.01" class="split-val input-val" oninput="calculateAll()"></td>
+            <td><button class="btn-remove" onclick="removeRow(this)">×</button></td>
         `;
         tbody.appendChild(tr);
-        // Atualiza a barra de progresso inicial
-        const input = tr.querySelector('.split-inst');
-        updateProgress(input);
+        if (item.inst) updateBar(tr.querySelector('.split-inst'));
     }
 
-    function removeSplitRow(btn) { btn.closest("tr").remove(); calculateAll(); }
+    function removeRow(btn) {
+        btn.closest("tr").remove();
+        calculateAll();
+    }
 
-    // --- LÓGICA E CÁLCULOS ---
+    // --- DRAG AND DROP LOGIC (ARRASTAR) ---
+    function setupDragAndDrop() {
+        const rows = document.querySelectorAll('.draggable-row');
+        rows.forEach(row => {
+            row.addEventListener('dragstart', dragStart);
+            row.addEventListener('dragover', dragOver);
+            row.addEventListener('drop', dragDrop);
+            row.addEventListener('dragend', dragEnd);
+        });
+    }
 
-    function updateProgress(input) {
-        const val = input.value;
-        const bar = input.nextElementSibling.querySelector('.progress-bar-fill');
+    let dragSrcEl = null;
+
+    function dragStart(e) {
+        dragSrcEl = this;
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/html', this.innerHTML);
+        this.classList.add('dragging');
+    }
+
+    function dragOver(e) {
+        if (e.preventDefault) e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
         
-        if (val.includes('/')) {
-            const parts = val.split('/');
-            const current = parseFloat(parts[0]);
-            const total = parseFloat(parts[1]);
-            
-            if (total > 0 && current <= total) {
-                const percent = (current / total) * 100;
-                bar.style.width = percent + '%';
-                
-                // Cores baseadas no progresso
-                if (percent < 30) bar.style.backgroundColor = '#10b981'; // Verde (Começo)
-                else if (percent < 70) bar.style.backgroundColor = '#f59e0b'; // Laranja (Meio)
-                else bar.style.backgroundColor = '#ef4444'; // Vermelho (Fim)
-                return;
-            }
+        // Efeito visual simples: se estiver sobre outra linha
+        const targetRow = e.target.closest('tr');
+        if (targetRow && targetRow !== dragSrcEl) {
+            targetRow.classList.add('drag-over');
         }
-        bar.style.width = '0%';
+        return false;
+    }
+
+    function dragDrop(e) {
+        if (e.stopPropagation) e.stopPropagation();
+        
+        const targetRow = this; // 'this' é a linha onde soltou
+        
+        if (dragSrcEl !== targetRow) {
+            // Lógica de troca de posição no DOM
+            // Verifica se arrastou de cima pra baixo ou baixo pra cima
+            const tbody = targetRow.parentNode;
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+            const srcIndex = rows.indexOf(dragSrcEl);
+            const targetIndex = rows.indexOf(targetRow);
+
+            if (srcIndex < targetIndex) {
+                // Arrastou para baixo: insere DEPOIS do alvo
+                tbody.insertBefore(dragSrcEl, targetRow.nextSibling);
+            } else {
+                // Arrastou para cima: insere ANTES do alvo
+                tbody.insertBefore(dragSrcEl, targetRow);
+            }
+            
+            // Recalcula tudo caso a ordem importasse (aqui não importa pro cálculo, mas é bom)
+            calculateAll();
+        }
+        return false;
+    }
+
+    function dragEnd(e) {
+        this.classList.remove('dragging');
+        document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+    }
+
+
+    // --- CÁLCULOS E AUXILIARES ---
+    function updateBar(input) {
+        const val = input.value;
+        const bar = input.nextElementSibling.querySelector('.progress-fill');
+        if (val.includes('/')) {
+            const [cur, tot] = val.split('/').map(Number);
+            if (tot > 0) bar.style.width = Math.min((cur/tot)*100, 100) + '%';
+        } else {
+            bar.style.width = '0%';
+        }
     }
 
     function calculateAll() {
-        // 1. Calcula Cartões e Futuro
-        const bbData = processCardTable('bbTable', 'bbTotalBill', 'bbMyShareDisplay', 'bb_auto');
-        const mpData = processCardTable('mpTable', 'mpTotalBill', 'mpMyShareDisplay', 'mp_auto');
+        // Processa BB
+        const bb = processSplit('bbTable', 'bbTotalBill', 'bbMyShareDisplay', 'bb_auto');
+        // Processa MP
+        const mp = processSplit('mpTable', 'mpTotalBill', 'mpMyShareDisplay', 'mp_auto');
 
-        // 2. Calcula Totais Gerais
-        let totalExpenses = 0;
-        let myRealExpenses = 0;
-        
-        document.querySelectorAll("#mainTable tbody tr").forEach(tr => {
-            const val = parseFloat(tr.querySelector(".input-val").value) || 0;
-            const isMine = tr.querySelector("input[type='checkbox']").checked;
-            
-            totalExpenses += val;
-            if (isMine) myRealExpenses += val;
+        // Processa Geral
+        let total = 0, myReal = 0;
+        document.querySelectorAll('#mainTable tbody tr').forEach(tr => {
+            const val = parseFloat(tr.querySelector('.input-val').value) || 0;
+            const isMine = tr.querySelector('input[type="checkbox"]').checked;
+            total += val;
+            if (isMine) myReal += val;
         });
 
         const salary = parseFloat(document.getElementById('salary').value) || 0;
         
-        document.getElementById('totalExpenses').innerText = formatMoney(totalExpenses);
-        document.getElementById('remaining').innerText = formatMoney(salary - totalExpenses);
-        document.getElementById('myRealExpenses').innerText = formatMoney(myRealExpenses);
+        document.getElementById('totalExpenses').innerText = fmt(total);
+        document.getElementById('remaining').innerText = fmt(salary - total);
+        document.getElementById('myRealExpenses').innerText = fmt(myReal);
 
-        // 3. Resumo de Devedores
-        generateDebtorsList(bbData, mpData);
+        // Devedores
+        updateDebtors(bb.debtors, mp.debtors);
     }
 
-    function processCardTable(tableId, totalBillId, displayId, mainInputId) {
-        const totalBill = parseFloat(document.getElementById(totalBillId).value) || 0;
+    function processSplit(tableId, totalId, displayId, inputId) {
+        const totalBill = parseFloat(document.getElementById(totalId).value) || 0;
         let othersSum = 0;
         let debtors = {};
 
         document.querySelectorAll(`#${tableId} tbody tr`).forEach(tr => {
-            const name = tr.querySelector(".split-name").value.trim();
-            const val = parseFloat(tr.querySelector(".split-val").value) || 0;
-            const instStr = tr.querySelector(".split-inst").value.trim();
-            
+            const name = tr.querySelector('.split-name').value.trim().toLowerCase();
+            const val = parseFloat(tr.querySelector('.split-val').value) || 0;
+            const inst = tr.querySelector('.split-inst').value;
+
             if (val > 0) {
                 othersSum += val;
-                
                 if (name) {
-                    const key = name.toLowerCase();
-                    if (!debtors[key]) debtors[key] = { name: name, current: 0, future: 0 };
+                    if (!debtors[name]) debtors[name] = { total: 0, future: 0, display: tr.querySelector('.split-name').value };
+                    debtors[name].total += val;
                     
-                    debtors[key].current += val;
-
-                    // Cálculo do Futuro (Parcelas)
-                    if (instStr.includes('/')) {
-                        const parts = instStr.split('/');
-                        const currentInst = parseFloat(parts[0]) || 0;
-                        const totalInst = parseFloat(parts[1]) || 0;
-                        
-                        if (totalInst > currentInst) {
-                            const remaining = totalInst - currentInst;
-                            debtors[key].future += (remaining * val);
-                        }
+                    // Futuro
+                    if (inst.includes('/')) {
+                        const [cur, tot] = inst.split('/').map(Number);
+                        if (tot > cur) debtors[name].future += (tot - cur) * val;
                     }
                 }
             }
         });
 
         const myShare = totalBill - othersSum;
-        document.getElementById(displayId).innerText = formatMoney(myShare);
-        
-        const mainInput = document.getElementById(mainInputId);
-        if (mainInput) mainInput.value = myShare.toFixed(2);
+        document.getElementById(displayId).innerText = fmt(myShare);
+        const autoInput = document.getElementById(inputId);
+        if (autoInput) autoInput.value = myShare.toFixed(2);
 
-        return debtors;
+        return { debtors };
     }
 
-    function generateDebtorsList(bbDebtors, mpDebtors) {
-        const container = document.getElementById('debtorsList');
-        container.innerHTML = "";
+    function updateDebtors(d1, d2) {
+        const list = document.getElementById('debtorsList');
+        list.innerHTML = "";
         
-        // Merge
         const all = {};
-        const merge = (source) => {
-            for (let key in source) {
-                if (!all[key]) all[key] = { name: source[key].name, current: 0, future: 0 };
-                all[key].current += source[key].current;
-                all[key].future += source[key].future;
+        const merge = (d) => {
+            for (let k in d) {
+                if (!all[k]) all[k] = { ...d[k] };
+                else {
+                    all[k].total += d[k].total;
+                    all[k].future += d[k].future;
+                }
             }
         };
-        merge(bbDebtors);
-        merge(mpDebtors);
+        merge(d1); merge(d2);
 
         if (Object.keys(all).length === 0) {
-            container.innerHTML = "<div style='grid-column:1/-1; text-align:center; color:#9ca3af;'>Nenhuma dívida cadastrada.</div>";
+            list.innerHTML = "<div style='grid-column:1/-1; text-align:center; color:#94a3b8;'>Ninguém deve nada.</div>";
             return;
         }
 
-        for (let key in all) {
-            const p = all[key];
-            const div = document.createElement("div");
-            div.className = "debt-card";
+        for (let k in all) {
+            const p = all[k];
+            const div = document.createElement('div');
+            div.className = 'debt-card';
             div.innerHTML = `
-                <div class="debt-name">${p.name}</div>
-                <div style="font-size:0.8rem; color:#6b7280; text-transform:uppercase; margin-bottom:5px;">Deve pagar este mês</div>
-                <div class="debt-value">${formatMoney(p.current)}</div>
-                ${p.future > 0 ? `
-                    <div class="debt-future">
-                        + <strong>${formatMoney(p.future)}</strong> a receber parcelado
-                    </div>
-                ` : ''}
+                <div class="debt-name">${p.display}</div>
+                <div style="font-size:0.75rem; color:#64748b; margin-top:5px;">DEVE HOJE</div>
+                <div class="debt-amount">${fmt(p.total)}</div>
+                ${p.future > 0 ? `<div class="debt-future">+ ${fmt(p.future)} futuro</div>` : ''}
             `;
-            container.appendChild(div);
+            list.appendChild(div);
         }
     }
 
-    function formatMoney(value) {
-        return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-    }
+    function fmt(n) { return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
 
 </script>
 
