@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Controle Financeiro 11.1</title>
+    <title>Controle Financeiro 12.0</title>
 
     <link rel="apple-touch-icon" href="icone.png">
     <link rel="icon" type="image/png" href="icone.png">
@@ -234,7 +234,7 @@
         </div>
     </div>
 
-    <footer>Controle Financeiro 11.1 (Correção de Fuso)</footer>
+    <footer>Controle Financeiro 12.0 (Com Memória de Mês)</footer>
 </div>
 
 <script type="module">
@@ -255,8 +255,8 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // --- SISTEMA DE SENHA SIMPLES ---
-    const SENHA_DO_SISTEMA = "299792"; // <--- TROQUE SUA SENHA AQUI!
+    // --- SENHA ---
+    const SENHA_DO_SISTEMA = "1234";
 
     window.checkPassword = function() {
         const input = document.getElementById('passInput').value;
@@ -283,7 +283,7 @@
         document.getElementById('passError').innerText = "";
     }
 
-    // --- VARIÁVEIS APP ---
+    // --- APP LOGIC ---
     let currentDocId = "";
     let isReceiving = false;
     let saveTimer;
@@ -294,13 +294,18 @@
     window.iconsList = ["💸", "🏠", "💡", "💧", "📶", "🏋️", "🚗", "⛽", "🍔", "💇", "💊", "💳", "🎓", "✈️"];
 
     function initApp() {
-        const now = new Date();
-        const year = now.getFullYear();
-        const month = String(now.getMonth() + 1).padStart(2, '0');
-        const defaultDate = `${year}-${month}`;
-        
+        // Tenta pegar o mês salvo na memória
+        const lastMonth = localStorage.getItem('lastViewedMonth');
         const picker = document.getElementById('monthPicker');
-        if (!picker.value) {
+
+        if (lastMonth) {
+            // Se tem memória, usa ela
+            picker.value = lastMonth;
+            loadMonthData(lastMonth);
+        } else {
+            // Se não, usa data atual
+            const now = new Date();
+            const defaultDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
             picker.value = defaultDate;
             loadMonthData(defaultDate);
         }
@@ -309,26 +314,25 @@
     window.changeMonth = function() {
         const picker = document.getElementById('monthPicker');
         if (currentDocId && !isReceiving) saveData(true); 
-        if (picker.value) loadMonthData(picker.value);
+        
+        if (picker.value) {
+            // SALVA NO LOCALSTORAGE O NOVO MÊS
+            localStorage.setItem('lastViewedMonth', picker.value);
+            loadMonthData(picker.value);
+        }
     }
 
-    // --- CORREÇÃO DE DATA (IMPORTAR MANUALMENTE) ---
     window.copyPreviousMonth = async function() {
         if(!confirm("Importar dados do mês anterior? (Valores atuais serão substituídos)")) return;
 
-        // Análise manual da string "YYYY-MM" para evitar bug de timezone
         const parts = currentDocId.split('-');
         let year = parseInt(parts[0]);
         let month = parseInt(parts[1]);
 
-        month--; // Volta 1 mês
-        if (month === 0) {
-            month = 12;
-            year--;
-        }
+        month--; 
+        if (month === 0) { month = 12; year--; }
 
         const prevId = `${year}-${String(month).padStart(2, '0')}`;
-
         document.getElementById('syncStatus').innerText = "Buscando " + prevId + "...";
 
         try {
@@ -376,7 +380,6 @@
 
     function updateScreen(data) {
         if (!data) data = getDefaultData();
-        // Garante Nubank
         if (data.main && !data.main.some(i => i.id === 'nubank_auto')) {
              data.main.unshift({ icon: '💳', name: 'Nubank', value: 0, isMine: true, locked: true, id: 'nubank_auto' });
         }
