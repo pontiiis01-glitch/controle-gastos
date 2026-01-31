@@ -12,111 +12,7 @@
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-        import { getFirestore, doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
-
-        // --- ÁREA DE CONFIGURAÇÃO ---
-        // 1. Apague tudo entre as chaves abaixo
-        // 2. Cole o código que você copiou do Firebase Console
-        const firebaseConfig = {
-           // Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
-
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyDBcLEJw2PiFoBvocr3Zq01sRjjakteHfs",
-  authDomain: "app-controle-gastos-1e658.firebaseapp.com",
-  projectId: "app-controle-gastos-1e658",
-  storageBucket: "app-controle-gastos-1e658.firebasestorage.app",
-  messagingSenderId: "738629744462",
-  appId: "1:738629744462:web:f299e491bafe5a059cd01f",
-  measurementId: "G-02QPMRE4M8"
-};
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
-        };
-        // ---------------------------
-
-        // Inicializa Firebase
-        let db;
-        try {
-            const app = initializeApp(firebaseConfig);
-            db = getFirestore(app);
-            console.log("Firebase conectado!");
-        } catch (e) {
-            console.error("Erro no Firebase. Verifique a configuração.", e);
-            alert("Erro: Configure as chaves do Firebase no código para sincronizar.");
-        }
-
-        // Referência ao documento único de dados
-        // 'meus_gastos' é a coleção, 'dados_gerais' é o ID do arquivo
-        const docRef = doc(db, "meus_gastos", "dados_gerais");
-
-        // Variável global para controle de debounce (evitar salvar a cada letra digitada)
-        let saveTimeout;
-        let isReceivingData = false;
-
-        // --- OUVINTE EM TEMPO REAL (SYNC) ---
-        // Isso roda sempre que algo muda no banco de dados (nuvem)
-        onSnapshot(docRef, (doc) => {
-            if (doc.exists()) {
-                // Marca que estamos recebendo dados para não salvar por cima
-                isReceivingData = true;
-                const data = doc.data();
-                
-                // Atualiza a tela
-                window.updateScreenFromData(data);
-                
-                // Libera para edição
-                setTimeout(() => { isReceivingData = false; }, 500);
-                
-                document.getElementById('syncStatus').innerHTML = '<span style="color:#10b981">☁ Sincronizado</span>';
-            } else {
-                // Se não existe nada na nuvem ainda, salva o padrão
-                console.log("Criando banco de dados inicial...");
-                window.saveDataNow(true); 
-            }
-        }, (error) => {
-            document.getElementById('syncStatus').innerHTML = '<span style="color:#ef4444">⚠ Offline/Erro</span>';
-        });
-
-        // --- FUNÇÃO DE SALVAR (Disponível globalmente) ---
-        window.scheduleSave = function() {
-            if (isReceivingData) return; // Não salva se acabou de receber atualização
-            
-            document.getElementById('syncStatus').innerHTML = '<span style="color:#f59e0b">... Salvando</span>';
-            
-            clearTimeout(saveTimeout);
-            saveTimeout = setTimeout(() => {
-                window.saveDataNow();
-            }, 1000); // Espera 1 segundo após parar de digitar para salvar
-        };
-
-        window.saveDataNow = async function(force = false) {
-            if (isReceivingData && !force) return;
-
-            const data = window.scrapeDataFromScreen();
-            
-            try {
-                await setDoc(docRef, data);
-                document.getElementById('syncStatus').innerHTML = '<span style="color:#10b981">☁ Salvo</span>';
-            } catch (e) {
-                console.error("Erro ao salvar:", e);
-                document.getElementById('syncStatus').innerHTML = '<span style="color:#ef4444">⚠ Erro ao Salvar</span>';
-            }
-        };
-
-    </script>
-
     <style>
-        /* (Mantendo o mesmo estilo bonito da V5) */
         :root {
             --primary: #2563eb;
             --primary-dark: #1e40af;
@@ -129,57 +25,251 @@ const analytics = getAnalytics(app);
             --danger: #ef4444;
             --warning: #f59e0b;
         }
-        body { font-family: 'Inter', sans-serif; background-color: var(--bg-body); color: var(--text-main); margin: 0; padding: 20px; line-height: 1.5; }
-        .container { max-width: 1100px; margin: 0 auto; padding-bottom: 80px; }
-        header { text-align: center; margin-bottom: 30px; }
-        header h1 { font-size: 2rem; color: var(--primary-dark); margin: 0; font-weight: 800; letter-spacing: -0.03em; }
-        .sync-indicator { font-size: 0.85rem; font-weight: 600; margin-top: 5px; display: inline-block; padding: 4px 12px; background: #fff; border-radius: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding-bottom: 80px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        header h1 {
+            font-size: 2rem;
+            color: var(--primary-dark);
+            margin: 0;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+        }
+        .sync-indicator {
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-top: 5px;
+            display: inline-block;
+            padding: 4px 12px;
+            background: #fff;
+            border-radius: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        /* --- DASHBOARD --- */
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .card-summary {
+            background: var(--bg-card);
+            padding: 25px;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border);
+            position: relative;
+            overflow: hidden;
+        }
         
-        /* Dashboard */
-        .dashboard { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-bottom: 40px; }
-        .card-summary { background: var(--bg-card); padding: 25px; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); border: 1px solid var(--border); position: relative; overflow: hidden; }
-        .card-summary::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 5px; }
+        .card-summary::before {
+            content: '';
+            position: absolute;
+            left: 0; top: 0; bottom: 0;
+            width: 5px;
+        }
+
         .card-summary.success::before { background-color: var(--success); }
         .card-summary.danger::before { background-color: var(--danger); }
         .card-summary.info::before { background-color: var(--primary); }
         .card-summary.warning::before { background-color: var(--warning); }
-        .card-summary h3 { margin: 0 0 10px 0; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); font-weight: 600; }
-        .card-summary .value { font-size: 2rem; font-weight: 800; color: var(--text-main); display: flex; align-items: center; }
-        .input-salary { font-size: 2rem; font-weight: 800; border: none; background: transparent; color: var(--success); width: 100%; border-bottom: 2px dashed #cbd5e1; padding: 0; }
+
+        .card-summary h3 {
+            margin: 0 0 10px 0;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .card-summary .value {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+        }
+
+        .input-salary {
+            font-size: 2rem;
+            font-weight: 800;
+            border: none;
+            background: transparent;
+            color: var(--success);
+            width: 100%;
+            border-bottom: 2px dashed #cbd5e1;
+            padding: 0;
+        }
         .input-salary:focus { outline: none; border-bottom-color: var(--success); }
 
-        /* Sections & Tables */
-        .section-card { background: var(--bg-card); border-radius: 20px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); margin-bottom: 40px; border: 1px solid var(--border); overflow: hidden; }
-        .section-header { padding: 20px 30px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: #fff; }
-        .section-header h2 { margin: 0; font-size: 1.2rem; font-weight: 700; color: var(--text-main); }
+        /* --- SEÇÕES --- */
+        .section-card {
+            background: var(--bg-card);
+            border-radius: 20px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            margin-bottom: 40px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+        }
+
+        .section-header {
+            padding: 20px 30px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #fff;
+        }
+
+        .section-header h2 {
+            margin: 0;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
         .content-padding { padding: 20px 30px 30px 30px; }
+
+        /* --- TABELAS --- */
         .table-responsive { overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; min-width: 800px; }
-        th { text-align: left; padding: 15px 10px; color: var(--text-muted); font-weight: 600; font-size: 0.85rem; text-transform: uppercase; border-bottom: 2px solid var(--border); }
-        td { padding: 10px; border-bottom: 1px solid var(--border); vertical-align: middle; background: #fff; }
         
-        /* Inputs & Drag */
-        .drag-handle { cursor: grab; color: #cbd5e1; font-size: 1.5rem; width: 30px; text-align: center; }
-        tr.dragging { opacity: 0.5; background: #f1f5f9; border: 2px dashed var(--primary); }
-        input[type="text"], input[type="number"] { width: 100%; padding: 10px 12px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.95rem; background: #f8fafc; box-sizing: border-box; }
-        input:focus { outline: none; border-color: var(--primary); background: #fff; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 800px;
+        }
+
+        th {
+            text-align: left;
+            padding: 15px 10px;
+            color: var(--text-muted);
+            font-weight: 600;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            border-bottom: 2px solid var(--border);
+        }
+
+        td {
+            padding: 10px;
+            border-bottom: 1px solid var(--border);
+            vertical-align: middle;
+            background: #fff;
+        }
+
+        /* --- DRAG & DROP --- */
+        .drag-handle {
+            cursor: grab;
+            color: #cbd5e1;
+            font-size: 1.5rem;
+            width: 30px;
+            text-align: center;
+        }
+        tr.dragging {
+            opacity: 0.5;
+            background: #f1f5f9;
+            border: 2px dashed var(--primary);
+        }
+
+        /* --- INPUTS --- */
+        input[type="text"], input[type="number"] {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            background: #f8fafc;
+            box-sizing: border-box;
+        }
+        input:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+        
         input.input-val { font-family: 'Courier New', monospace; font-weight: 600; }
+        
+        /* --- PARCELAS --- */
         .inst-container { position: relative; }
-        .progress-mini { height: 4px; background: #e2e8f0; border-radius: 2px; margin-top: 4px; overflow: hidden; }
+        .progress-mini {
+            height: 4px;
+            background: #e2e8f0;
+            border-radius: 2px;
+            margin-top: 4px;
+            overflow: hidden;
+        }
         .progress-fill { height: 100%; background: var(--primary); width: 0; transition: width 0.3s; }
-        
-        /* Buttons */
-        .btn-add { background-color: #f0fdf4; color: #15803d; border: 2px dashed #86efac; width: 100%; padding: 12px; border-radius: 10px; cursor: pointer; font-weight: 600; margin-top: 15px; }
-        .btn-remove { background: transparent; color: #ef4444; border: 1px solid transparent; width: 32px; height: 32px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
-        
-        /* Debtors */
-        .debt-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; }
-        .debt-card { background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 20px; text-align: center; }
+
+        /* --- BOTÕES --- */
+        .btn-add {
+            background-color: #f0fdf4;
+            color: #15803d;
+            border: 2px dashed #86efac;
+            width: 100%;
+            padding: 12px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-top: 15px;
+        }
+
+        .btn-remove {
+            background: transparent;
+            color: #ef4444;
+            border: 1px solid transparent;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        /* --- DEVEDORES --- */
+        .debt-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        .debt-card {
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
         .debt-name { font-weight: 700; color: var(--primary-dark); font-size: 1.1rem; text-transform: capitalize; }
         .debt-amount { font-size: 1.5rem; font-weight: 800; color: var(--text-main); margin: 5px 0; }
         .debt-future { font-size: 0.8rem; color: var(--text-muted); background: #f1f5f9; padding: 4px 8px; border-radius: 4px; display: inline-block; }
-        
-        footer { text-align: center; color: var(--text-muted); font-size: 0.85rem; margin-top: 50px; padding-top: 20px; border-top: 1px solid var(--border); }
+
+        footer {
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
+        }
     </style>
 </head>
 <body>
@@ -212,11 +302,21 @@ const analytics = getAnalytics(app);
     </div>
 
     <div class="section-card">
-        <div class="section-header"><h2>📉 Gastos Fixos & Cartões</h2></div>
+        <div class="section-header">
+            <h2>📉 Gastos Fixos & Cartões</h2>
+        </div>
         <div class="content-padding">
             <div class="table-responsive">
                 <table id="mainTable">
-                    <thead><tr><th style="width:50px"></th><th>Item</th><th>Valor (R$)</th><th style="text-align:center">Meu?</th><th></th></tr></thead>
+                    <thead>
+                        <tr>
+                            <th style="width: 50px;"></th>
+                            <th>Item</th>
+                            <th>Valor (R$)</th>
+                            <th style="text-align: center;">Meu?</th>
+                            <th></th>
+                        </tr>
+                    </thead>
                     <tbody></tbody>
                 </table>
             </div>
@@ -228,19 +328,30 @@ const analytics = getAnalytics(app);
         <div class="section-header" style="background: #fffbeb;">
             <h2 style="color: #b45309;">💳 Banco do Brasil</h2>
             <div style="text-align: right;">
-                <small style="color:#92400e; font-weight:600; font-size:0.75rem;">FATURA TOTAL</small><br>
-                <input type="number" id="bbTotalBill" oninput="calculateAll()" style="width:120px; text-align:right; border-color:#fcd34d; font-weight:bold; color:#b45309;">
+                <small style="color: #92400e; font-weight: 600; font-size: 0.75rem;">FATURA TOTAL</small><br>
+                <input type="number" id="bbTotalBill" oninput="calculateAll()" style="width: 120px; text-align: right; border-color: #fcd34d; font-weight: bold; color: #b45309;">
             </div>
         </div>
         <div class="content-padding">
             <div class="table-responsive">
                 <table id="bbTable">
-                    <thead><tr><th style="width:50px"></th><th>Quem</th><th>Descrição</th><th>Parcela</th><th>Valor</th><th></th></tr></thead>
+                    <thead>
+                        <tr>
+                            <th style="width: 50px;"></th>
+                            <th>Quem</th>
+                            <th>Descrição</th>
+                            <th>Parcela</th>
+                            <th>Valor</th>
+                            <th></th>
+                        </tr>
+                    </thead>
                     <tbody></tbody>
                 </table>
             </div>
-            <button class="btn-add" style="border-color:#fcd34d; color:#b45309; background:#fff7ed;" onclick="addSplitRow('bbTable')">+ Adicionar no BB</button>
-            <div style="margin-top:20px; text-align:right; color:#b45309;">Minha parte: <strong id="bbMyShareDisplay" style="font-size:1.2rem;">R$ 0,00</strong></div>
+            <button class="btn-add" style="border-color: #fcd34d; color: #b45309; background: #fff7ed;" onclick="addSplitRow('bbTable')">+ Adicionar no BB</button>
+            <div style="margin-top: 20px; text-align: right; color: #b45309;">
+                Minha parte: <strong id="bbMyShareDisplay" style="font-size: 1.2rem;">R$ 0,00</strong>
+            </div>
         </div>
     </div>
 
@@ -248,34 +359,134 @@ const analytics = getAnalytics(app);
         <div class="section-header" style="background: #eff6ff;">
             <h2 style="color: #1d4ed8;">💳 Mercado Pago</h2>
             <div style="text-align: right;">
-                <small style="color:#1e40af; font-weight:600; font-size:0.75rem;">FATURA TOTAL</small><br>
-                <input type="number" id="mpTotalBill" oninput="calculateAll()" style="width:120px; text-align:right; border-color:#93c5fd; font-weight:bold; color:#1e40af;">
+                <small style="color: #1e40af; font-weight: 600; font-size: 0.75rem;">FATURA TOTAL</small><br>
+                <input type="number" id="mpTotalBill" oninput="calculateAll()" style="width: 120px; text-align: right; border-color: #93c5fd; font-weight: bold; color: #1e40af;">
             </div>
         </div>
         <div class="content-padding">
             <div class="table-responsive">
                 <table id="mpTable">
-                    <thead><tr><th style="width:50px"></th><th>Quem</th><th>Descrição</th><th>Parcela</th><th>Valor</th><th></th></tr></thead>
+                    <thead>
+                        <tr>
+                            <th style="width: 50px;"></th>
+                            <th>Quem</th>
+                            <th>Descrição</th>
+                            <th>Parcela</th>
+                            <th>Valor</th>
+                            <th></th>
+                        </tr>
+                    </thead>
                     <tbody></tbody>
                 </table>
             </div>
-            <button class="btn-add" style="border-color:#93c5fd; color:#1d4ed8; background:#eff6ff;" onclick="addSplitRow('mpTable')">+ Adicionar no MP</button>
-            <div style="margin-top:20px; text-align:right; color:#1d4ed8;">Minha parte: <strong id="mpMyShareDisplay" style="font-size:1.2rem;">R$ 0,00</strong></div>
+            <button class="btn-add" style="border-color: #93c5fd; color: #1d4ed8; background: #eff6ff;" onclick="addSplitRow('mpTable')">+ Adicionar no MP</button>
+            <div style="margin-top: 20px; text-align: right; color: #1d4ed8;">
+                Minha parte: <strong id="mpMyShareDisplay" style="font-size: 1.2rem;">R$ 0,00</strong>
+            </div>
         </div>
     </div>
 
     <div class="section-card" style="border-left: 5px solid #8b5cf6;">
-        <div class="section-header"><h2 style="color: #6d28d9;">💰 Controle de Devedores</h2></div>
-        <div class="content-padding"><div id="debtorsList" class="debt-grid"></div></div>
+        <div class="section-header">
+            <h2 style="color: #6d28d9;">💰 Controle de Devedores</h2>
+        </div>
+        <div class="content-padding">
+            <div id="debtorsList" class="debt-grid">
+                </div>
+        </div>
     </div>
 
-    <footer>Sincronização em tempo real via Google Firebase</footer>
+    <footer>
+        Sincronização em tempo real via Google Firebase
+    </footer>
 </div>
 
-<script>
-    // --- LÓGICA DO APP ---
+<script type="module">
+    // Importando do CDN (URL oficial do Google para navegador)
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+    import { getFirestore, doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
-    // Dados padrão para iniciar se vazio
+    // --- ÁREA DE CONFIGURAÇÃO (SEUS DADOS JÁ INSERIDOS) ---
+    const firebaseConfig = {
+        apiKey: "AIzaSyDBcLEJw2PiFoBvocr3Zq01sRjjakteHfs",
+        authDomain: "app-controle-gastos-1e658.firebaseapp.com",
+        projectId: "app-controle-gastos-1e658",
+        storageBucket: "app-controle-gastos-1e658.firebasestorage.app",
+        messagingSenderId: "738629744462",
+        appId: "1:738629744462:web:f299e491bafe5a059cd01f",
+        measurementId: "G-02QPMRE4M8"
+    };
+
+    // Inicializa Firebase
+    let db;
+    try {
+        const app = initializeApp(firebaseConfig);
+        db = getFirestore(app);
+        console.log("Firebase conectado com sucesso!");
+    } catch (e) {
+        console.error("Erro no Firebase:", e);
+        document.getElementById('syncStatus').innerHTML = '<span style="color:#ef4444">Erro Config</span>';
+    }
+
+    // Referência ao banco de dados (Coleção: meus_gastos, Documento: dados_gerais)
+    const docRef = doc(db, "meus_gastos", "dados_gerais");
+
+    let saveTimeout;
+    let isReceivingData = false;
+
+    // --- OUVINTE EM TEMPO REAL (SYNC) ---
+    // Isso roda sempre que algo muda no banco de dados (nuvem)
+    onSnapshot(docRef, (docSnap) => {
+        if (docSnap.exists()) {
+            isReceivingData = true; // Bloqueia salvamento enquanto atualiza
+            const data = docSnap.data();
+            
+            window.updateScreenFromData(data);
+            
+            // Pequeno delay para liberar a edição
+            setTimeout(() => { isReceivingData = false; }, 500);
+            
+            document.getElementById('syncStatus').innerHTML = '<span style="color:#10b981">☁ Sincronizado</span>';
+        } else {
+            // Se for o primeiro acesso e não tiver nada no banco
+            console.log("Banco de dados vazio. Criando padrão...");
+            window.saveDataNow(true); 
+        }
+    }, (error) => {
+        console.error("Erro de conexão:", error);
+        document.getElementById('syncStatus').innerHTML = '<span style="color:#ef4444">⚠ Offline</span>';
+    });
+
+    // --- FUNÇÕES DE SALVAMENTO ---
+    window.scheduleSave = function() {
+        if (isReceivingData) return; 
+        
+        document.getElementById('syncStatus').innerHTML = '<span style="color:#f59e0b">... Salvando</span>';
+        
+        clearTimeout(saveTimeout);
+        // Espera 1 segundo após parar de digitar para salvar no banco
+        saveTimeout = setTimeout(() => {
+            window.saveDataNow();
+        }, 1000); 
+    };
+
+    window.saveDataNow = async function(force = false) {
+        if (isReceivingData && !force) return;
+
+        const data = window.scrapeDataFromScreen();
+        
+        try {
+            await setDoc(docRef, data);
+            document.getElementById('syncStatus').innerHTML = '<span style="color:#10b981">☁ Salvo</span>';
+        } catch (e) {
+            console.error("Erro ao salvar:", e);
+            document.getElementById('syncStatus').innerHTML = '<span style="color:#ef4444">⚠ Erro ao Salvar</span>';
+        }
+    };
+
+    // --- DEFININDO AS FUNÇÕES GLOBAIS (Para o HTML poder chamar) ---
+    
+    // 1. Dados Padrão
     const defaultData = {
         salary: 10000, bbTotal: 1820, mpTotal: 2211,
         main: [
@@ -288,7 +499,7 @@ const analytics = getAnalytics(app);
         mp: [{ name: 'Léo', desc: 'Peças PC', value: 167.00, inst: '8/12' }]
     };
 
-    // FUNÇÕES GLOBAIS
+    // 2. Atualizar Tela (Ler dados)
     window.updateScreenFromData = function(data) {
         if (!data) data = defaultData;
         
@@ -300,10 +511,11 @@ const analytics = getAnalytics(app);
         renderTable('bbTable', data.bb || [], 'split');
         renderTable('mpTable', data.mp || [], 'split');
 
-        runCalculations(); // Apenas calcula, sem salvar
-        setupDragAndDrop();
+        runCalculations(); // Calcula valores na tela
+        setupDragAndDrop(); // Re-ativa o drag and drop
     };
 
+    // 3. Ler Tela (Preparar para salvar)
     window.scrapeDataFromScreen = function() {
         const data = {
             salary: document.getElementById('salary').value,
@@ -339,7 +551,7 @@ const analytics = getAnalytics(app);
         return data;
     };
 
-    // --- EVENTOS DE INTERFACE ---
+    // 4. Cálculos
     window.calculateAll = function() {
         runCalculations();
         if(window.scheduleSave) window.scheduleSave();
@@ -369,7 +581,7 @@ const analytics = getAnalytics(app);
         updateDebtors(bb.debtors, mp.debtors);
     }
 
-    // --- RENDERIZADORES ---
+    // 5. Renderização e Auxiliares
     function renderTable(tableId, data, type) {
         const tbody = document.querySelector(`#${tableId} tbody`);
         tbody.innerHTML = "";
@@ -412,11 +624,11 @@ const analytics = getAnalytics(app);
 
     window.removeRow = function(btn) { btn.closest("tr").remove(); window.calculateAll(); }
     
-    // Auxiliares
     window.updateBar = function(input) {
         const val = input.value; const bar = input.nextElementSibling.querySelector('.progress-fill');
         if (val.includes('/')) { const [cur, tot] = val.split('/').map(Number); if (tot > 0) bar.style.width = Math.min((cur/tot)*100, 100) + '%'; } else { bar.style.width = '0%'; }
     }
+
     function processSplit(tableId, totalId, displayId, inputId) {
         const totalBill = parseFloat(document.getElementById(totalId).value) || 0;
         let othersSum = 0; let debtors = {};
@@ -439,6 +651,7 @@ const analytics = getAnalytics(app);
         if (autoInput) autoInput.value = myShare.toFixed(2);
         return { debtors };
     }
+
     function updateDebtors(d1, d2) {
         const list = document.getElementById('debtorsList'); list.innerHTML = "";
         const all = {}; const merge = (d) => { for (let k in d) { if (!all[k]) all[k] = { ...d[k] }; else { all[k].total += d[k].total; all[k].future += d[k].future; } } };
@@ -450,13 +663,21 @@ const analytics = getAnalytics(app);
             list.appendChild(div);
         }
     }
+
     function fmt(n) { return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
 
-    // Drag Drop Simplificado
+    // Drag Drop Logic
     function setupDragAndDrop() {
         const rows = document.querySelectorAll('.draggable-row');
-        rows.forEach(row => { row.addEventListener('dragstart', function(e){ e.dataTransfer.setData('text/html', null); this.classList.add('dragging'); window.dragSrc = this; }); row.addEventListener('dragover', function(e){ e.preventDefault(); }); row.addEventListener('drop', function(e){ e.preventDefault(); if (window.dragSrc !== this) { this.parentNode.insertBefore(window.dragSrc, this); window.calculateAll(); } }); row.addEventListener('dragend', function(){ this.classList.remove('dragging'); }); });
+        rows.forEach(row => { 
+            row.addEventListener('dragstart', function(e){ e.dataTransfer.setData('text/html', null); this.classList.add('dragging'); window.dragSrc = this; }); 
+            row.addEventListener('dragover', function(e){ e.preventDefault(); }); 
+            row.addEventListener('drop', function(e){ e.preventDefault(); if (window.dragSrc !== this) { this.parentNode.insertBefore(window.dragSrc, this); window.calculateAll(); } }); 
+            row.addEventListener('dragend', function(){ this.classList.remove('dragging'); }); 
+        });
     }
+
 </script>
+
 </body>
 </html>
