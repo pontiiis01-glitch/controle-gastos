@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Controle Financeiro 10.0</title>
+    <title>Controle Financeiro 11.0</title>
 
     <link rel="apple-touch-icon" href="icone.png">
     <link rel="icon" type="image/png" href="icone.png">
@@ -23,29 +23,34 @@
 
         body { font-family: 'Inter', sans-serif; background-color: var(--bg-body); color: var(--text-main); margin: 0; padding: 0; }
         
-        /* TELA DE LOGIN */
-        #loginScreen {
+        /* TELA DE SENHA */
+        #lockScreen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-body);
-            display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 999;
+            display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999;
         }
-        .login-box {
-            background: #fff; padding: 40px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; max-width: 90%; width: 350px;
+        .lock-box {
+            background: #fff; padding: 40px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); 
+            text-align: center; max-width: 90%; width: 320px;
         }
-        .btn-google {
-            background: #fff; border: 1px solid #ddd; color: #333; padding: 12px 20px;
-            border-radius: 50px; cursor: pointer; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; margin-top: 20px; transition: all 0.2s;
+        .lock-input {
+            width: 100%; padding: 15px; font-size: 1.5rem; text-align: center; letter-spacing: 5px;
+            border: 2px solid var(--border); border-radius: 10px; margin: 20px 0; outline: none;
+            font-weight: 800; background: #f8fafc;
         }
-        .btn-google:hover { background: #f1f5f9; }
+        .lock-input:focus { border-color: var(--primary); background: #fff; }
+        .btn-unlock {
+            background: var(--primary); color: white; border: none; padding: 15px; width: 100%;
+            border-radius: 10px; font-size: 1rem; font-weight: 700; cursor: pointer; transition: 0.2s;
+        }
+        .btn-unlock:hover { background: var(--primary-dark); }
+        .error-msg { color: var(--danger); font-size: 0.85rem; margin-top: 10px; min-height: 20px; font-weight: 600; }
 
         /* APP CONTENT */
         #appContent { display: none; padding: 15px; padding-bottom: 100px; max-width: 1000px; margin: 0 auto; }
         
         /* HEADER */
         header { display: flex; flex-direction: column; align-items: center; gap: 15px; margin-bottom: 20px; margin-top: 10px; }
-        .user-info { font-size: 0.8rem; color: var(--text-muted); display: flex; align-items: center; gap: 5px; }
-        .btn-logout { font-size: 0.7rem; color: var(--danger); text-decoration: underline; cursor: pointer; }
-        
-        .controls-row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+        .controls-row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; align-items: center; }
         
         .date-control {
             background: #fff; padding: 8px 15px; border-radius: 50px;
@@ -59,7 +64,10 @@
             background: #3b82f6; color: white; border: none; padding: 8px 15px; border-radius: 50px;
             font-size: 0.85rem; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 5px;
         }
-        .btn-copy:hover { background: #2563eb; }
+        .btn-logout-simple {
+            background: #fee2e2; color: #b91c1c; border: none; padding: 8px 12px; border-radius: 50px;
+            font-size: 0.8rem; cursor: pointer; font-weight: 600;
+        }
 
         .sync-indicator { font-size: 0.75rem; font-weight: 600; padding: 4px 10px; border-radius: 20px; background: #fff; }
 
@@ -131,24 +139,21 @@
 </head>
 <body>
 
-<div id="loginScreen">
-    <div class="login-box">
-        <h1 style="margin-bottom:10px;">Financeiro 10.0</h1>
-        <p style="color:#64748b; margin-bottom:30px;">Faça login para acessar seus gastos seguros na nuvem.</p>
-        <button class="btn-google" onclick="loginWithGoogle()">
-            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="20">
-            Entrar com Google
-        </button>
+<div id="lockScreen">
+    <div class="lock-box">
+        <div style="font-size:3rem; margin-bottom:10px;">🔒</div>
+        <h2>Acesso Restrito</h2>
+        <p style="color:#64748b; font-size:0.9rem;">Digite sua senha para acessar</p>
+        
+        <input type="password" id="passInput" class="lock-input" placeholder="****" inputmode="numeric">
+        <div id="passError" class="error-msg"></div>
+        
+        <button class="btn-unlock" onclick="checkPassword()">ENTRAR</button>
     </div>
 </div>
 
 <div id="appContent">
     <header>
-        <div class="user-info">
-            <span id="userEmail">usuario@email.com</span>
-            <span class="btn-logout" onclick="logout()">Sair</span>
-        </div>
-
         <div class="controls-row">
             <div class="date-control">
                 <span>📅</span>
@@ -157,6 +162,7 @@
             <button class="btn-copy" onclick="copyPreviousMonth()">
                 <span>🔄</span> Copiar Mês Anterior
             </button>
+            <button class="btn-logout-simple" onclick="lockApp()">Bloquear</button>
         </div>
         <div id="syncStatus" class="sync-indicator">Conectando...</div>
     </header>
@@ -228,13 +234,12 @@
         </div>
     </div>
 
-    <footer>Controle Financeiro 10.0 (Login + Gráficos + Importar)</footer>
+    <footer>Controle Financeiro 11.0 (Com Senha)</footer>
 </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
     import { getFirestore, doc, onSnapshot, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
-    import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
 
     // --- CONFIG FIREBASE ---
     const firebaseConfig = {
@@ -249,61 +254,74 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
-    const auth = getAuth(app);
-    const provider = new GoogleAuthProvider();
 
-    // VARIÁVEIS
+    // --- SISTEMA DE SENHA SIMPLES ---
+    const SENHA_DO_SISTEMA = "2997"; // <--- TROQUE SUA SENHA AQUI!
+
+    window.checkPassword = function() {
+        const input = document.getElementById('passInput').value;
+        const errorDiv = document.getElementById('passError');
+        
+        if (input === SENHA_DO_SISTEMA) {
+            // Senha correta
+            document.getElementById('lockScreen').style.display = 'none';
+            document.getElementById('appContent').style.display = 'block';
+            initApp();
+        } else {
+            errorDiv.innerText = "Senha incorreta!";
+            document.getElementById('passInput').value = "";
+        }
+    }
+
+    // Permitir Enter na senha
+    document.getElementById('passInput').addEventListener("keypress", function(event) {
+        if (event.key === "Enter") {
+            window.checkPassword();
+        }
+    });
+
+    window.lockApp = function() {
+        document.getElementById('lockScreen').style.display = 'flex';
+        document.getElementById('appContent').style.display = 'none';
+        document.getElementById('passInput').value = "";
+        document.getElementById('passError').innerText = "";
+    }
+
+    // --- VARIÁVEIS APP ---
     let currentDocId = "";
     let isReceiving = false;
     let saveTimer;
     let unsubscribe = null;
-    let chartInstance = null; // Para o Gráfico
+    let chartInstance = null;
     
     window.paidDebtors = [];
     window.iconsList = ["💸", "🏠", "💡", "💧", "📶", "🏋️", "🚗", "⛽", "🍔", "💇", "💊", "💳", "🎓", "✈️"];
 
-    // --- LOGIN ---
-    window.loginWithGoogle = () => {
-        signInWithPopup(auth, provider).catch((error) => alert("Erro no login: " + error.message));
-    }
-    window.logout = () => { signOut(auth); }
-
-    // Monitora Login
-    onAuthStateChanged(auth, (user) => {
-        if (user) {
-            document.getElementById('loginScreen').style.display = 'none';
-            document.getElementById('appContent').style.display = 'block';
-            document.getElementById('userEmail').innerText = user.email;
-            initApp();
-        } else {
-            document.getElementById('loginScreen').style.display = 'flex';
-            document.getElementById('appContent').style.display = 'none';
-        }
-    });
-
-    // --- APP START ---
     function initApp() {
         const now = new Date();
         const year = now.getFullYear();
         const month = String(now.getMonth() + 1).padStart(2, '0');
         const defaultDate = `${year}-${month}`;
-        document.getElementById('monthPicker').value = defaultDate;
-        loadMonthData(defaultDate);
+        
+        const picker = document.getElementById('monthPicker');
+        // Só define se estiver vazio (para não resetar se bloquear e desbloquear)
+        if (!picker.value) {
+            picker.value = defaultDate;
+            loadMonthData(defaultDate);
+        }
     }
 
-    // --- FUNÇÕES DE MÊS ---
     window.changeMonth = function() {
         const picker = document.getElementById('monthPicker');
-        if (currentDocId && !isReceiving) saveData(true); // Salva antes de sair
+        if (currentDocId && !isReceiving) saveData(true); 
         if (picker.value) loadMonthData(picker.value);
     }
 
-    // NOVO: IMPORTAR MÊS ANTERIOR
     window.copyPreviousMonth = async function() {
-        if(!confirm("Tem certeza? Isso vai substituir os dados deste mês pelos dados do mês anterior.")) return;
+        if(!confirm("Importar dados do mês anterior? (Valores atuais serão substituídos)")) return;
 
         const current = new Date(currentDocId + "-01");
-        current.setMonth(current.getMonth() - 1); // Volta 1 mês
+        current.setMonth(current.getMonth() - 1); 
         const year = current.getFullYear();
         const month = String(current.getMonth() + 1).padStart(2, '0');
         const prevId = `${year}-${month}`;
@@ -314,16 +332,16 @@
             const docSnap = await getDoc(doc(db, "meus_gastos", prevId));
             if (docSnap.exists()) {
                 const data = docSnap.data();
-                data.paidDebtors = []; // Reseta pagamentos
-                isReceiving = true; // Bloqueia save loop
-                updateScreen(data); // Carrega na tela
+                data.paidDebtors = []; 
+                isReceiving = true; 
+                updateScreen(data); 
                 setTimeout(() => { 
                     isReceiving = false; 
-                    saveData(true); // Salva no mês atual
-                    alert("Dados de " + prevId + " importados com sucesso!");
+                    saveData(true); 
+                    alert("Importado de " + prevId);
                 }, 500);
             } else {
-                alert("Não encontrei dados salvos para o mês " + prevId);
+                alert("Sem dados em " + prevId);
             }
         } catch(e) {
             console.error(e);
@@ -394,7 +412,6 @@
         list.forEach(item => { if (type === 'main') addMainRowHTML(tbody, item); else addSplitRowHTML(tbody, item); });
     }
 
-    // --- CALCULOS & GRÁFICO ---
     window.calculateAll = function() {
         const bb = processCard('bbTable', 'bbTotalBill', 'bbMyShareDisplay', 'bb_auto');
         const mp = processCard('mpTable', 'mpTotalBill', 'mpMyShareDisplay', 'mp_auto');
@@ -408,11 +425,11 @@
         document.querySelectorAll('#mainTable tbody tr').forEach(tr => {
             const val = parseFloat(tr.querySelector('.val-input').value) || 0;
             const isMine = tr.querySelector('input[type="checkbox"]').checked;
-            const isCardAuto = tr.querySelector('.val-input').hasAttribute('readonly'); // Identifica cartões
+            const isCardAuto = tr.querySelector('.val-input').hasAttribute('readonly'); 
             
             totalExpenses += val;
             if (isMine) myRealExpenses += val;
-            if (!isCardAuto) fixedSum += val; // Soma apenas fixos reais
+            if (!isCardAuto) fixedSum += val; 
         });
 
         const salary = parseFloat(document.getElementById('salary').value) || 0;
@@ -422,16 +439,13 @@
 
         updateDebtors({ ...bb.debtors }, { ...mp.debtors }, { ...passai.debtors }, { ...nubank.debtors });
         
-        // Atualiza Gráfico
         const cardsTotal = bb.myShare + mp.myShare + passai.myShare + nubank.myShare;
         updateChart(fixedSum, cardsTotal, emergency, salary - totalExpenses);
     }
 
     function updateChart(fixed, cards, emerg, rest) {
         const ctx = document.getElementById('expenseChart').getContext('2d');
-        if (chartInstance) chartInstance.destroy(); // Remove anterior
-        
-        // Evita gráfico negativo
+        if (chartInstance) chartInstance.destroy();
         if (rest < 0) rest = 0;
 
         chartInstance = new Chart(ctx, {
@@ -472,7 +486,7 @@
         return { debtors, myShare };
     }
 
-    // --- BOILERPLATE TABLE FUNCTIONS ---
+    // BOILERPLATE
     window.addMainRow = () => { addMainRowHTML(document.querySelector("#mainTable tbody"), {icon:'💸',name:'',value:'',isMine:true}); calculateAndSchedule(); }
     window.addSplitRow = (id) => { addSplitRowHTML(document.querySelector(`#${id} tbody`), {name:'',desc:'',inst:'',value:''}); calculateAndSchedule(); }
     
