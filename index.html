@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Controle Financeiro 8.0</title>
+    <title>Controle Financeiro 9.0</title>
 
     <link rel="apple-touch-icon" href="icone.png">
     <link rel="icon" type="image/png" href="icone.png">
@@ -24,8 +24,9 @@
             --success: #10b981;
             --danger: #ef4444;
             --warning: #f59e0b;
-            --purple: #8b5cf6;
+            --purple: #8b5cf6; /* Cor da Emergência */
             --passai: #ea580c;
+            --nubank: #820ad1; /* Cor do Nubank */
         }
 
         body {
@@ -187,7 +188,6 @@
 
         .d-fut { font-size: 0.75rem; color: var(--text-muted); margin-top: 5px; }
 
-        /* Checkbox Customizado Pagamento */
         .pay-check {
             width: 24px; height: 24px; border-radius: 50%; border: 2px solid #cbd5e1;
             display: flex; align-items: center; justify-content: center; cursor: pointer;
@@ -201,6 +201,7 @@
         .style-bb { border-left: 5px solid #f59e0b; } .style-bb h2 { color: #b45309; }
         .style-mp { border-left: 5px solid #3b82f6; } .style-mp h2 { color: #1d4ed8; }
         .style-passai { border-left: 5px solid var(--passai); } .style-passai h2 { color: #c2410c; }
+        .style-nubank { border-left: 5px solid var(--nubank); } .style-nubank h2 { color: var(--nubank); }
         
         .bill-input { width: 100px; text-align: right; font-weight: bold; padding: 5px; border-radius: 5px; border: 1px solid #ccc; }
     </style>
@@ -327,6 +328,26 @@
         </div>
     </div>
 
+    <div class="section style-nubank">
+        <div class="sec-header">
+            <h2>💳 Nubank</h2>
+            <div>
+                <small>FATURA:</small>
+                <input type="number" id="nubankTotalBill" class="bill-input" oninput="calculateAll()">
+            </div>
+        </div>
+        <div class="sec-body">
+            <div class="table-wrap">
+                <table id="nubankTable">
+                    <thead><tr><th>Quem</th><th>Desc.</th><th>Parc.</th><th>Valor</th><th></th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            <button class="btn-add" onclick="addSplitRow('nubankTable')">+ Adicionar no Nubank</button>
+            <div style="text-align:right; margin-top:10px; color:#820ad1">Minha parte: <strong id="nubankMyShareDisplay">R$ 0,00</strong></div>
+        </div>
+    </div>
+
     <div class="section" style="border-left: 5px solid #8b5cf6;">
         <div class="sec-header"><h2 style="color:#6d28d9">💰 Controle de Pagamentos</h2></div>
         <div class="sec-body">
@@ -344,7 +365,7 @@
         </div>
     </div>
 
-    <footer>Controle Financeiro 8.0</footer>
+    <footer>Controle Financeiro 9.0</footer>
 </div>
 
 <script type="module">
@@ -371,9 +392,7 @@
     let saveTimer;
     let unsubscribe = null;
     
-    // Lista de quem pagou (Armazenada na memória durante a edição)
     window.paidDebtors = []; 
-
     window.iconsList = ["💸", "🏠", "💡", "💧", "📶", "🏋️", "🚗", "⛽", "🍔", "💇", "💊", "💳", "🎓", "✈️"];
 
     // --- INICIALIZAÇÃO ---
@@ -406,16 +425,13 @@
             if (docSnap.exists()) {
                 isReceiving = true;
                 const data = docSnap.data();
-                
-                // Carrega a lista de quem já pagou
                 window.paidDebtors = data.paidDebtors || [];
-
                 updateScreen(data);
                 setTimeout(() => isReceiving = false, 500);
                 document.getElementById('syncStatus').innerHTML = '<span style="color:#10b981">☁ Sincronizado</span>';
             } else {
                 console.log("Mês novo. Criando...");
-                window.paidDebtors = []; // Limpa pagamentos
+                window.paidDebtors = []; 
                 updateScreen(null); 
                 saveData(true);     
             }
@@ -435,26 +451,30 @@
         document.getElementById('bbTotalBill').value = data.bbTotal || 0;
         document.getElementById('mpTotalBill').value = data.mpTotal || 0;
         document.getElementById('passaiTotalBill').value = data.passaiTotal || 0;
+        document.getElementById('nubankTotalBill').value = data.nubankTotal || 0;
 
         renderTable('mainTable', data.main || [], 'main');
         renderTable('bbTable', data.bb || [], 'split');
         renderTable('mpTable', data.mp || [], 'split');
         renderTable('passaiTable', data.passai || [], 'split');
+        renderTable('nubankTable', data.nubank || [], 'split');
 
         calculateAll();
     }
 
     function getDefaultData() {
         return {
-            salary: 0, emergency: 0, bbTotal: 0, mpTotal: 0, passaiTotal: 0,
+            salary: 0, emergency: 0, 
+            bbTotal: 0, mpTotal: 0, passaiTotal: 0, nubankTotal: 0,
             main: [
                 { icon: '💳', name: 'Cartão BB', value: 0, isMine: true, locked: true, id: 'bb_auto' },
                 { icon: '💳', name: 'Mercado Pago', value: 0, isMine: true, locked: true, id: 'mp_auto' },
                 { icon: '💳', name: 'Passaí', value: 0, isMine: true, locked: true, id: 'passai_auto' },
+                { icon: '💳', name: 'Nubank', value: 0, isMine: true, locked: true, id: 'nubank_auto' },
                 { icon: '🏋️', name: 'Academia', value: 0, isMine: true },
                 { icon: '💡', name: 'Luz', value: 0, isMine: true }
             ],
-            bb: [], mp: [], passai: [], paidDebtors: []
+            bb: [], mp: [], passai: [], nubank: [], paidDebtors: []
         };
     }
 
@@ -526,27 +546,23 @@
         } else bar.style.width = '0%';
     }
 
-    // --- CÁLCULOS E PAGAMENTOS ---
-    
+    // --- CÁLCULOS ---
     window.togglePaid = function(name) {
         const idx = window.paidDebtors.indexOf(name);
-        if (idx > -1) {
-            window.paidDebtors.splice(idx, 1); // Remove (Desmarca)
-        } else {
-            window.paidDebtors.push(name); // Adiciona (Marca)
-        }
-        calculateAndSchedule(); // Salva
+        if (idx > -1) window.paidDebtors.splice(idx, 1);
+        else window.paidDebtors.push(name);
+        calculateAndSchedule();
     }
 
     window.calculateAll = function() {
         const bb = processCard('bbTable', 'bbTotalBill', 'bbMyShareDisplay', 'bb_auto');
         const mp = processCard('mpTable', 'mpTotalBill', 'mpMyShareDisplay', 'mp_auto');
         const passai = processCard('passaiTable', 'passaiTotalBill', 'passaiMyShareDisplay', 'passai_auto');
+        const nubank = processCard('nubankTable', 'nubankTotalBill', 'nubankMyShareDisplay', 'nubank_auto');
 
         let totalExpenses = 0;
         let myRealExpenses = 0;
         
-        // Emergencia soma no total, mas não no gasto pessoal
         const emergency = parseFloat(document.getElementById('emergencyFund').value) || 0;
         totalExpenses += emergency;
 
@@ -564,7 +580,7 @@
         document.getElementById('remaining').innerText = fmt(salary - totalExpenses);
         document.getElementById('myRealExpenses').innerText = fmt(myRealExpenses);
 
-        updateDebtors({ ...bb.debtors }, { ...mp.debtors }, { ...passai.debtors });
+        updateDebtors({ ...bb.debtors }, { ...mp.debtors }, { ...passai.debtors }, { ...nubank.debtors });
     }
 
     function processCard(tableId, totalId, displayId, autoInputId) {
@@ -580,7 +596,7 @@
             if (val > 0) {
                 othersSum += val;
                 if (name) {
-                    const key = name.toLowerCase(); // Chave única
+                    const key = name.toLowerCase();
                     if (!debtors[key]) debtors[key] = { name: name, total: 0, future: 0 };
                     debtors[key].total += val;
                     if (inst.includes('/')) {
@@ -600,7 +616,7 @@
         return { debtors };
     }
 
-    function updateDebtors(d1, d2, d3) {
+    function updateDebtors(d1, d2, d3, d4) {
         const list = document.getElementById('debtorsList');
         list.innerHTML = "";
         
@@ -614,9 +630,8 @@
                 }
             }
         };
-        merge(d1); merge(d2); merge(d3);
+        merge(d1); merge(d2); merge(d3); merge(d4);
 
-        // Totais
         let toReceive = 0;
         let received = 0;
 
@@ -625,7 +640,6 @@
         } else {
             for (let k in all) {
                 const p = all[k];
-                // Verifica se está na lista de pagos
                 const isPaid = window.paidDebtors.includes(p.name);
                 
                 if (isPaid) received += p.total;
@@ -673,8 +687,9 @@
             bbTotal: document.getElementById('bbTotalBill').value,
             mpTotal: document.getElementById('mpTotalBill').value,
             passaiTotal: document.getElementById('passaiTotalBill').value,
-            paidDebtors: window.paidDebtors, // Salva a lista de quem pagou
-            main: [], bb: [], mp: [], passai: []
+            nubankTotal: document.getElementById('nubankTotalBill').value,
+            paidDebtors: window.paidDebtors,
+            main: [], bb: [], mp: [], passai: [], nubank: []
         };
 
         // Main
@@ -699,6 +714,7 @@
         scrapeCard('bbTable', data.bb);
         scrapeCard('mpTable', data.mp);
         scrapeCard('passaiTable', data.passai);
+        scrapeCard('nubankTable', data.nubank);
 
         try {
             await setDoc(doc(db, "meus_gastos", currentDocId), data);
