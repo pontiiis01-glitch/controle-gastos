@@ -5,18 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Controle Financeiro Cloud</title>
+    <title>Controle Financeiro 8.0</title>
 
     <link rel="apple-touch-icon" href="icone.png">
     <link rel="icon" type="image/png" href="icone.png">
 
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     
     <style>
         :root {
             --primary: #2563eb;
             --primary-dark: #1e40af;
-            --bg-body: #f8fafc;
+            --bg-body: #f1f5f9;
             --bg-card: #ffffff;
             --text-main: #0f172a;
             --text-muted: #64748b;
@@ -24,6 +24,8 @@
             --success: #10b981;
             --danger: #ef4444;
             --warning: #f59e0b;
+            --purple: #8b5cf6;
+            --passai: #ea580c;
         }
 
         body {
@@ -31,382 +33,325 @@
             background-color: var(--bg-body);
             color: var(--text-main);
             margin: 0;
-            padding: 20px;
-            line-height: 1.5;
+            padding: 15px;
+            padding-bottom: 100px;
         }
 
-        .container {
-            max-width: 1100px;
-            margin: 0 auto;
-            padding-bottom: 80px;
-        }
+        .container { max-width: 1000px; margin: 0 auto; }
 
+        /* --- HEADER & DATA --- */
         header {
-            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
             margin-bottom: 30px;
         }
-        header h1 {
-            font-size: 2rem;
-            color: var(--primary-dark);
-            margin: 0;
-            font-weight: 800;
-            letter-spacing: -0.03em;
-        }
-        .sync-indicator {
-            font-size: 0.85rem;
-            font-weight: 600;
-            margin-top: 5px;
-            display: inline-block;
-            padding: 4px 12px;
-            background: #fff;
-            border-radius: 20px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
-
-        /* --- DASHBOARD --- */
-        .dashboard {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 20px;
-            margin-bottom: 40px;
-        }
-
-        .card-summary {
-            background: var(--bg-card);
-            padding: 25px;
-            border-radius: 16px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-            border: 1px solid var(--border);
-            position: relative;
-            overflow: hidden;
-        }
         
-        .card-summary::before {
-            content: '';
-            position: absolute;
-            left: 0; top: 0; bottom: 0;
-            width: 5px;
-        }
+        h1 { margin: 0; font-size: 1.5rem; color: var(--primary-dark); }
 
-        .card-summary.success::before { background-color: var(--success); }
-        .card-summary.danger::before { background-color: var(--danger); }
-        .card-summary.info::before { background-color: var(--primary); }
-        .card-summary.warning::before { background-color: var(--warning); }
-
-        .card-summary h3 {
-            margin: 0 0 10px 0;
-            font-size: 0.8rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: var(--text-muted);
-            font-weight: 600;
-        }
-
-        .card-summary .value {
-            font-size: 2rem;
-            font-weight: 800;
-            color: var(--text-main);
+        .date-control {
+            background: #fff;
+            padding: 8px 15px;
+            border-radius: 50px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
             display: flex;
             align-items: center;
+            gap: 10px;
+            border: 1px solid var(--border);
+        }
+        
+        input[type="month"] {
+            border: none;
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+            color: var(--text-main);
+            font-weight: 600;
+            background: transparent;
+            cursor: pointer;
+        }
+        input[type="month"]:focus { outline: none; }
+
+        .sync-indicator { font-size: 0.75rem; font-weight: 600; padding: 4px 10px; border-radius: 20px; background: #fff; }
+
+        /* --- DASHBOARD --- */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
         }
 
-        .input-salary {
-            font-size: 2rem;
-            font-weight: 800;
-            border: none;
-            background: transparent;
-            color: var(--success);
-            width: 100%;
-            border-bottom: 2px dashed #cbd5e1;
-            padding: 0;
+        .card-stat {
+            background: var(--bg-card);
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
         }
-        .input-salary:focus { outline: none; border-bottom-color: var(--success); }
+
+        .card-stat h3 { margin: 0 0 5px 0; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600; }
+        .card-stat .val { font-size: 1.4rem; font-weight: 800; color: var(--text-main); }
+        
+        .stat-input {
+            width: 100%; font-size: 1.4rem; font-weight: 800; border: none; 
+            border-bottom: 2px dashed #cbd5e1; background: transparent; padding: 0;
+            color: inherit;
+        }
+        .stat-input:focus { outline: none; border-bottom-color: var(--primary); }
+
+        /* Cores dos Cards */
+        .c-salary .val, .c-salary input { color: var(--success); }
+        .c-total .val { color: var(--danger); }
+        .c-rest .val { color: var(--primary); }
+        .c-mine .val { color: var(--warning); }
+        .c-emerg .val, .c-emerg input { color: var(--purple); }
 
         /* --- SEÇÕES --- */
-        .section-card {
+        .section {
             background: var(--bg-card);
             border-radius: 20px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-            margin-bottom: 40px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+            margin-bottom: 30px;
             border: 1px solid var(--border);
             overflow: hidden;
         }
 
-        .section-header {
-            padding: 20px 30px;
+        .sec-header {
+            padding: 15px 20px;
+            background: #fff;
             border-bottom: 1px solid var(--border);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: #fff;
         }
-
-        .section-header h2 {
-            margin: 0;
-            font-size: 1.2rem;
-            font-weight: 700;
-            color: var(--text-main);
-        }
-
-        .content-padding { padding: 20px 30px 30px 30px; }
+        .sec-header h2 { margin: 0; font-size: 1.1rem; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+        .sec-body { padding: 20px; }
 
         /* --- TABELAS --- */
-        .table-responsive { overflow-x: auto; }
+        .table-wrap { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; min-width: 600px; }
+        th { text-align: left; padding: 10px; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); border-bottom: 2px solid var(--border); }
+        td { padding: 10px; border-bottom: 1px solid var(--border); vertical-align: middle; }
         
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            min-width: 800px;
-        }
-
-        th {
-            text-align: left;
-            padding: 15px 10px;
-            color: var(--text-muted);
-            font-weight: 600;
-            font-size: 0.85rem;
-            text-transform: uppercase;
-            border-bottom: 2px solid var(--border);
-        }
-
-        td {
-            padding: 10px;
-            border-bottom: 1px solid var(--border);
-            vertical-align: middle;
-            background: #fff;
-        }
-
-        /* --- DRAG & DROP --- */
-        .drag-handle {
-            cursor: grab;
-            color: #cbd5e1;
-            font-size: 1.5rem;
-            width: 30px;
-            text-align: center;
-        }
-        tr.dragging {
-            opacity: 0.5;
-            background: #f1f5f9;
-            border: 2px dashed var(--primary);
-        }
-
-        /* --- INPUTS --- */
-        input[type="text"], input[type="number"] {
-            width: 100%;
-            padding: 10px 12px;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            font-size: 0.95rem;
-            background: #f8fafc;
-            box-sizing: border-box;
-        }
-        input:focus {
-            outline: none;
-            border-color: var(--primary);
-            background: #fff;
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-        }
+        input.td-input { width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.9rem; background: #f8fafc; }
+        input.td-input:focus { border-color: var(--primary); background: #fff; outline: none; }
         
-        input.input-val { font-family: 'Courier New', monospace; font-weight: 600; }
+        select.icon-select { border: none; background: transparent; font-size: 1.2rem; cursor: pointer; padding: 0 5px; }
+        select.icon-select:focus { outline: none; }
         
-        /* --- PARCELAS --- */
-        .inst-container { position: relative; }
-        .progress-mini {
-            height: 4px;
-            background: #e2e8f0;
-            border-radius: 2px;
-            margin-top: 4px;
-            overflow: hidden;
-        }
-        .progress-fill { height: 100%; background: var(--primary); width: 0; transition: width 0.3s; }
+        input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--primary); cursor: pointer; }
 
-        /* --- BOTÕES --- */
+        .prog-bar { height: 4px; background: #e2e8f0; border-radius: 2px; margin-top: 5px; overflow: hidden; }
+        .prog-fill { height: 100%; background: var(--primary); width: 0%; transition: width 0.3s; }
+
         .btn-add {
-            background-color: #f0fdf4;
-            color: #15803d;
-            border: 2px dashed #86efac;
-            width: 100%;
-            padding: 12px;
-            border-radius: 10px;
-            cursor: pointer;
-            font-weight: 600;
-            margin-top: 15px;
+            width: 100%; padding: 12px; margin-top: 15px; border-radius: 10px; border: 2px dashed #cbd5e1;
+            background: #f8fafc; color: var(--text-muted); font-weight: 600; cursor: pointer; transition: all 0.2s;
         }
+        .btn-add:hover { border-color: var(--primary); color: var(--primary); background: #eff6ff; }
+        .btn-del { border: none; background: transparent; color: var(--danger); font-size: 1.2rem; cursor: pointer; }
 
-        .btn-remove {
-            background: transparent;
-            color: #ef4444;
-            border: 1px solid transparent;
-            width: 32px;
-            height: 32px;
-            border-radius: 8px;
-            cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 1.2rem;
+        /* DEVEDORES */
+        .debt-summary {
+            display: flex; gap: 15px; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #f1f5f9;
         }
+        .ds-box { flex: 1; text-align: center; }
+        .ds-lbl { font-size: 0.7rem; text-transform: uppercase; color: #64748b; font-weight: 600; }
+        .ds-val { font-size: 1.1rem; font-weight: 800; }
+        
+        .debt-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; }
+        
+        .debt-item {
+            background: #fff; border: 1px solid var(--border); padding: 15px; border-radius: 12px;
+            transition: all 0.3s ease; position: relative;
+        }
+        .debt-item.is-paid {
+            background: #dcfce7; border-color: #86efac; opacity: 0.8;
+        }
+        
+        .d-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+        .d-name { font-weight: 700; color: var(--primary-dark); font-size: 1rem; text-transform: capitalize; }
+        
+        .d-val { font-size: 1.3rem; font-weight: 800; color: var(--text-main); margin: 5px 0; }
+        .debt-item.is-paid .d-val { color: #15803d; text-decoration: line-through; }
+        
+        .d-status {
+            font-size: 0.75rem; font-weight: 600; color: #b45309; 
+            background: #fffbeb; padding: 2px 8px; border-radius: 10px; display: inline-block;
+        }
+        .debt-item.is-paid .d-status { color: #15803d; background: #fff; }
 
-        /* --- DEVEDORES --- */
-        .debt-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 15px;
-        }
-        .debt-card {
-            background: #fff;
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 20px;
-            text-align: center;
-        }
-        .debt-name { font-weight: 700; color: var(--primary-dark); font-size: 1.1rem; text-transform: capitalize; }
-        .debt-amount { font-size: 1.5rem; font-weight: 800; color: var(--text-main); margin: 5px 0; }
-        .debt-future { font-size: 0.8rem; color: var(--text-muted); background: #f1f5f9; padding: 4px 8px; border-radius: 4px; display: inline-block; }
+        .d-fut { font-size: 0.75rem; color: var(--text-muted); margin-top: 5px; }
 
-        footer {
-            text-align: center;
-            color: var(--text-muted);
-            font-size: 0.85rem;
-            margin-top: 50px;
-            padding-top: 20px;
-            border-top: 1px solid var(--border);
+        /* Checkbox Customizado Pagamento */
+        .pay-check {
+            width: 24px; height: 24px; border-radius: 50%; border: 2px solid #cbd5e1;
+            display: flex; align-items: center; justify-content: center; cursor: pointer;
+            background: #fff; transition: all 0.2s;
         }
+        .pay-check.checked { background: #22c55e; border-color: #22c55e; color: #fff; }
+
+        footer { text-align: center; font-size: 0.8rem; color: var(--text-muted); margin-top: 40px; }
+
+        /* Estilos específicos de cartões */
+        .style-bb { border-left: 5px solid #f59e0b; } .style-bb h2 { color: #b45309; }
+        .style-mp { border-left: 5px solid #3b82f6; } .style-mp h2 { color: #1d4ed8; }
+        .style-passai { border-left: 5px solid var(--passai); } .style-passai h2 { color: #c2410c; }
+        
+        .bill-input { width: 100px; text-align: right; font-weight: bold; padding: 5px; border-radius: 5px; border: 1px solid #ccc; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <header>
-        <h1>Meus Gastos</h1>
+        <div class="date-control">
+            <span>📅 Mês:</span>
+            <input type="month" id="monthPicker" onchange="changeMonth()">
+        </div>
         <div id="syncStatus" class="sync-indicator">Conectando...</div>
     </header>
 
-    <div class="dashboard">
-        <div class="card-summary success">
+    <div class="dashboard-grid">
+        <div class="card-stat c-salary">
             <h3>Salário</h3>
-            <div class="value">
-                R$ <input type="number" id="salary" class="input-salary" oninput="calculateAll()">
-            </div>
+            <input type="number" id="salary" class="stat-input" value="0" oninput="calculateAll()">
         </div>
-        <div class="card-summary danger">
-            <h3>Total Gastos</h3>
-            <div class="value" id="totalExpenses">R$ 0,00</div>
+        
+        <div class="card-stat c-emerg">
+            <h3>🚨 Emergência</h3>
+            <input type="number" id="emergencyFund" class="stat-input" value="0" oninput="calculateAll()" placeholder="0,00">
+            <small style="font-size:0.65rem; color:#aaa; margin-top:5px;">(Reserva, não é gasto)</small>
         </div>
-        <div class="card-summary info">
+
+        <div class="card-stat c-total">
+            <h3>Total Saídas</h3>
+            <div class="val" id="totalExpenses">R$ 0,00</div>
+        </div>
+
+        <div class="card-stat c-rest">
             <h3>Resta</h3>
-            <div class="value" id="remaining" style="color: var(--primary);">R$ 0,00</div>
+            <div class="val" id="remaining">R$ 0,00</div>
         </div>
-        <div class="card-summary warning">
+
+        <div class="card-stat c-mine">
             <h3>Meu Custo Real</h3>
-            <div class="value" id="myRealExpenses" style="color: #d97706;">R$ 0,00</div>
+            <div class="val" id="myRealExpenses">R$ 0,00</div>
         </div>
     </div>
 
-    <div class="section-card">
-        <div class="section-header">
-            <h2>📉 Gastos Fixos & Cartões</h2>
+    <div class="section">
+        <div class="sec-header">
+            <h2>📉 Gastos Fixos</h2>
         </div>
-        <div class="content-padding">
-            <div class="table-responsive">
+        <div class="sec-body">
+            <div class="table-wrap">
                 <table id="mainTable">
                     <thead>
                         <tr>
-                            <th style="width: 50px;"></th>
+                            <th style="width:40px">Ícone</th>
                             <th>Item</th>
-                            <th>Valor (R$)</th>
-                            <th style="text-align: center;">Meu?</th>
-                            <th></th>
+                            <th style="width:100px">Valor</th>
+                            <th style="width:40px; text-align:center">Meu?</th>
+                            <th style="width:30px"></th>
                         </tr>
                     </thead>
                     <tbody></tbody>
                 </table>
             </div>
-            <button class="btn-add" onclick="addMainRow()">+ Adicionar Item</button>
+            <button class="btn-add" onclick="addMainRow()">+ Adicionar Gasto Fixo</button>
         </div>
     </div>
 
-    <div class="section-card" style="border-left: 5px solid #f59e0b;">
-        <div class="section-header" style="background: #fffbeb;">
-            <h2 style="color: #b45309;">💳 Banco do Brasil</h2>
-            <div style="text-align: right;">
-                <small style="color: #92400e; font-weight: 600; font-size: 0.75rem;">FATURA TOTAL</small><br>
-                <input type="number" id="bbTotalBill" oninput="calculateAll()" style="width: 120px; text-align: right; border-color: #fcd34d; font-weight: bold; color: #b45309;">
+    <div class="section style-bb">
+        <div class="sec-header">
+            <h2>💳 Banco do Brasil</h2>
+            <div>
+                <small>FATURA:</small>
+                <input type="number" id="bbTotalBill" class="bill-input" oninput="calculateAll()">
             </div>
         </div>
-        <div class="content-padding">
-            <div class="table-responsive">
+        <div class="sec-body">
+            <div class="table-wrap">
                 <table id="bbTable">
-                    <thead>
-                        <tr>
-                            <th style="width: 50px;"></th>
-                            <th>Quem</th>
-                            <th>Descrição</th>
-                            <th>Parcela</th>
-                            <th>Valor</th>
-                            <th></th>
-                        </tr>
-                    </thead>
+                    <thead><tr><th>Quem</th><th>Desc.</th><th>Parc.</th><th>Valor</th><th></th></tr></thead>
                     <tbody></tbody>
                 </table>
             </div>
-            <button class="btn-add" style="border-color: #fcd34d; color: #b45309; background: #fff7ed;" onclick="addSplitRow('bbTable')">+ Adicionar no BB</button>
-            <div style="margin-top: 20px; text-align: right; color: #b45309;">
-                Minha parte: <strong id="bbMyShareDisplay" style="font-size: 1.2rem;">R$ 0,00</strong>
-            </div>
+            <button class="btn-add" onclick="addSplitRow('bbTable')">+ Adicionar no BB</button>
+            <div style="text-align:right; margin-top:10px; color:#b45309">Minha parte: <strong id="bbMyShareDisplay">R$ 0,00</strong></div>
         </div>
     </div>
 
-    <div class="section-card" style="border-left: 5px solid #3b82f6;">
-        <div class="section-header" style="background: #eff6ff;">
-            <h2 style="color: #1d4ed8;">💳 Mercado Pago</h2>
-            <div style="text-align: right;">
-                <small style="color: #1e40af; font-weight: 600; font-size: 0.75rem;">FATURA TOTAL</small><br>
-                <input type="number" id="mpTotalBill" oninput="calculateAll()" style="width: 120px; text-align: right; border-color: #93c5fd; font-weight: bold; color: #1e40af;">
+    <div class="section style-mp">
+        <div class="sec-header">
+            <h2>💳 Mercado Pago</h2>
+            <div>
+                <small>FATURA:</small>
+                <input type="number" id="mpTotalBill" class="bill-input" oninput="calculateAll()">
             </div>
         </div>
-        <div class="content-padding">
-            <div class="table-responsive">
+        <div class="sec-body">
+            <div class="table-wrap">
                 <table id="mpTable">
-                    <thead>
-                        <tr>
-                            <th style="width: 50px;"></th>
-                            <th>Quem</th>
-                            <th>Descrição</th>
-                            <th>Parcela</th>
-                            <th>Valor</th>
-                            <th></th>
-                        </tr>
-                    </thead>
+                    <thead><tr><th>Quem</th><th>Desc.</th><th>Parc.</th><th>Valor</th><th></th></tr></thead>
                     <tbody></tbody>
                 </table>
             </div>
-            <button class="btn-add" style="border-color: #93c5fd; color: #1d4ed8; background: #eff6ff;" onclick="addSplitRow('mpTable')">+ Adicionar no MP</button>
-            <div style="margin-top: 20px; text-align: right; color: #1d4ed8;">
-                Minha parte: <strong id="mpMyShareDisplay" style="font-size: 1.2rem;">R$ 0,00</strong>
+            <button class="btn-add" onclick="addSplitRow('mpTable')">+ Adicionar no MP</button>
+            <div style="text-align:right; margin-top:10px; color:#1d4ed8">Minha parte: <strong id="mpMyShareDisplay">R$ 0,00</strong></div>
+        </div>
+    </div>
+
+    <div class="section style-passai">
+        <div class="sec-header">
+            <h2>💳 Passaí (Itaú)</h2>
+            <div>
+                <small>FATURA:</small>
+                <input type="number" id="passaiTotalBill" class="bill-input" oninput="calculateAll()">
             </div>
         </div>
+        <div class="sec-body">
+            <div class="table-wrap">
+                <table id="passaiTable">
+                    <thead><tr><th>Quem</th><th>Desc.</th><th>Parc.</th><th>Valor</th><th></th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            <button class="btn-add" onclick="addSplitRow('passaiTable')">+ Adicionar no Passaí</button>
+            <div style="text-align:right; margin-top:10px; color:#c2410c">Minha parte: <strong id="passaiMyShareDisplay">R$ 0,00</strong></div>
+        </div>
     </div>
 
-    <div class="section-card" style="border-left: 5px solid #8b5cf6;">
-        <div class="section-header">
-            <h2 style="color: #6d28d9;">💰 Controle de Devedores</h2>
-        </div>
-        <div class="content-padding">
-            <div id="debtorsList" class="debt-grid">
+    <div class="section" style="border-left: 5px solid #8b5cf6;">
+        <div class="sec-header"><h2 style="color:#6d28d9">💰 Controle de Pagamentos</h2></div>
+        <div class="sec-body">
+            <div class="debt-summary">
+                <div class="ds-box">
+                    <div class="ds-lbl">A Receber</div>
+                    <div class="ds-val" id="totalToReceive" style="color:#ef4444">R$ 0,00</div>
                 </div>
+                <div class="ds-box" style="border-left:1px solid #e2e8f0">
+                    <div class="ds-lbl">Já Recebido</div>
+                    <div class="ds-val" id="totalReceived" style="color:#22c55e">R$ 0,00</div>
+                </div>
+            </div>
+            <div id="debtorsList" class="debt-list"></div>
         </div>
     </div>
 
-    <footer>
-        Sincronização em tempo real via Google Firebase
-    </footer>
+    <footer>Controle Financeiro 8.0</footer>
 </div>
 
 <script type="module">
-    // Importando do CDN (URL oficial do Google para navegador)
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
     import { getFirestore, doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
-    // --- ÁREA DE CONFIGURAÇÃO (SEUS DADOS JÁ INSERIDOS) ---
+    // --- CONFIGURAÇÃO FIREBASE ---
     const firebaseConfig = {
         apiKey: "AIzaSyDBcLEJw2PiFoBvocr3Zq01sRjjakteHfs",
         authDomain: "app-controle-gastos-1e658.firebaseapp.com",
@@ -417,264 +362,351 @@
         measurementId: "G-02QPMRE4M8"
     };
 
-    // Inicializa Firebase
-    let db;
-    try {
-        const app = initializeApp(firebaseConfig);
-        db = getFirestore(app);
-        console.log("Firebase conectado com sucesso!");
-    } catch (e) {
-        console.error("Erro no Firebase:", e);
-        document.getElementById('syncStatus').innerHTML = '<span style="color:#ef4444">Erro Config</span>';
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    
+    // --- VARIÁVEIS GLOBAIS ---
+    let currentDocId = "";
+    let isReceiving = false;
+    let saveTimer;
+    let unsubscribe = null;
+    
+    // Lista de quem pagou (Armazenada na memória durante a edição)
+    window.paidDebtors = []; 
+
+    window.iconsList = ["💸", "🏠", "💡", "💧", "📶", "🏋️", "🚗", "⛽", "🍔", "💇", "💊", "💳", "🎓", "✈️"];
+
+    // --- INICIALIZAÇÃO ---
+    window.onload = function() {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const defaultDate = `${year}-${month}`;
+        
+        const picker = document.getElementById('monthPicker');
+        picker.value = defaultDate;
+        
+        loadMonthData(defaultDate);
+    };
+
+    window.changeMonth = function() {
+        const picker = document.getElementById('monthPicker');
+        if (picker.value) loadMonthData(picker.value);
     }
 
-    // Referência ao banco de dados (Coleção: meus_gastos, Documento: dados_gerais)
-    const docRef = doc(db, "meus_gastos", "dados_gerais");
+    function loadMonthData(dateString) {
+        currentDocId = dateString;
+        document.getElementById('syncStatus').innerText = "Carregando " + dateString + "...";
 
-    let saveTimeout;
-    let isReceivingData = false;
+        if (unsubscribe) unsubscribe();
 
-    // --- OUVINTE EM TEMPO REAL (SYNC) ---
-    // Isso roda sempre que algo muda no banco de dados (nuvem)
-    onSnapshot(docRef, (docSnap) => {
-        if (docSnap.exists()) {
-            isReceivingData = true; // Bloqueia salvamento enquanto atualiza
-            const data = docSnap.data();
-            
-            window.updateScreenFromData(data);
-            
-            // Pequeno delay para liberar a edição
-            setTimeout(() => { isReceivingData = false; }, 500);
-            
-            document.getElementById('syncStatus').innerHTML = '<span style="color:#10b981">☁ Sincronizado</span>';
-        } else {
-            // Se for o primeiro acesso e não tiver nada no banco
-            console.log("Banco de dados vazio. Criando padrão...");
-            window.saveDataNow(true); 
-        }
-    }, (error) => {
-        console.error("Erro de conexão:", error);
-        document.getElementById('syncStatus').innerHTML = '<span style="color:#ef4444">⚠ Offline</span>';
-    });
+        const docRef = doc(db, "meus_gastos", currentDocId);
 
-    // --- FUNÇÕES DE SALVAMENTO ---
-    window.scheduleSave = function() {
-        if (isReceivingData) return; 
-        
-        document.getElementById('syncStatus').innerHTML = '<span style="color:#f59e0b">... Salvando</span>';
-        
-        clearTimeout(saveTimeout);
-        // Espera 1 segundo após parar de digitar para salvar no banco
-        saveTimeout = setTimeout(() => {
-            window.saveDataNow();
-        }, 1000); 
-    };
+        unsubscribe = onSnapshot(docRef, (docSnap) => {
+            if (docSnap.exists()) {
+                isReceiving = true;
+                const data = docSnap.data();
+                
+                // Carrega a lista de quem já pagou
+                window.paidDebtors = data.paidDebtors || [];
 
-    window.saveDataNow = async function(force = false) {
-        if (isReceivingData && !force) return;
+                updateScreen(data);
+                setTimeout(() => isReceiving = false, 500);
+                document.getElementById('syncStatus').innerHTML = '<span style="color:#10b981">☁ Sincronizado</span>';
+            } else {
+                console.log("Mês novo. Criando...");
+                window.paidDebtors = []; // Limpa pagamentos
+                updateScreen(null); 
+                saveData(true);     
+            }
+        }, (err) => {
+            console.error(err);
+            document.getElementById('syncStatus').innerText = "Erro Offline";
+        });
+    }
 
-        const data = window.scrapeDataFromScreen();
-        
-        try {
-            await setDoc(docRef, data);
-            document.getElementById('syncStatus').innerHTML = '<span style="color:#10b981">☁ Salvo</span>';
-        } catch (e) {
-            console.error("Erro ao salvar:", e);
-            document.getElementById('syncStatus').innerHTML = '<span style="color:#ef4444">⚠ Erro ao Salvar</span>';
-        }
-    };
+    // --- RENDERIZAÇÃO ---
+    function updateScreen(data) {
+        if (!data) data = getDefaultData(); 
 
-    // --- DEFININDO AS FUNÇÕES GLOBAIS (Para o HTML poder chamar) ---
-    
-    // 1. Dados Padrão
-    const defaultData = {
-        salary: 10000, bbTotal: 1820, mpTotal: 2211,
-        main: [
-            { id: 'bb_auto', name: 'Cartão BB (Minha Parte)', value: 0, isMine: true, locked: true },
-            { id: 'mp_auto', name: 'Mercado Pago (Minha Parte)', value: 0, isMine: true, locked: true },
-            { name: 'Academia', value: 95.00, isMine: true },
-            { name: 'Luz', value: 150.00, isMine: true }
-        ],
-        bb: [{ name: 'Disney', desc: 'Assinatura', value: 35.16, inst: '' }],
-        mp: [{ name: 'Léo', desc: 'Peças PC', value: 167.00, inst: '8/12' }]
-    };
-
-    // 2. Atualizar Tela (Ler dados)
-    window.updateScreenFromData = function(data) {
-        if (!data) data = defaultData;
-        
         document.getElementById('salary').value = data.salary || 0;
+        document.getElementById('emergencyFund').value = data.emergency || 0;
+        
         document.getElementById('bbTotalBill').value = data.bbTotal || 0;
         document.getElementById('mpTotalBill').value = data.mpTotal || 0;
+        document.getElementById('passaiTotalBill').value = data.passaiTotal || 0;
 
         renderTable('mainTable', data.main || [], 'main');
         renderTable('bbTable', data.bb || [], 'split');
         renderTable('mpTable', data.mp || [], 'split');
+        renderTable('passaiTable', data.passai || [], 'split');
 
-        runCalculations(); // Calcula valores na tela
-        setupDragAndDrop(); // Re-ativa o drag and drop
-    };
+        calculateAll();
+    }
 
-    // 3. Ler Tela (Preparar para salvar)
-    window.scrapeDataFromScreen = function() {
-        const data = {
-            salary: document.getElementById('salary').value,
-            bbTotal: document.getElementById('bbTotalBill').value,
-            mpTotal: document.getElementById('mpTotalBill').value,
-            main: [], bb: [], mp: []
+    function getDefaultData() {
+        return {
+            salary: 0, emergency: 0, bbTotal: 0, mpTotal: 0, passaiTotal: 0,
+            main: [
+                { icon: '💳', name: 'Cartão BB', value: 0, isMine: true, locked: true, id: 'bb_auto' },
+                { icon: '💳', name: 'Mercado Pago', value: 0, isMine: true, locked: true, id: 'mp_auto' },
+                { icon: '💳', name: 'Passaí', value: 0, isMine: true, locked: true, id: 'passai_auto' },
+                { icon: '🏋️', name: 'Academia', value: 0, isMine: true },
+                { icon: '💡', name: 'Luz', value: 0, isMine: true }
+            ],
+            bb: [], mp: [], passai: [], paidDebtors: []
         };
-        
-        // Main
-        document.querySelectorAll('#mainTable tbody tr').forEach(tr => {
-            data.main.push({
-                name: tr.querySelector('input[type="text"]').value,
-                value: tr.querySelector('.input-val').value,
-                isMine: tr.querySelector('input[type="checkbox"]').checked,
-                locked: tr.querySelector('.input-val').hasAttribute('readonly'),
-                id: tr.querySelector('.input-val').id || null
-            });
-        });
-
-        // Splits
-        ['bbTable', 'mpTable'].forEach(id => {
-            const key = id === 'bbTable' ? 'bb' : 'mp';
-            document.querySelectorAll(`#${id} tbody tr`).forEach(tr => {
-                const inputs = tr.querySelectorAll('input[type="text"]');
-                data[key].push({
-                    name: inputs[0].value,
-                    desc: inputs[1].value,
-                    inst: inputs[2].value,
-                    value: tr.querySelector('.split-val').value
-                });
-            });
-        });
-        return data;
-    };
-
-    // 4. Cálculos
-    window.calculateAll = function() {
-        runCalculations();
-        if(window.scheduleSave) window.scheduleSave();
     }
 
-    function runCalculations() {
-        // BB
-        const bb = processSplit('bbTable', 'bbTotalBill', 'bbMyShareDisplay', 'bb_auto');
-        // MP
-        const mp = processSplit('mpTable', 'mpTotalBill', 'mpMyShareDisplay', 'mp_auto');
-
-        // Main
-        let total = 0, myReal = 0;
-        document.querySelectorAll('#mainTable tbody tr').forEach(tr => {
-            const val = parseFloat(tr.querySelector('.input-val').value) || 0;
-            const isMine = tr.querySelector('input[type="checkbox"]').checked;
-            total += val;
-            if (isMine) myReal += val;
-        });
-
-        const salary = parseFloat(document.getElementById('salary').value) || 0;
-        
-        document.getElementById('totalExpenses').innerText = fmt(total);
-        document.getElementById('remaining').innerText = fmt(salary - total);
-        document.getElementById('myRealExpenses').innerText = fmt(myReal);
-
-        updateDebtors(bb.debtors, mp.debtors);
-    }
-
-    // 5. Renderização e Auxiliares
-    function renderTable(tableId, data, type) {
-        const tbody = document.querySelector(`#${tableId} tbody`);
+    function renderTable(id, list, type) {
+        const tbody = document.querySelector(`#${id} tbody`);
         tbody.innerHTML = "";
-        data.forEach(item => {
+        list.forEach(item => {
             if (type === 'main') addMainRowHTML(tbody, item);
             else addSplitRowHTML(tbody, item);
         });
     }
 
+    // --- MANIPULAÇÃO DE LINHAS ---
     window.addMainRow = function() {
         const tbody = document.querySelector("#mainTable tbody");
-        addMainRowHTML(tbody, { name: '', value: '', isMine: true });
-        window.calculateAll();
-        setupDragAndDrop();
+        addMainRowHTML(tbody, { icon: '💸', name: '', value: '', isMine: true });
+        calculateAndSchedule();
     }
 
-    window.addSplitRow = function(tableId) {
-        const tbody = document.querySelector(`#${tableId} tbody`);
-        addSplitRowHTML(tbody, { name: '', desc: '', value: '', inst: '' });
-        window.calculateAll();
-        setupDragAndDrop();
+    window.addSplitRow = function(id) {
+        const tbody = document.querySelector(`#${id} tbody`);
+        addSplitRowHTML(tbody, { name: '', desc: '', inst: '', value: '' });
+        calculateAndSchedule();
     }
 
     function addMainRowHTML(tbody, item) {
         const tr = document.createElement("tr");
-        tr.className = "draggable-row"; tr.draggable = true;
-        const lockedAttr = item.locked ? 'readonly style="background:#f1f5f9; color:#94a3b8;"' : '';
-        const delBtn = item.locked ? '' : '<button class="btn-remove" onclick="removeRow(this)">×</button>';
-        tr.innerHTML = `<td class="drag-handle">☰</td><td><input type="text" value="${item.name}" ${lockedAttr} oninput="calculateAll()"></td><td><input type="number" value="${item.value}" step="0.01" class="input-val" oninput="calculateAll()" id="${item.id || ''}" ${lockedAttr}></td><td style="text-align:center"><input type="checkbox" ${item.isMine ? "checked" : ""} onchange="calculateAll()" style="width:20px;height:20px;"></td><td>${delBtn}</td>`;
+        let iconOptions = window.iconsList.map(i => `<option value="${i}" ${i === item.icon ? 'selected' : ''}>${i}</option>`).join('');
+        const locked = item.locked ? 'readonly style="background:#f1f5f9; color:#999"' : '';
+        const del = item.locked ? '' : `<button class="btn-del" onclick="removeRow(this)">×</button>`;
+
+        tr.innerHTML = `
+            <td><select class="icon-select" onchange="calculateAndSchedule()">${iconOptions}</select></td>
+            <td><input type="text" class="td-input" value="${item.name}" ${locked} oninput="calculateAndSchedule()"></td>
+            <td><input type="number" class="td-input val-input" value="${item.value}" step="0.01" id="${item.id || ''}" ${locked} oninput="calculateAndSchedule()"></td>
+            <td style="text-align:center"><input type="checkbox" ${item.isMine ? 'checked' : ''} onchange="calculateAndSchedule()"></td>
+            <td>${del}</td>
+        `;
         tbody.appendChild(tr);
     }
 
     function addSplitRowHTML(tbody, item) {
         const tr = document.createElement("tr");
-        tr.className = "draggable-row"; tr.draggable = true;
-        tr.innerHTML = `<td class="drag-handle">☰</td><td><input type="text" value="${item.name}" placeholder="Nome" class="split-name" oninput="calculateAll()"></td><td><input type="text" value="${item.desc}" placeholder="Descrição" oninput="calculateAll()"></td><td class="inst-container"><input type="text" value="${item.inst || ''}" placeholder="1/10" class="split-inst" oninput="updateBar(this); calculateAll()"><div class="progress-mini"><div class="progress-fill" style="width:0%"></div></div></td><td><input type="number" value="${item.value}" step="0.01" class="split-val input-val" oninput="calculateAll()"></td><td><button class="btn-remove" onclick="removeRow(this)">×</button></td>`;
+        tr.innerHTML = `
+            <td><input type="text" class="td-input split-name" value="${item.name}" placeholder="Nome" oninput="calculateAndSchedule()"></td>
+            <td><input type="text" class="td-input" value="${item.desc}" placeholder="Item" oninput="calculateAndSchedule()"></td>
+            <td>
+                <input type="text" class="td-input split-inst" value="${item.inst || ''}" placeholder="1/10" oninput="updateBar(this); calculateAndSchedule()">
+                <div class="prog-bar"><div class="prog-fill" style="width:0%"></div></div>
+            </td>
+            <td><input type="number" class="td-input val-input split-val" value="${item.value}" step="0.01" oninput="calculateAndSchedule()"></td>
+            <td><button class="btn-del" onclick="removeRow(this)">×</button></td>
+        `;
         tbody.appendChild(tr);
-        if (item.inst) updateBar(tr.querySelector('.split-inst'));
+        if(item.inst) updateBar(tr.querySelector('.split-inst'));
     }
 
-    window.removeRow = function(btn) { btn.closest("tr").remove(); window.calculateAll(); }
-    
+    window.removeRow = function(btn) {
+        btn.closest('tr').remove();
+        calculateAndSchedule();
+    }
+
     window.updateBar = function(input) {
-        const val = input.value; const bar = input.nextElementSibling.querySelector('.progress-fill');
-        if (val.includes('/')) { const [cur, tot] = val.split('/').map(Number); if (tot > 0) bar.style.width = Math.min((cur/tot)*100, 100) + '%'; } else { bar.style.width = '0%'; }
+        const val = input.value;
+        const bar = input.nextElementSibling.querySelector('.prog-fill');
+        if(val.includes('/')) {
+            const [cur, tot] = val.split('/').map(Number);
+            if(tot > 0) bar.style.width = Math.min((cur/tot)*100, 100) + '%';
+        } else bar.style.width = '0%';
     }
 
-    function processSplit(tableId, totalId, displayId, inputId) {
+    // --- CÁLCULOS E PAGAMENTOS ---
+    
+    window.togglePaid = function(name) {
+        const idx = window.paidDebtors.indexOf(name);
+        if (idx > -1) {
+            window.paidDebtors.splice(idx, 1); // Remove (Desmarca)
+        } else {
+            window.paidDebtors.push(name); // Adiciona (Marca)
+        }
+        calculateAndSchedule(); // Salva
+    }
+
+    window.calculateAll = function() {
+        const bb = processCard('bbTable', 'bbTotalBill', 'bbMyShareDisplay', 'bb_auto');
+        const mp = processCard('mpTable', 'mpTotalBill', 'mpMyShareDisplay', 'mp_auto');
+        const passai = processCard('passaiTable', 'passaiTotalBill', 'passaiMyShareDisplay', 'passai_auto');
+
+        let totalExpenses = 0;
+        let myRealExpenses = 0;
+        
+        // Emergencia soma no total, mas não no gasto pessoal
+        const emergency = parseFloat(document.getElementById('emergencyFund').value) || 0;
+        totalExpenses += emergency;
+
+        document.querySelectorAll('#mainTable tbody tr').forEach(tr => {
+            const val = parseFloat(tr.querySelector('.val-input').value) || 0;
+            const isMine = tr.querySelector('input[type="checkbox"]').checked;
+            
+            totalExpenses += val;
+            if (isMine) myRealExpenses += val;
+        });
+
+        const salary = parseFloat(document.getElementById('salary').value) || 0;
+        
+        document.getElementById('totalExpenses').innerText = fmt(totalExpenses);
+        document.getElementById('remaining').innerText = fmt(salary - totalExpenses);
+        document.getElementById('myRealExpenses').innerText = fmt(myRealExpenses);
+
+        updateDebtors({ ...bb.debtors }, { ...mp.debtors }, { ...passai.debtors });
+    }
+
+    function processCard(tableId, totalId, displayId, autoInputId) {
         const totalBill = parseFloat(document.getElementById(totalId).value) || 0;
-        let othersSum = 0; let debtors = {};
+        let othersSum = 0;
+        let debtors = {};
+
         document.querySelectorAll(`#${tableId} tbody tr`).forEach(tr => {
-            const name = tr.querySelector('.split-name').value.trim().toLowerCase();
+            const name = tr.querySelector('.split-name').value.trim();
             const val = parseFloat(tr.querySelector('.split-val').value) || 0;
             const inst = tr.querySelector('.split-inst').value;
+
             if (val > 0) {
                 othersSum += val;
                 if (name) {
-                    if (!debtors[name]) debtors[name] = { total: 0, future: 0, display: tr.querySelector('.split-name').value };
-                    debtors[name].total += val;
-                    if (inst.includes('/')) { const [cur, tot] = inst.split('/').map(Number); if (tot > cur) debtors[name].future += (tot - cur) * val; }
+                    const key = name.toLowerCase(); // Chave única
+                    if (!debtors[key]) debtors[key] = { name: name, total: 0, future: 0 };
+                    debtors[key].total += val;
+                    if (inst.includes('/')) {
+                        const [cur, tot] = inst.split('/').map(Number);
+                        if (tot > cur) debtors[key].future += (tot - cur) * val;
+                    }
                 }
             }
         });
+
         const myShare = totalBill - othersSum;
         document.getElementById(displayId).innerText = fmt(myShare);
-        const autoInput = document.getElementById(inputId);
+        
+        const autoInput = document.getElementById(autoInputId);
         if (autoInput) autoInput.value = myShare.toFixed(2);
+
         return { debtors };
     }
 
-    function updateDebtors(d1, d2) {
-        const list = document.getElementById('debtorsList'); list.innerHTML = "";
-        const all = {}; const merge = (d) => { for (let k in d) { if (!all[k]) all[k] = { ...d[k] }; else { all[k].total += d[k].total; all[k].future += d[k].future; } } };
-        merge(d1); merge(d2);
-        if (Object.keys(all).length === 0) { list.innerHTML = "<div style='grid-column:1/-1;text-align:center;color:#94a3b8;'>Ninguém deve nada.</div>"; return; }
-        for (let k in all) {
-            const p = all[k]; const div = document.createElement('div'); div.className = 'debt-card';
-            div.innerHTML = `<div class="debt-name">${p.display}</div><div style="font-size:0.75rem;color:#64748b;margin-top:5px;">DEVE HOJE</div><div class="debt-amount">${fmt(p.total)}</div>${p.future > 0 ? `<div class="debt-future">+ ${fmt(p.future)} futuro</div>` : ''}`;
-            list.appendChild(div);
+    function updateDebtors(d1, d2, d3) {
+        const list = document.getElementById('debtorsList');
+        list.innerHTML = "";
+        
+        const all = {};
+        const merge = (source) => {
+            for (let k in source) {
+                if (!all[k]) all[k] = { ...source[k] };
+                else {
+                    all[k].total += source[k].total;
+                    all[k].future += source[k].future;
+                }
+            }
+        };
+        merge(d1); merge(d2); merge(d3);
+
+        // Totais
+        let toReceive = 0;
+        let received = 0;
+
+        if (Object.keys(all).length === 0) {
+            list.innerHTML = "<div style='color:#999; width:100%; text-align:center'>Ninguém deve nada.</div>";
+        } else {
+            for (let k in all) {
+                const p = all[k];
+                // Verifica se está na lista de pagos
+                const isPaid = window.paidDebtors.includes(p.name);
+                
+                if (isPaid) received += p.total;
+                else toReceive += p.total;
+
+                const div = document.createElement('div');
+                div.className = `debt-item ${isPaid ? 'is-paid' : ''}`;
+                div.innerHTML = `
+                    <div class="d-head">
+                        <div class="d-name">${p.name}</div>
+                        <div class="pay-check ${isPaid ? 'checked' : ''}" onclick="togglePaid('${p.name}')">
+                            ${isPaid ? '✔' : ''}
+                        </div>
+                    </div>
+                    <div class="d-status">${isPaid ? 'PAGO' : 'PENDENTE'}</div>
+                    <div class="d-val">${fmt(p.total)}</div>
+                    <div class="d-fut">${p.future > 0 ? `+ ${fmt(p.future)} fut.` : 'Quitado'}</div>
+                `;
+                list.appendChild(div);
+            }
         }
+
+        document.getElementById('totalToReceive').innerText = fmt(toReceive);
+        document.getElementById('totalReceived').innerText = fmt(received);
     }
 
     function fmt(n) { return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
 
-    // Drag Drop Logic
-    function setupDragAndDrop() {
-        const rows = document.querySelectorAll('.draggable-row');
-        rows.forEach(row => { 
-            row.addEventListener('dragstart', function(e){ e.dataTransfer.setData('text/html', null); this.classList.add('dragging'); window.dragSrc = this; }); 
-            row.addEventListener('dragover', function(e){ e.preventDefault(); }); 
-            row.addEventListener('drop', function(e){ e.preventDefault(); if (window.dragSrc !== this) { this.parentNode.insertBefore(window.dragSrc, this); window.calculateAll(); } }); 
-            row.addEventListener('dragend', function(){ this.classList.remove('dragging'); }); 
+    // --- SALVAMENTO ---
+    window.calculateAndSchedule = function() {
+        calculateAll();
+        if (isReceiving) return;
+
+        document.getElementById('syncStatus').innerText = "...";
+        clearTimeout(saveTimer);
+        saveTimer = setTimeout(() => saveData(), 1000);
+    }
+
+    async function saveData(force = false) {
+        if (isReceiving && !force) return;
+        
+        const data = {
+            salary: document.getElementById('salary').value,
+            emergency: document.getElementById('emergencyFund').value,
+            bbTotal: document.getElementById('bbTotalBill').value,
+            mpTotal: document.getElementById('mpTotalBill').value,
+            passaiTotal: document.getElementById('passaiTotalBill').value,
+            paidDebtors: window.paidDebtors, // Salva a lista de quem pagou
+            main: [], bb: [], mp: [], passai: []
+        };
+
+        // Main
+        document.querySelectorAll('#mainTable tbody tr').forEach(tr => {
+            data.main.push({
+                icon: tr.querySelector('.icon-select').value,
+                name: tr.querySelector('input[type="text"]').value,
+                value: tr.querySelector('.val-input').value,
+                isMine: tr.querySelector('input[type="checkbox"]').checked,
+                locked: tr.querySelector('.val-input').hasAttribute('readonly'),
+                id: tr.querySelector('.val-input').id || null
+            });
         });
+
+        // Cards
+        const scrapeCard = (tid, arr) => {
+            document.querySelectorAll(`#${tid} tbody tr`).forEach(tr => {
+                const inps = tr.querySelectorAll('input');
+                arr.push({ name: inps[0].value, desc: inps[1].value, inst: inps[2].value, value: inps[3].value });
+            });
+        };
+        scrapeCard('bbTable', data.bb);
+        scrapeCard('mpTable', data.mp);
+        scrapeCard('passaiTable', data.passai);
+
+        try {
+            await setDoc(doc(db, "meus_gastos", currentDocId), data);
+            document.getElementById('syncStatus').innerHTML = '<span style="color:#10b981">☁ Salvo</span>';
+        } catch (e) {
+            console.error(e);
+            document.getElementById('syncStatus').innerText = "Erro ao Salvar";
+        }
     }
 
 </script>
