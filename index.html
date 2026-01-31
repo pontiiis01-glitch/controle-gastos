@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Controle Financeiro 9.1</title>
+    <title>Controle Financeiro 9.2</title>
 
     <link rel="apple-touch-icon" href="icone.png">
     <link rel="icon" type="image/png" href="icone.png">
@@ -216,7 +216,7 @@
         </div>
     </div>
 
-    <footer>Controle Financeiro 9.1</footer>
+    <footer>Controle Financeiro 9.2 (Correção de Salvamento)</footer>
 </div>
 
 <script type="module">
@@ -257,9 +257,24 @@
         loadMonthData(defaultDate);
     };
 
+    // --- CORREÇÃO DO SALVAMENTO (SAVE-BEFORE-SWITCH) ---
     window.changeMonth = function() {
         const picker = document.getElementById('monthPicker');
-        if (picker.value) loadMonthData(picker.value);
+        const newDate = picker.value;
+        
+        // 1. Força o salvamento do mês anterior AGORA
+        if (currentDocId && !isReceiving) {
+            clearTimeout(saveTimer);
+            document.getElementById('syncStatus').innerText = "Salvando anterior...";
+            // Salva síncrono (chama a função de salvar com 'force=true')
+            // Nota: saveData é async, mas ele captura os dados da tela imediatamente
+            saveData(true); 
+        }
+
+        // 2. Carrega o novo mês
+        if (newDate) {
+            loadMonthData(newDate);
+        }
     }
 
     function loadMonthData(dateString) {
@@ -292,11 +307,10 @@
     function updateScreen(data) {
         if (!data) data = getDefaultData();
 
-        // --- CORREÇÃO DE MIGRAÇÃO (ADICIONA NUBANK SE FALTAR) ---
+        // Garante que o Nubank apareça se for antigo
         if (data.main && !data.main.some(i => i.id === 'nubank_auto')) {
              data.main.unshift({ icon: '💳', name: 'Nubank', value: 0, isMine: true, locked: true, id: 'nubank_auto' });
         }
-        // ---------------------------------------------------------
 
         document.getElementById('salary').value = data.salary || 0;
         document.getElementById('emergencyFund').value = data.emergency || 0;
@@ -340,6 +354,7 @@
         });
     }
 
+    // --- MANIPULAÇÃO DE LINHAS ---
     window.addMainRow = function() {
         const tbody = document.querySelector("#mainTable tbody");
         addMainRowHTML(tbody, { icon: '💸', name: '', value: '', isMine: true });
