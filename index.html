@@ -5,92 +5,101 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Controle Financeiro 9.2</title>
+    <title>Controle Financeiro 10.0</title>
 
     <link rel="apple-touch-icon" href="icone.png">
     <link rel="icon" type="image/png" href="icone.png">
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <style>
         :root {
-            --primary: #2563eb;
-            --primary-dark: #1e40af;
-            --bg-body: #f1f5f9;
-            --bg-card: #ffffff;
-            --text-main: #0f172a;
-            --text-muted: #64748b;
-            --border: #e2e8f0;
-            --success: #10b981;
-            --danger: #ef4444;
-            --warning: #f59e0b;
-            --purple: #8b5cf6;
-            --passai: #ea580c;
-            --nubank: #820ad1;
+            --primary: #2563eb; --primary-dark: #1e40af; --bg-body: #f8fafc; --bg-card: #ffffff;
+            --text-main: #0f172a; --text-muted: #64748b; --border: #e2e8f0;
+            --success: #10b981; --danger: #ef4444; --warning: #f59e0b; --purple: #8b5cf6;
+            --passai: #ea580c; --nubank: #820ad1;
         }
 
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg-body);
-            color: var(--text-main);
-            margin: 0;
-            padding: 15px;
-            padding-bottom: 100px;
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg-body); color: var(--text-main); margin: 0; padding: 0; }
+        
+        /* TELA DE LOGIN */
+        #loginScreen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-body);
+            display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 999;
         }
+        .login-box {
+            background: #fff; padding: 40px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; max-width: 90%; width: 350px;
+        }
+        .btn-google {
+            background: #fff; border: 1px solid #ddd; color: #333; padding: 12px 20px;
+            border-radius: 50px; cursor: pointer; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; margin-top: 20px; transition: all 0.2s;
+        }
+        .btn-google:hover { background: #f1f5f9; }
 
-        .container { max-width: 1000px; margin: 0 auto; }
-
+        /* APP CONTENT */
+        #appContent { display: none; padding: 15px; padding-bottom: 100px; max-width: 1000px; margin: 0 auto; }
+        
         /* HEADER */
-        header { display: flex; flex-direction: column; align-items: center; gap: 15px; margin-bottom: 30px; }
+        header { display: flex; flex-direction: column; align-items: center; gap: 15px; margin-bottom: 20px; margin-top: 10px; }
+        .user-info { font-size: 0.8rem; color: var(--text-muted); display: flex; align-items: center; gap: 5px; }
+        .btn-logout { font-size: 0.7rem; color: var(--danger); text-decoration: underline; cursor: pointer; }
+        
+        .controls-row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+        
         .date-control {
             background: #fff; padding: 8px 15px; border-radius: 50px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; align-items: center;
             gap: 10px; border: 1px solid var(--border);
         }
-        input[type="month"] { border: none; font-family: 'Inter', sans-serif; font-size: 1rem; color: var(--text-main); font-weight: 600; background: transparent; cursor: pointer; }
+        input[type="month"] { border: none; font-family: 'Inter', sans-serif; font-size: 1rem; font-weight: 600; background: transparent; cursor: pointer; }
         input[type="month"]:focus { outline: none; }
+        
+        .btn-copy {
+            background: #3b82f6; color: white; border: none; padding: 8px 15px; border-radius: 50px;
+            font-size: 0.85rem; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 5px;
+        }
+        .btn-copy:hover { background: #2563eb; }
+
         .sync-indicator { font-size: 0.75rem; font-weight: 600; padding: 4px 10px; border-radius: 20px; background: #fff; }
 
         /* DASHBOARD */
-        .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 15px; margin-bottom: 30px; }
+        .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 30px; }
         .card-stat {
-            background: var(--bg-card); padding: 20px; border-radius: 16px;
+            background: var(--bg-card); padding: 15px; border-radius: 16px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.03); border: 1px solid var(--border);
             display: flex; flex-direction: column; justify-content: space-between;
         }
-        .card-stat h3 { margin: 0 0 5px 0; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600; }
-        .card-stat .val { font-size: 1.4rem; font-weight: 800; color: var(--text-main); }
-        .stat-input { width: 100%; font-size: 1.4rem; font-weight: 800; border: none; border-bottom: 2px dashed #cbd5e1; background: transparent; padding: 0; color: inherit; }
+        .card-stat h3 { margin: 0 0 5px 0; font-size: 0.7rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600; }
+        .card-stat .val { font-size: 1.3rem; font-weight: 800; color: var(--text-main); }
+        .stat-input { width: 100%; font-size: 1.3rem; font-weight: 800; border: none; border-bottom: 2px dashed #cbd5e1; background: transparent; padding: 0; color: inherit; }
         .stat-input:focus { outline: none; border-bottom-color: var(--primary); }
 
-        /* CORES DASHBOARD */
+        /* CHART */
+        .chart-container { background: #fff; padding: 20px; border-radius: 20px; margin-bottom: 30px; border: 1px solid var(--border); height: 300px; display: flex; justify-content: center; }
+
+        /* CORES */
         .c-salary .val, .c-salary input { color: var(--success); }
         .c-total .val { color: var(--danger); }
         .c-rest .val { color: var(--primary); }
         .c-mine .val { color: var(--warning); }
         .c-emerg .val, .c-emerg input { color: var(--purple); }
 
-        /* SEÇÕES */
+        /* SEÇÕES & TABELAS */
         .section { background: var(--bg-card); border-radius: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.03); margin-bottom: 30px; border: 1px solid var(--border); overflow: hidden; }
         .sec-header { padding: 15px 20px; background: #fff; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
         .sec-header h2 { margin: 0; font-size: 1.1rem; font-weight: 700; display: flex; align-items: center; gap: 8px; }
         .sec-body { padding: 20px; }
-
-        /* TABELAS */
         .table-wrap { overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; min-width: 600px; }
         th { text-align: left; padding: 10px; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); border-bottom: 2px solid var(--border); }
         td { padding: 10px; border-bottom: 1px solid var(--border); vertical-align: middle; }
         input.td-input { width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.9rem; background: #f8fafc; }
-        input.td-input:focus { border-color: var(--primary); background: #fff; outline: none; }
-        select.icon-select { border: none; background: transparent; font-size: 1.2rem; cursor: pointer; padding: 0 5px; }
-        select.icon-select:focus { outline: none; }
-        input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--primary); cursor: pointer; }
+        select.icon-select { border: none; background: transparent; font-size: 1.2rem; cursor: pointer; }
+        input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--primary); }
         .prog-bar { height: 4px; background: #e2e8f0; border-radius: 2px; margin-top: 5px; overflow: hidden; }
         .prog-fill { height: 100%; background: var(--primary); width: 0%; transition: width 0.3s; }
-
-        .btn-add { width: 100%; padding: 12px; margin-top: 15px; border-radius: 10px; border: 2px dashed #cbd5e1; background: #f8fafc; color: var(--text-muted); font-weight: 600; cursor: pointer; transition: all 0.2s; }
-        .btn-add:hover { border-color: var(--primary); color: var(--primary); background: #eff6ff; }
+        .btn-add { width: 100%; padding: 12px; margin-top: 15px; border-radius: 10px; border: 2px dashed #cbd5e1; background: #f8fafc; color: var(--text-muted); font-weight: 600; cursor: pointer; }
         .btn-del { border: none; background: transparent; color: var(--danger); font-size: 1.2rem; cursor: pointer; }
 
         /* DEVEDORES */
@@ -99,16 +108,15 @@
         .ds-lbl { font-size: 0.7rem; text-transform: uppercase; color: #64748b; font-weight: 600; }
         .ds-val { font-size: 1.1rem; font-weight: 800; }
         .debt-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; }
-        .debt-item { background: #fff; border: 1px solid var(--border); padding: 15px; border-radius: 12px; transition: all 0.3s ease; position: relative; }
+        .debt-item { background: #fff; border: 1px solid var(--border); padding: 15px; border-radius: 12px; position: relative; }
         .debt-item.is-paid { background: #dcfce7; border-color: #86efac; opacity: 0.8; }
         .d-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
         .d-name { font-weight: 700; color: var(--primary-dark); font-size: 1rem; text-transform: capitalize; }
         .d-val { font-size: 1.3rem; font-weight: 800; color: var(--text-main); margin: 5px 0; }
         .debt-item.is-paid .d-val { color: #15803d; text-decoration: line-through; }
-        .d-status { font-size: 0.75rem; font-weight: 600; color: #b45309; background: #fffbeb; padding: 2px 8px; border-radius: 10px; display: inline-block; }
+        .d-status { font-size: 0.75rem; font-weight: 600; color: #b45309; background: #fffbeb; padding: 2px 8px; border-radius: 10px; }
         .debt-item.is-paid .d-status { color: #15803d; background: #fff; }
-        .d-fut { font-size: 0.75rem; color: var(--text-muted); margin-top: 5px; }
-        .pay-check { width: 24px; height: 24px; border-radius: 50%; border: 2px solid #cbd5e1; display: flex; align-items: center; justify-content: center; cursor: pointer; background: #fff; transition: all 0.2s; }
+        .pay-check { width: 24px; height: 24px; border-radius: 50%; border: 2px solid #cbd5e1; display: flex; align-items: center; justify-content: center; cursor: pointer; background: #fff; }
         .pay-check.checked { background: #22c55e; border-color: #22c55e; color: #fff; }
 
         footer { text-align: center; font-size: 0.8rem; color: var(--text-muted); margin-top: 40px; }
@@ -123,48 +131,52 @@
 </head>
 <body>
 
-<div class="container">
+<div id="loginScreen">
+    <div class="login-box">
+        <h1 style="margin-bottom:10px;">Financeiro 10.0</h1>
+        <p style="color:#64748b; margin-bottom:30px;">Faça login para acessar seus gastos seguros na nuvem.</p>
+        <button class="btn-google" onclick="loginWithGoogle()">
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="20">
+            Entrar com Google
+        </button>
+    </div>
+</div>
+
+<div id="appContent">
     <header>
-        <div class="date-control">
-            <span>📅 Mês:</span>
-            <input type="month" id="monthPicker" onchange="changeMonth()">
+        <div class="user-info">
+            <span id="userEmail">usuario@email.com</span>
+            <span class="btn-logout" onclick="logout()">Sair</span>
+        </div>
+
+        <div class="controls-row">
+            <div class="date-control">
+                <span>📅</span>
+                <input type="month" id="monthPicker" onchange="changeMonth()">
+            </div>
+            <button class="btn-copy" onclick="copyPreviousMonth()">
+                <span>🔄</span> Copiar Mês Anterior
+            </button>
         </div>
         <div id="syncStatus" class="sync-indicator">Conectando...</div>
     </header>
 
     <div class="dashboard-grid">
-        <div class="card-stat c-salary">
-            <h3>Salário</h3>
-            <input type="number" id="salary" class="stat-input" value="0" oninput="calculateAll()">
-        </div>
-        <div class="card-stat c-emerg">
-            <h3>🚨 Emergência</h3>
-            <input type="number" id="emergencyFund" class="stat-input" value="0" oninput="calculateAll()" placeholder="0,00">
-            <small style="font-size:0.65rem; color:#aaa; margin-top:5px;">(Reserva, não é gasto)</small>
-        </div>
-        <div class="card-stat c-total">
-            <h3>Total Saídas</h3>
-            <div class="val" id="totalExpenses">R$ 0,00</div>
-        </div>
-        <div class="card-stat c-rest">
-            <h3>Resta</h3>
-            <div class="val" id="remaining">R$ 0,00</div>
-        </div>
-        <div class="card-stat c-mine">
-            <h3>Meu Custo Real</h3>
-            <div class="val" id="myRealExpenses">R$ 0,00</div>
-        </div>
+        <div class="card-stat c-salary"><h3>Salário</h3><input type="number" id="salary" class="stat-input" value="0" oninput="calculateAll()"></div>
+        <div class="card-stat c-emerg"><h3>🚨 Emergência</h3><input type="number" id="emergencyFund" class="stat-input" value="0" oninput="calculateAll()"></div>
+        <div class="card-stat c-total"><h3>Total Saídas</h3><div class="val" id="totalExpenses">R$ 0,00</div></div>
+        <div class="card-stat c-rest"><h3>Resta</h3><div class="val" id="remaining">R$ 0,00</div></div>
+        <div class="card-stat c-mine"><h3>Meu Custo Real</h3><div class="val" id="myRealExpenses">R$ 0,00</div></div>
+    </div>
+
+    <div class="chart-container">
+        <canvas id="expenseChart"></canvas>
     </div>
 
     <div class="section">
         <div class="sec-header"><h2>📉 Gastos Fixos</h2></div>
         <div class="sec-body">
-            <div class="table-wrap">
-                <table id="mainTable">
-                    <thead><tr><th style="width:40px">Ícone</th><th>Item</th><th style="width:100px">Valor</th><th style="width:40px; text-align:center">Meu?</th><th style="width:30px"></th></tr></thead>
-                    <tbody></tbody>
-                </table>
-            </div>
+            <div class="table-wrap"><table id="mainTable"><thead><tr><th style="width:40px">Ícone</th><th>Item</th><th style="width:100px">Valor</th><th style="width:40px; text-align:center">Meu?</th><th style="width:30px"></th></tr></thead><tbody></tbody></table></div>
             <button class="btn-add" onclick="addMainRow()">+ Adicionar Gasto Fixo</button>
         </div>
     </div>
@@ -216,14 +228,15 @@
         </div>
     </div>
 
-    <footer>Controle Financeiro 9.2 (Correção de Salvamento)</footer>
+    <footer>Controle Financeiro 10.0 (Login + Gráficos + Importar)</footer>
 </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-    import { getFirestore, doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+    import { getFirestore, doc, onSnapshot, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+    import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
 
-    // --- FIREBASE KEYS ---
+    // --- CONFIG FIREBASE ---
     const firebaseConfig = {
         apiKey: "AIzaSyDBcLEJw2PiFoBvocr3Zq01sRjjakteHfs",
         authDomain: "app-controle-gastos-1e658.firebaseapp.com",
@@ -236,53 +249,92 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
-    
-    // VARS
+    const auth = getAuth(app);
+    const provider = new GoogleAuthProvider();
+
+    // VARIÁVEIS
     let currentDocId = "";
     let isReceiving = false;
     let saveTimer;
     let unsubscribe = null;
+    let chartInstance = null; // Para o Gráfico
     
-    window.paidDebtors = []; 
+    window.paidDebtors = [];
     window.iconsList = ["💸", "🏠", "💡", "💧", "📶", "🏋️", "🚗", "⛽", "🍔", "💇", "💊", "💳", "🎓", "✈️"];
 
-    // START
-    window.onload = function() {
+    // --- LOGIN ---
+    window.loginWithGoogle = () => {
+        signInWithPopup(auth, provider).catch((error) => alert("Erro no login: " + error.message));
+    }
+    window.logout = () => { signOut(auth); }
+
+    // Monitora Login
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('appContent').style.display = 'block';
+            document.getElementById('userEmail').innerText = user.email;
+            initApp();
+        } else {
+            document.getElementById('loginScreen').style.display = 'flex';
+            document.getElementById('appContent').style.display = 'none';
+        }
+    });
+
+    // --- APP START ---
+    function initApp() {
         const now = new Date();
         const year = now.getFullYear();
         const month = String(now.getMonth() + 1).padStart(2, '0');
         const defaultDate = `${year}-${month}`;
-        
         document.getElementById('monthPicker').value = defaultDate;
         loadMonthData(defaultDate);
-    };
+    }
 
-    // --- CORREÇÃO DO SALVAMENTO (SAVE-BEFORE-SWITCH) ---
+    // --- FUNÇÕES DE MÊS ---
     window.changeMonth = function() {
         const picker = document.getElementById('monthPicker');
-        const newDate = picker.value;
-        
-        // 1. Força o salvamento do mês anterior AGORA
-        if (currentDocId && !isReceiving) {
-            clearTimeout(saveTimer);
-            document.getElementById('syncStatus').innerText = "Salvando anterior...";
-            // Salva síncrono (chama a função de salvar com 'force=true')
-            // Nota: saveData é async, mas ele captura os dados da tela imediatamente
-            saveData(true); 
-        }
+        if (currentDocId && !isReceiving) saveData(true); // Salva antes de sair
+        if (picker.value) loadMonthData(picker.value);
+    }
 
-        // 2. Carrega o novo mês
-        if (newDate) {
-            loadMonthData(newDate);
+    // NOVO: IMPORTAR MÊS ANTERIOR
+    window.copyPreviousMonth = async function() {
+        if(!confirm("Tem certeza? Isso vai substituir os dados deste mês pelos dados do mês anterior.")) return;
+
+        const current = new Date(currentDocId + "-01");
+        current.setMonth(current.getMonth() - 1); // Volta 1 mês
+        const year = current.getFullYear();
+        const month = String(current.getMonth() + 1).padStart(2, '0');
+        const prevId = `${year}-${month}`;
+
+        document.getElementById('syncStatus').innerText = "Buscando " + prevId + "...";
+
+        try {
+            const docSnap = await getDoc(doc(db, "meus_gastos", prevId));
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                data.paidDebtors = []; // Reseta pagamentos
+                isReceiving = true; // Bloqueia save loop
+                updateScreen(data); // Carrega na tela
+                setTimeout(() => { 
+                    isReceiving = false; 
+                    saveData(true); // Salva no mês atual
+                    alert("Dados de " + prevId + " importados com sucesso!");
+                }, 500);
+            } else {
+                alert("Não encontrei dados salvos para o mês " + prevId);
+            }
+        } catch(e) {
+            console.error(e);
+            alert("Erro ao importar.");
         }
     }
 
     function loadMonthData(dateString) {
         currentDocId = dateString;
         document.getElementById('syncStatus').innerText = "Carregando...";
-
         if (unsubscribe) unsubscribe();
-
         const docRef = doc(db, "meus_gastos", currentDocId);
 
         unsubscribe = onSnapshot(docRef, (docSnap) => {
@@ -298,23 +350,17 @@
                 updateScreen(null); 
                 saveData(true);     
             }
-        }, (err) => {
-            console.error(err);
-            document.getElementById('syncStatus').innerText = "Erro Offline";
         });
     }
 
     function updateScreen(data) {
         if (!data) data = getDefaultData();
-
-        // Garante que o Nubank apareça se for antigo
+        // Garante Nubank
         if (data.main && !data.main.some(i => i.id === 'nubank_auto')) {
              data.main.unshift({ icon: '💳', name: 'Nubank', value: 0, isMine: true, locked: true, id: 'nubank_auto' });
         }
-
         document.getElementById('salary').value = data.salary || 0;
         document.getElementById('emergencyFund').value = data.emergency || 0;
-        
         document.getElementById('bbTotalBill').value = data.bbTotal || 0;
         document.getElementById('mpTotalBill').value = data.mpTotal || 0;
         document.getElementById('passaiTotalBill').value = data.passaiTotal || 0;
@@ -325,14 +371,12 @@
         renderTable('mpTable', data.mp || [], 'split');
         renderTable('passaiTable', data.passai || [], 'split');
         renderTable('nubankTable', data.nubank || [], 'split');
-
         calculateAll();
     }
 
     function getDefaultData() {
         return {
-            salary: 0, emergency: 0, 
-            bbTotal: 0, mpTotal: 0, passaiTotal: 0, nubankTotal: 0,
+            salary: 0, emergency: 0, bbTotal: 0, mpTotal: 0, passaiTotal: 0, nubankTotal: 0,
             main: [
                 { icon: '💳', name: 'Cartão BB', value: 0, isMine: true, locked: true, id: 'bb_auto' },
                 { icon: '💳', name: 'Mercado Pago', value: 0, isMine: true, locked: true, id: 'mp_auto' },
@@ -340,74 +384,35 @@
                 { icon: '💳', name: 'Nubank', value: 0, isMine: true, locked: true, id: 'nubank_auto' },
                 { icon: '🏋️', name: 'Academia', value: 0, isMine: true },
                 { icon: '💡', name: 'Luz', value: 0, isMine: true }
-            ],
-            bb: [], mp: [], passai: [], nubank: [], paidDebtors: []
+            ], bb: [], mp: [], passai: [], nubank: [], paidDebtors: []
         };
     }
 
     function renderTable(id, list, type) {
         const tbody = document.querySelector(`#${id} tbody`);
         tbody.innerHTML = "";
-        list.forEach(item => {
-            if (type === 'main') addMainRowHTML(tbody, item);
-            else addSplitRowHTML(tbody, item);
-        });
+        list.forEach(item => { if (type === 'main') addMainRowHTML(tbody, item); else addSplitRowHTML(tbody, item); });
     }
 
-    // --- MANIPULAÇÃO DE LINHAS ---
-    window.addMainRow = function() {
-        const tbody = document.querySelector("#mainTable tbody");
-        addMainRowHTML(tbody, { icon: '💸', name: '', value: '', isMine: true });
-        calculateAndSchedule();
-    }
-
-    window.addSplitRow = function(id) {
-        const tbody = document.querySelector(`#${id} tbody`);
-        addSplitRowHTML(tbody, { name: '', desc: '', inst: '', value: '' });
-        calculateAndSchedule();
-    }
-
-    function addMainRowHTML(tbody, item) {
-        const tr = document.createElement("tr");
-        let iconOptions = window.iconsList.map(i => `<option value="${i}" ${i === item.icon ? 'selected' : ''}>${i}</option>`).join('');
-        const locked = item.locked ? 'readonly style="background:#f1f5f9; color:#999"' : '';
-        const del = item.locked ? '' : `<button class="btn-del" onclick="removeRow(this)">×</button>`;
-        tr.innerHTML = `<td><select class="icon-select" onchange="calculateAndSchedule()">${iconOptions}</select></td><td><input type="text" class="td-input" value="${item.name}" ${locked} oninput="calculateAndSchedule()"></td><td><input type="number" class="td-input val-input" value="${item.value}" step="0.01" id="${item.id || ''}" ${locked} oninput="calculateAndSchedule()"></td><td style="text-align:center"><input type="checkbox" ${item.isMine ? 'checked' : ''} onchange="calculateAndSchedule()"></td><td>${del}</td>`;
-        tbody.appendChild(tr);
-    }
-
-    function addSplitRowHTML(tbody, item) {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `<td><input type="text" class="td-input split-name" value="${item.name}" placeholder="Nome" oninput="calculateAndSchedule()"></td><td><input type="text" class="td-input" value="${item.desc}" placeholder="Item" oninput="calculateAndSchedule()"></td><td><input type="text" class="td-input split-inst" value="${item.inst || ''}" placeholder="1/10" oninput="updateBar(this); calculateAndSchedule()"><div class="prog-bar"><div class="prog-fill" style="width:0%"></div></div></td><td><input type="number" class="td-input val-input split-val" value="${item.value}" step="0.01" oninput="calculateAndSchedule()"></td><td><button class="btn-del" onclick="removeRow(this)">×</button></td>`;
-        tbody.appendChild(tr);
-        if(item.inst) updateBar(tr.querySelector('.split-inst'));
-    }
-
-    window.removeRow = function(btn) { btn.closest('tr').remove(); calculateAndSchedule(); }
-    window.updateBar = function(input) {
-        const val = input.value; const bar = input.nextElementSibling.querySelector('.prog-fill');
-        if(val.includes('/')) { const [cur, tot] = val.split('/').map(Number); if(tot > 0) bar.style.width = Math.min((cur/tot)*100, 100) + '%'; } else bar.style.width = '0%';
-    }
-    window.togglePaid = function(name) {
-        const idx = window.paidDebtors.indexOf(name);
-        if (idx > -1) window.paidDebtors.splice(idx, 1); else window.paidDebtors.push(name);
-        calculateAndSchedule();
-    }
-
+    // --- CALCULOS & GRÁFICO ---
     window.calculateAll = function() {
         const bb = processCard('bbTable', 'bbTotalBill', 'bbMyShareDisplay', 'bb_auto');
         const mp = processCard('mpTable', 'mpTotalBill', 'mpMyShareDisplay', 'mp_auto');
         const passai = processCard('passaiTable', 'passaiTotalBill', 'passaiMyShareDisplay', 'passai_auto');
         const nubank = processCard('nubankTable', 'nubankTotalBill', 'nubankMyShareDisplay', 'nubank_auto');
 
-        let totalExpenses = 0; let myRealExpenses = 0;
-        totalExpenses += parseFloat(document.getElementById('emergencyFund').value) || 0;
+        let totalExpenses = 0; let myRealExpenses = 0; let fixedSum = 0;
+        const emergency = parseFloat(document.getElementById('emergencyFund').value) || 0;
+        totalExpenses += emergency;
 
         document.querySelectorAll('#mainTable tbody tr').forEach(tr => {
             const val = parseFloat(tr.querySelector('.val-input').value) || 0;
             const isMine = tr.querySelector('input[type="checkbox"]').checked;
+            const isCardAuto = tr.querySelector('.val-input').hasAttribute('readonly'); // Identifica cartões
+            
             totalExpenses += val;
             if (isMine) myRealExpenses += val;
+            if (!isCardAuto) fixedSum += val; // Soma apenas fixos reais
         });
 
         const salary = parseFloat(document.getElementById('salary').value) || 0;
@@ -416,6 +421,31 @@
         document.getElementById('myRealExpenses').innerText = fmt(myRealExpenses);
 
         updateDebtors({ ...bb.debtors }, { ...mp.debtors }, { ...passai.debtors }, { ...nubank.debtors });
+        
+        // Atualiza Gráfico
+        const cardsTotal = bb.myShare + mp.myShare + passai.myShare + nubank.myShare;
+        updateChart(fixedSum, cardsTotal, emergency, salary - totalExpenses);
+    }
+
+    function updateChart(fixed, cards, emerg, rest) {
+        const ctx = document.getElementById('expenseChart').getContext('2d');
+        if (chartInstance) chartInstance.destroy(); // Remove anterior
+        
+        // Evita gráfico negativo
+        if (rest < 0) rest = 0;
+
+        chartInstance = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Gastos Fixos', 'Cartões', 'Emergência', 'Livre'],
+                datasets: [{
+                    data: [fixed, cards, emerg, rest],
+                    backgroundColor: ['#3b82f6', '#f59e0b', '#8b5cf6', '#10b981'],
+                    borderWidth: 0
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+        });
     }
 
     function processCard(tableId, totalId, displayId, autoInputId) {
@@ -439,51 +469,58 @@
         document.getElementById(displayId).innerText = fmt(myShare);
         const autoInput = document.getElementById(autoInputId);
         if (autoInput) autoInput.value = myShare.toFixed(2);
-        return { debtors };
+        return { debtors, myShare };
     }
 
+    // --- BOILERPLATE TABLE FUNCTIONS ---
+    window.addMainRow = () => { addMainRowHTML(document.querySelector("#mainTable tbody"), {icon:'💸',name:'',value:'',isMine:true}); calculateAndSchedule(); }
+    window.addSplitRow = (id) => { addSplitRowHTML(document.querySelector(`#${id} tbody`), {name:'',desc:'',inst:'',value:''}); calculateAndSchedule(); }
+    
+    function addMainRowHTML(tbody, item) {
+        const tr = document.createElement("tr");
+        let opts = window.iconsList.map(i => `<option value="${i}" ${i === item.icon ? 'selected' : ''}>${i}</option>`).join('');
+        const locked = item.locked ? 'readonly style="background:#f1f5f9; color:#999"' : '';
+        const del = item.locked ? '' : `<button class="btn-del" onclick="removeRow(this)">×</button>`;
+        tr.innerHTML = `<td><select class="icon-select" onchange="calculateAndSchedule()">${opts}</select></td><td><input type="text" class="td-input" value="${item.name}" ${locked} oninput="calculateAndSchedule()"></td><td><input type="number" class="td-input val-input" value="${item.value}" step="0.01" id="${item.id || ''}" ${locked} oninput="calculateAndSchedule()"></td><td style="text-align:center"><input type="checkbox" ${item.isMine ? 'checked' : ''} onchange="calculateAndSchedule()"></td><td>${del}</td>`;
+        tbody.appendChild(tr);
+    }
+    function addSplitRowHTML(tbody, item) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td><input type="text" class="td-input split-name" value="${item.name}" placeholder="Nome" oninput="calculateAndSchedule()"></td><td><input type="text" class="td-input" value="${item.desc}" placeholder="Item" oninput="calculateAndSchedule()"></td><td><input type="text" class="td-input split-inst" value="${item.inst || ''}" placeholder="1/10" oninput="updateBar(this); calculateAndSchedule()"><div class="prog-bar"><div class="prog-fill" style="width:0%"></div></div></td><td><input type="number" class="td-input val-input split-val" value="${item.value}" step="0.01" oninput="calculateAndSchedule()"></td><td><button class="btn-del" onclick="removeRow(this)">×</button></td>`;
+        tbody.appendChild(tr);
+        if(item.inst) updateBar(tr.querySelector('.split-inst'));
+    }
+    window.removeRow = (btn) => { btn.closest('tr').remove(); calculateAndSchedule(); }
+    window.updateBar = (input) => { const val = input.value; const bar = input.nextElementSibling.querySelector('.prog-fill'); if(val.includes('/')) { const [cur, tot] = val.split('/').map(Number); if(tot > 0) bar.style.width = Math.min((cur/tot)*100, 100) + '%'; } else bar.style.width = '0%'; }
+    window.togglePaid = (name) => { const idx = window.paidDebtors.indexOf(name); if (idx > -1) window.paidDebtors.splice(idx, 1); else window.paidDebtors.push(name); calculateAndSchedule(); }
+    
     function updateDebtors(d1, d2, d3, d4) {
         const list = document.getElementById('debtorsList'); list.innerHTML = "";
-        const all = {}; const merge = (source) => { for (let k in source) { if (!all[k]) all[k] = { ...source[k] }; else { all[k].total += source[k].total; all[k].future += source[k].future; } } };
+        const all = {}; const merge = (s) => { for (let k in s) { if (!all[k]) all[k] = {...s[k]}; else { all[k].total += s[k].total; all[k].future += s[k].future; } } };
         merge(d1); merge(d2); merge(d3); merge(d4);
-        let toReceive = 0; let received = 0;
-
-        if (Object.keys(all).length === 0) { list.innerHTML = "<div style='color:#999; width:100%; text-align:center'>Ninguém deve nada.</div>"; } 
+        let tr = 0; let r = 0;
+        if (Object.keys(all).length === 0) list.innerHTML = "<div style='color:#999; width:100%; text-align:center'>Ninguém deve nada.</div>";
         else {
             for (let k in all) {
-                const p = all[k];
-                const isPaid = window.paidDebtors.includes(p.name);
-                if (isPaid) received += p.total; else toReceive += p.total;
-                const div = document.createElement('div');
-                div.className = `debt-item ${isPaid ? 'is-paid' : ''}`;
+                const p = all[k]; const isPaid = window.paidDebtors.includes(p.name);
+                if (isPaid) r += p.total; else tr += p.total;
+                const div = document.createElement('div'); div.className = `debt-item ${isPaid ? 'is-paid' : ''}`;
                 div.innerHTML = `<div class="d-head"><div class="d-name">${p.name}</div><div class="pay-check ${isPaid ? 'checked' : ''}" onclick="togglePaid('${p.name}')">${isPaid ? '✔' : ''}</div></div><div class="d-status">${isPaid ? 'PAGO' : 'PENDENTE'}</div><div class="d-val">${fmt(p.total)}</div><div class="d-fut">${p.future > 0 ? `+ ${fmt(p.future)} fut.` : 'Quitado'}</div>`;
                 list.appendChild(div);
             }
         }
-        document.getElementById('totalToReceive').innerText = fmt(toReceive);
-        document.getElementById('totalReceived').innerText = fmt(received);
+        document.getElementById('totalToReceive').innerText = fmt(tr); document.getElementById('totalReceived').innerText = fmt(r);
     }
-
+    
     function fmt(n) { return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
-
-    window.calculateAndSchedule = function() { calculateAll(); if (isReceiving) return; document.getElementById('syncStatus').innerText = "..."; clearTimeout(saveTimer); saveTimer = setTimeout(() => saveData(), 1000); }
-
+    window.calculateAndSchedule = () => { calculateAll(); if (isReceiving) return; document.getElementById('syncStatus').innerText = "..."; clearTimeout(saveTimer); saveTimer = setTimeout(() => saveData(), 1000); }
     async function saveData(force = false) {
         if (isReceiving && !force) return;
-        const data = {
-            salary: document.getElementById('salary').value,
-            emergency: document.getElementById('emergencyFund').value,
-            bbTotal: document.getElementById('bbTotalBill').value,
-            mpTotal: document.getElementById('mpTotalBill').value,
-            passaiTotal: document.getElementById('passaiTotalBill').value,
-            nubankTotal: document.getElementById('nubankTotalBill').value,
-            paidDebtors: window.paidDebtors,
-            main: [], bb: [], mp: [], passai: [], nubank: []
-        };
+        const data = { salary: document.getElementById('salary').value, emergency: document.getElementById('emergencyFund').value, bbTotal: document.getElementById('bbTotalBill').value, mpTotal: document.getElementById('mpTotalBill').value, passaiTotal: document.getElementById('passaiTotalBill').value, nubankTotal: document.getElementById('nubankTotalBill').value, paidDebtors: window.paidDebtors, main: [], bb: [], mp: [], passai: [], nubank: [] };
         document.querySelectorAll('#mainTable tbody tr').forEach(tr => { data.main.push({ icon: tr.querySelector('.icon-select').value, name: tr.querySelector('input[type="text"]').value, value: tr.querySelector('.val-input').value, isMine: tr.querySelector('input[type="checkbox"]').checked, locked: tr.querySelector('.val-input').hasAttribute('readonly'), id: tr.querySelector('.val-input').id || null }); });
-        const scrapeCard = (tid, arr) => { document.querySelectorAll(`#${tid} tbody tr`).forEach(tr => { const inps = tr.querySelectorAll('input'); arr.push({ name: inps[0].value, desc: inps[1].value, inst: inps[2].value, value: inps[3].value }); }); };
-        scrapeCard('bbTable', data.bb); scrapeCard('mpTable', data.mp); scrapeCard('passaiTable', data.passai); scrapeCard('nubankTable', data.nubank);
-        try { await setDoc(doc(db, "meus_gastos", currentDocId), data); document.getElementById('syncStatus').innerHTML = '<span style="color:#10b981">☁ Salvo</span>'; } catch (e) { console.error(e); document.getElementById('syncStatus').innerText = "Erro ao Salvar"; }
+        const sc = (id, arr) => { document.querySelectorAll(`#${id} tbody tr`).forEach(tr => { const i = tr.querySelectorAll('input'); arr.push({ name: i[0].value, desc: i[1].value, inst: i[2].value, value: i[3].value }); }); };
+        sc('bbTable', data.bb); sc('mpTable', data.mp); sc('passaiTable', data.passai); sc('nubankTable', data.nubank);
+        try { await setDoc(doc(db, "meus_gastos", currentDocId), data); document.getElementById('syncStatus').innerHTML = '<span style="color:#10b981">☁ Salvo</span>'; } catch (e) { console.error(e); document.getElementById('syncStatus').innerText = "Erro Save"; }
     }
 </script>
 </body>
