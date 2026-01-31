@@ -4,32 +4,58 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Watch</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
     <style>
         body {
-            background-color: #000; /* Fundo preto economiza bateria */
+            background-color: #000;
             color: #fff;
             font-family: 'Inter', sans-serif;
             margin: 0;
-            padding: 10px;
+            padding: 15px 10px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
             min-height: 100vh;
             text-align: center;
         }
+
+        /* Seletor de Data Estilizado para Watch */
+        .date-container {
+            width: 100%;
+            margin-bottom: 20px;
+        }
+        input[type="month"] {
+            background: #1c1c1e;
+            color: #fff;
+            border: 1px solid #333;
+            padding: 12px;
+            border-radius: 12px;
+            width: 100%;
+            font-size: 1.1rem;
+            text-align: center;
+            font-family: 'Inter', sans-serif;
+            font-weight: 700;
+            outline: none;
+            box-sizing: border-box;
+            color-scheme: dark; /* Força o picker nativo a ser escuro */
+        }
+
+        /* Itens */
         .item { margin-bottom: 15px; width: 100%; border-bottom: 1px solid #333; padding-bottom: 10px; }
-        .label { font-size: 0.8rem; color: #aaa; text-transform: uppercase; margin-bottom: 2px; }
-        .value { font-size: 1.6rem; font-weight: 700; }
+        .label { font-size: 0.75rem; color: #999; text-transform: uppercase; margin-bottom: 4px; letter-spacing: 1px; }
+        .value { font-size: 1.8rem; font-weight: 700; }
         
         .green { color: #4ade80; }
         .red { color: #f87171; }
         .blue { color: #60a5fa; }
-        .loading { font-size: 0.8rem; color: #666; }
+        .loading { font-size: 0.8rem; color: #666; margin-top: 20px; }
     </style>
 </head>
 <body>
+
+    <div class="date-container">
+        <input type="month" id="monthPicker" onchange="changeMonth()">
+    </div>
 
     <div id="content" style="display:none;">
         <div class="item">
@@ -46,13 +72,13 @@
         </div>
     </div>
 
-    <div id="loading" class="loading">Carregando dados...</div>
+    <div id="loading" class="loading">Carregando...</div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
         import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
-        // SUAS CHAVES AQUI (As mesmas do index.html)
+        // SUAS CHAVES (Já configuradas)
         const firebaseConfig = {
             apiKey: "AIzaSyDBcLEJw2PiFoBvocr3Zq01sRjjakteHfs",
             authDomain: "app-controle-gastos-1e658.firebaseapp.com",
@@ -66,11 +92,29 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // Pega data atual
-        const now = new Date();
-        const docId = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+        // Inicialização
+        window.onload = function() {
+            const now = new Date();
+            const defaultDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+            
+            const picker = document.getElementById('monthPicker');
+            picker.value = defaultDate;
+            
+            loadData(defaultDate);
+        };
 
-        async function loadData() {
+        // Função chamada ao trocar a data
+        window.changeMonth = function() {
+            const picker = document.getElementById('monthPicker');
+            if (picker.value) {
+                document.getElementById('content').style.display = 'none';
+                document.getElementById('loading').style.display = 'block';
+                document.getElementById('loading').innerText = "Buscando...";
+                loadData(picker.value);
+            }
+        }
+
+        async function loadData(docId) {
             try {
                 const docRef = doc(db, "meus_gastos", docId);
                 const snap = await getDoc(docRef);
@@ -78,93 +122,68 @@
                 if (snap.exists()) {
                     const data = snap.data();
                     
-                    // Recalcula Totais (Mesma lógica do app principal simplificada)
-                    let total = (parseFloat(data.emergency) || 0) + (parseFloat(data.bbTotal) || 0) + (parseFloat(data.mpTotal) || 0) + (parseFloat(data.passaiTotal) || 0) + (parseFloat(data.nubankTotal) || 0);
-                    
-                    // Soma itens manuais
-                    let myReal = 0;
-                    if(data.main) {
-                        data.main.forEach(i => {
-                            let val = parseFloat(i.value) || 0;
-                            // Se não for um dos cartões automáticos
-                            if(!['bb_auto','mp_auto','passai_auto','nubank_auto'].includes(i.id)) {
-                                total += val;
-                            }
-                            if(i.isMine) myReal += val;
-                        });
-                    }
-
-                    // Correção: Para "Meu Custo Real", precisamos somar a parte dos cartões
-                    // Mas como é complexo recalcular aqui sem todas as funções, 
-                    // vamos focar no TOTAL e RESTA que são mais fáceis.
-                    // (O cálculo perfeito exigiria copiar toda aquela lógica JS gigante pra cá)
-                    
-                    // Simplificação para visualização rápida:
-                    // Vamos exibir o SALÁRIO - TOTAL (Resta)
-                    
                     const salary = parseFloat(data.salary) || 0;
                     
-                    // Recalculo rápido dos totais dos cartões (só o total da fatura)
-                    // Nota: O cálculo exato do "Resta" depende da soma das tabelas.
-                    // Para ser 100% preciso, precisaríamos da função calculateAll aqui.
-                    // Vou assumir que você quer ver se tem dinheiro ou não.
-                    
-                    // TRUQUE: Vamos ler apenas o que foi salvo no banco?
-                    // O banco salva os inputs, não o resultado da conta. 
-                    // Então vamos fazer uma conta básica aqui:
-                    
-                    // Recalculando TOTAL GERAL igual ao index.html
-                    let finalTotal = (parseFloat(data.emergency) || 0);
-                    
-                    // Adiciona itens manuais
-                    if (data.main) {
-                        data.main.forEach(item => {
-                            if (!item.locked) finalTotal += (parseFloat(item.value) || 0);
+                    // Cálculo Simplificado para Watch (Lê o total salvo ou recalcula o básico)
+                    // Recalcula Totais Gerais baseados nos dados salvos
+                    let totalExpenses = (parseFloat(data.emergency) || 0);
+                    let myRealExpenses = 0;
+
+                    // Soma manuais
+                    if(data.main) {
+                        data.main.forEach(i => {
+                            const val = parseFloat(i.value) || 0;
+                            // Se não for cartão automático, soma no total geral
+                            if(!['bb_auto','mp_auto','passai_auto','nubank_auto'].includes(i.id)) {
+                                totalExpenses += val;
+                            }
+                            if(i.isMine) myRealExpenses += val;
                         });
                     }
-                    
-                    // Adiciona Minha Parte dos Cartões (precisa recalcular na hora)
-                    const calcCardShare = (totalBill, list) => {
-                        let bill = parseFloat(totalBill) || 0;
+
+                    // Função auxiliar para cartões
+                    const calcCard = (total, list) => {
+                        const bill = parseFloat(total) || 0;
                         let others = 0;
                         if(list) list.forEach(i => others += (parseFloat(i.value) || 0));
-                        return bill - others;
+                        return bill - others; // Minha parte
                     };
 
-                    finalTotal += calcCardShare(data.bbTotal, data.bb);
-                    finalTotal += calcCardShare(data.mpTotal, data.mp);
-                    finalTotal += calcCardShare(data.passaiTotal, data.passai);
-                    finalTotal += calcCardShare(data.nubankTotal, data.nubank);
+                    // Calcula minha parte dos cartões
+                    const bbShare = calcCard(data.bbTotal, data.bb);
+                    const mpShare = calcCard(data.mpTotal, data.mp);
+                    const passaiShare = calcCard(data.passaiTotal, data.passai);
+                    const nubankShare = calcCard(data.nubankTotal, data.nubank);
 
-                    const resta = salary - finalTotal;
+                    // Soma cartões ao total
+                    totalExpenses += bbShare + mpShare + passaiShare + nubankShare;
+                    
+                    // Ajusta "Meu Custo Real" (Manual + Cartões)
+                    // Nota: O loop acima já somou os manuais marcados como "Meu". 
+                    // Agora somamos a parte dos cartões (que sempre são "Meus" na lógica do app principal)
+                    myRealExpenses += bbShare + mpShare + passaiShare + nubankShare;
 
-                    document.getElementById('resta').innerText = resta.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
-                    document.getElementById('gastos').innerText = finalTotal.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
-                    
-                    // "Meu Custo" aproximado (Manual + Cartões)
-                    // Para simplificar no relógio, vou omitir ou deixar zerado se for muito complexo
-                    // Mas vamos tentar:
-                    let myShare = 0;
-                    if(data.main) data.main.forEach(i => { if(i.isMine && !i.locked) myShare += parseFloat(i.value)||0; });
-                    myShare += calcCardShare(data.bbTotal, data.bb);
-                    myShare += calcCardShare(data.mpTotal, data.mp);
-                    myShare += calcCardShare(data.passaiTotal, data.passai);
-                    myShare += calcCardShare(data.nubankTotal, data.nubank);
-                    
-                    document.getElementById('meu').innerText = myShare.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
+                    const remaining = salary - totalExpenses;
+
+                    // Atualiza Tela
+                    document.getElementById('resta').innerText = fmt(remaining);
+                    document.getElementById('gastos').innerText = fmt(totalExpenses);
+                    document.getElementById('meu').innerText = fmt(myRealExpenses);
 
                     document.getElementById('loading').style.display = 'none';
                     document.getElementById('content').style.display = 'block';
                 } else {
-                    document.getElementById('loading').innerText = "Sem dados este mês.";
+                    document.getElementById('loading').innerText = "Sem dados neste mês.";
                 }
             } catch (e) {
-                document.getElementById('loading').innerText = "Erro :(";
+                document.getElementById('loading').innerText = "Erro ao carregar.";
                 console.error(e);
             }
         }
 
-        loadData();
+        function fmt(n) {
+            return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }); // Sem centavos pra caber melhor
+        }
     </script>
 </body>
 </html>
