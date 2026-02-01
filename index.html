@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Controle Financeiro 12.1</title>
+    <title>Controle Financeiro 12.2</title>
 
     <link rel="apple-touch-icon" href="icone.png">
     <link rel="icon" type="image/png" href="icone.png">
@@ -234,7 +234,7 @@
         </div>
     </div>
 
-    <footer>Controle Financeiro 12.1 (Anti-Ghost Typing)</footer>
+    <footer>Controle Financeiro 12.2 (Correção de Salvamento Entre Meses)</footer>
 </div>
 
 <script type="module">
@@ -310,8 +310,15 @@
 
     window.changeMonth = function() {
         const picker = document.getElementById('monthPicker');
-        if (currentDocId && !isReceiving) saveData(true); 
         
+        // 1. SALVAMENTO CRÍTICO DO MÊS ANTERIOR ANTES DE MUDAR
+        const oldId = currentDocId;
+        if (oldId && !isReceiving) {
+            // Salva forçado no ID antigo
+            saveData(true, oldId); 
+        }
+        
+        // 2. AGORA MUDA PARA O NOVO
         if (picker.value) {
             localStorage.setItem('lastViewedMonth', picker.value);
             loadMonthData(picker.value);
@@ -360,9 +367,7 @@
 
         unsubscribe = onSnapshot(docRef, (docSnap) => {
             if (docSnap.exists()) {
-                // CORREÇÃO ANTI-GHOST TYPING (IMPORTANTE!)
                 if (docSnap.metadata.hasPendingWrites) {
-                    // Ignora atualizações locais para não redesenhar a tela enquanto digita
                     return;
                 }
 
@@ -494,7 +499,6 @@
         return { debtors, myShare };
     }
 
-    // BOILERPLATE
     window.addMainRow = () => { addMainRowHTML(document.querySelector("#mainTable tbody"), {icon:'💸',name:'',value:'',isMine:true}); calculateAndSchedule(); }
     window.addSplitRow = (id) => { addSplitRowHTML(document.querySelector(`#${id} tbody`), {name:'',desc:'',inst:'',value:''}); calculateAndSchedule(); }
     
@@ -517,11 +521,7 @@
     window.togglePaid = (name) => { const idx = window.paidDebtors.indexOf(name); if (idx > -1) window.paidDebtors.splice(idx, 1); else window.paidDebtors.push(name); calculateAndSchedule(); }
     
     function updateDebtors(d1, d2, d3, d4) {
-        const list = document.getElementById('debtorsList'); 
-        // Não apaga a lista se não for necessário (evita piscar se não for recalculado)
-        // Mas como calculateAll chama isso, vamos apenas reconstruir.
-        list.innerHTML = "";
-        
+        const list = document.getElementById('debtorsList'); list.innerHTML = "";
         const all = {}; const merge = (s) => { for (let k in s) { if (!all[k]) all[k] = {...s[k]}; else { all[k].total += s[k].total; all[k].future += s[k].future; } } };
         merge(d1); merge(d2); merge(d3); merge(d4);
         let tr = 0; let r = 0;
@@ -540,15 +540,29 @@
     
     function fmt(n) { return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
     window.calculateAndSchedule = () => { calculateAll(); if (isReceiving) return; document.getElementById('syncStatus').innerText = "..."; clearTimeout(saveTimer); saveTimer = setTimeout(() => saveData(), 1000); }
-    async function saveData(force = false) {
+    
+    // --- FUNÇÃO DE SALVAMENTO CORRIGIDA (AGORA ACEITA O ID CORRETO) ---
+    async function saveData(force = false, targetId = null) {
         if (isReceiving && !force) return;
+        
+        // Se um ID específico for passado (o mês antigo), usamos ele. 
+        // Se não, usamos o mês atual da tela.
+        const idToSave = targetId || currentDocId;
+        if (!idToSave) return;
+
         const data = { salary: document.getElementById('salary').value, emergency: document.getElementById('emergencyFund').value, bbTotal: document.getElementById('bbTotalBill').value, mpTotal: document.getElementById('mpTotalBill').value, passaiTotal: document.getElementById('passaiTotalBill').value, nubankTotal: document.getElementById('nubankTotalBill').value, paidDebtors: window.paidDebtors, main: [], bb: [], mp: [], passai: [], nubank: [] };
         document.querySelectorAll('#mainTable tbody tr').forEach(tr => { data.main.push({ icon: tr.querySelector('.icon-select').value, name: tr.querySelector('input[type="text"]').value, value: tr.querySelector('.val-input').value, isMine: tr.querySelector('input[type="checkbox"]').checked, locked: tr.querySelector('.val-input').hasAttribute('readonly'), id: tr.querySelector('.val-input').id || null }); });
         const sc = (id, arr) => { document.querySelectorAll(`#${id} tbody tr`).forEach(tr => { const i = tr.querySelectorAll('input'); arr.push({ name: i[0].value, desc: i[1].value, inst: i[2].value, value: i[3].value }); }); };
         sc('bbTable', data.bb); sc('mpTable', data.mp); sc('passaiTable', data.passai); sc('nubankTable', data.nubank);
-        try { await setDoc(doc(db, "meus_gastos", currentDocId), data); document.getElementById('syncStatus').innerHTML = '<span style="color:#10b981">☁ Salvo</span>'; } catch (e) { console.error(e); document.getElementById('syncStatus').innerText = "Erro Save"; }
+        
+        try { 
+            await setDoc(doc(db, "meus_gastos", idToSave), data); 
+            document.getElementById('syncStatus').innerHTML = '<span style="color:#10b981">☁ Salvo</span>'; 
+        } catch (e) { 
+            console.error(e); 
+            document.getElementById('syncStatus').innerText = "Erro Save"; 
+        }
     }
 </script>
 </body>
 </html>
-
