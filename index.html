@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Controle Financeiro 12.0</title>
+    <title>Controle Financeiro 12.1</title>
 
     <link rel="apple-touch-icon" href="icone.png">
     <link rel="icon" type="image/png" href="icone.png">
@@ -234,7 +234,7 @@
         </div>
     </div>
 
-    <footer>Controle Financeiro 12.0 (Com Memória de Mês)</footer>
+    <footer>Controle Financeiro 12.1 (Anti-Ghost Typing)</footer>
 </div>
 
 <script type="module">
@@ -256,7 +256,7 @@
     const db = getFirestore(app);
 
     // --- SENHA ---
-    const SENHA_DO_SISTEMA = "299792";
+    const SENHA_DO_SISTEMA = "1234";
 
     window.checkPassword = function() {
         const input = document.getElementById('passInput').value;
@@ -294,16 +294,13 @@
     window.iconsList = ["💸", "🏠", "💡", "💧", "📶", "🏋️", "🚗", "⛽", "🍔", "💇", "💊", "💳", "🎓", "✈️"];
 
     function initApp() {
-        // Tenta pegar o mês salvo na memória
         const lastMonth = localStorage.getItem('lastViewedMonth');
         const picker = document.getElementById('monthPicker');
 
         if (lastMonth) {
-            // Se tem memória, usa ela
             picker.value = lastMonth;
             loadMonthData(lastMonth);
         } else {
-            // Se não, usa data atual
             const now = new Date();
             const defaultDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
             picker.value = defaultDate;
@@ -316,7 +313,6 @@
         if (currentDocId && !isReceiving) saveData(true); 
         
         if (picker.value) {
-            // SALVA NO LOCALSTORAGE O NOVO MÊS
             localStorage.setItem('lastViewedMonth', picker.value);
             loadMonthData(picker.value);
         }
@@ -364,6 +360,12 @@
 
         unsubscribe = onSnapshot(docRef, (docSnap) => {
             if (docSnap.exists()) {
+                // CORREÇÃO ANTI-GHOST TYPING (IMPORTANTE!)
+                if (docSnap.metadata.hasPendingWrites) {
+                    // Ignora atualizações locais para não redesenhar a tela enquanto digita
+                    return;
+                }
+
                 isReceiving = true;
                 const data = docSnap.data();
                 window.paidDebtors = data.paidDebtors || [];
@@ -515,7 +517,11 @@
     window.togglePaid = (name) => { const idx = window.paidDebtors.indexOf(name); if (idx > -1) window.paidDebtors.splice(idx, 1); else window.paidDebtors.push(name); calculateAndSchedule(); }
     
     function updateDebtors(d1, d2, d3, d4) {
-        const list = document.getElementById('debtorsList'); list.innerHTML = "";
+        const list = document.getElementById('debtorsList'); 
+        // Não apaga a lista se não for necessário (evita piscar se não for recalculado)
+        // Mas como calculateAll chama isso, vamos apenas reconstruir.
+        list.innerHTML = "";
+        
         const all = {}; const merge = (s) => { for (let k in s) { if (!all[k]) all[k] = {...s[k]}; else { all[k].total += s[k].total; all[k].future += s[k].future; } } };
         merge(d1); merge(d2); merge(d3); merge(d4);
         let tr = 0; let r = 0;
@@ -544,5 +550,4 @@
     }
 </script>
 </body>
-
 </html>
