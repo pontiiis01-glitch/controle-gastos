@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Controle Financeiro 12.2</title>
+    <title>Controle Financeiro 13.0</title>
 
     <link rel="apple-touch-icon" href="icone.png">
     <link rel="icon" type="image/png" href="icone.png">
@@ -17,7 +17,7 @@
         :root {
             --primary: #2563eb; --primary-dark: #1e40af; --bg-body: #f8fafc; --bg-card: #ffffff;
             --text-main: #0f172a; --text-muted: #64748b; --border: #e2e8f0;
-            --success: #10b981; --danger: #ef4444; --warning: #f59e0b; --purple: #8b5cf6;
+            --success: #10b981; --success-dark: #059669; --danger: #ef4444; --warning: #f59e0b; --purple: #8b5cf6;
             --passai: #ea580c; --nubank: #820ad1;
         }
 
@@ -88,6 +88,7 @@
 
         /* CORES */
         .c-salary .val, .c-salary input { color: var(--success); }
+        .c-income .val { color: var(--success-dark); }
         .c-total .val { color: var(--danger); }
         .c-rest .val { color: var(--primary); }
         .c-mine .val { color: var(--warning); }
@@ -129,7 +130,8 @@
 
         footer { text-align: center; font-size: 0.8rem; color: var(--text-muted); margin-top: 40px; }
 
-        /* ESTILOS CARTÕES */
+        /* ESTILOS ESPECÍFICOS */
+        .style-income { border-left: 5px solid var(--success-dark); } .style-income h2 { color: var(--success-dark); }
         .style-bb { border-left: 5px solid #f59e0b; } .style-bb h2 { color: #b45309; }
         .style-mp { border-left: 5px solid #3b82f6; } .style-mp h2 { color: #1d4ed8; }
         .style-passai { border-left: 5px solid var(--passai); } .style-passai h2 { color: #c2410c; }
@@ -144,10 +146,8 @@
         <div style="font-size:3rem; margin-bottom:10px;">🔒</div>
         <h2>Acesso Restrito</h2>
         <p style="color:#64748b; font-size:0.9rem;">Digite sua senha para acessar</p>
-        
         <input type="password" id="passInput" class="lock-input" placeholder="****" inputmode="numeric">
         <div id="passError" class="error-msg"></div>
-        
         <button class="btn-unlock" onclick="checkPassword()">ENTRAR</button>
     </div>
 </div>
@@ -160,7 +160,7 @@
                 <input type="month" id="monthPicker" onchange="changeMonth()">
             </div>
             <button class="btn-copy" onclick="copyPreviousMonth()">
-                <span>🔄</span> Copiar Mês Anterior
+                <span>🔄</span> Copiar Mês
             </button>
             <button class="btn-logout-simple" onclick="lockApp()">Bloquear</button>
         </div>
@@ -168,15 +168,29 @@
     </header>
 
     <div class="dashboard-grid">
-        <div class="card-stat c-salary"><h3>Salário</h3><input type="number" id="salary" class="stat-input" value="0" oninput="calculateAll()"></div>
+        <div class="card-stat c-salary"><h3>Salário Base</h3><input type="number" id="salary" class="stat-input" value="0" oninput="calculateAll()"></div>
+        <div class="card-stat c-income"><h3>Renda Extra</h3><div class="val" id="extraIncomeTotal">R$ 0,00</div></div>
         <div class="card-stat c-emerg"><h3>🚨 Emergência</h3><input type="number" id="emergencyFund" class="stat-input" value="0" oninput="calculateAll()"></div>
         <div class="card-stat c-total"><h3>Total Saídas</h3><div class="val" id="totalExpenses">R$ 0,00</div></div>
-        <div class="card-stat c-rest"><h3>Resta</h3><div class="val" id="remaining">R$ 0,00</div></div>
+        <div class="card-stat c-rest"><h3>Resta (Total)</h3><div class="val" id="remaining">R$ 0,00</div></div>
         <div class="card-stat c-mine"><h3>Meu Custo Real</h3><div class="val" id="myRealExpenses">R$ 0,00</div></div>
     </div>
 
     <div class="chart-container">
         <canvas id="expenseChart"></canvas>
+    </div>
+
+    <div class="section style-income">
+        <div class="sec-header"><h2>💰 Entradas Extras <small style="font-size:0.7rem; font-weight:normal;">(Diárias, Férias, 13º...)</small></h2></div>
+        <div class="sec-body">
+            <div class="table-wrap">
+                <table id="incomeTable">
+                    <thead><tr><th>Descrição</th><th style="width:120px">Valor (R$)</th><th style="width:30px"></th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            <button class="btn-add" style="border-color:var(--success-dark); color:var(--success-dark); background:#f0fdf4;" onclick="addIncomeRow()">+ Adicionar Renda Extra</button>
+        </div>
     </div>
 
     <div class="section">
@@ -234,7 +248,7 @@
         </div>
     </div>
 
-    <footer>Controle Financeiro 12.2 (Correção de Salvamento Entre Meses)</footer>
+    <footer>Controle Financeiro 13.0 (Com Rendas Extras)</footer>
 </div>
 
 <script type="module">
@@ -260,28 +274,17 @@
 
     window.checkPassword = function() {
         const input = document.getElementById('passInput').value;
-        const errorDiv = document.getElementById('passError');
-        
         if (input === SENHA_DO_SISTEMA) {
             document.getElementById('lockScreen').style.display = 'none';
             document.getElementById('appContent').style.display = 'block';
             initApp();
         } else {
-            errorDiv.innerText = "Senha incorreta!";
+            document.getElementById('passError').innerText = "Senha incorreta!";
             document.getElementById('passInput').value = "";
         }
     }
-
-    document.getElementById('passInput').addEventListener("keypress", function(event) {
-        if (event.key === "Enter") window.checkPassword();
-    });
-
-    window.lockApp = function() {
-        document.getElementById('lockScreen').style.display = 'flex';
-        document.getElementById('appContent').style.display = 'none';
-        document.getElementById('passInput').value = "";
-        document.getElementById('passError').innerText = "";
-    }
+    document.getElementById('passInput').addEventListener("keypress", (e) => { if(e.key === "Enter") window.checkPassword(); });
+    window.lockApp = () => { document.getElementById('lockScreen').style.display = 'flex'; document.getElementById('appContent').style.display = 'none'; document.getElementById('passInput').value = ""; }
 
     // --- APP LOGIC ---
     let currentDocId = "";
@@ -296,67 +299,33 @@
     function initApp() {
         const lastMonth = localStorage.getItem('lastViewedMonth');
         const picker = document.getElementById('monthPicker');
-
-        if (lastMonth) {
-            picker.value = lastMonth;
-            loadMonthData(lastMonth);
-        } else {
-            const now = new Date();
-            const defaultDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-            picker.value = defaultDate;
-            loadMonthData(defaultDate);
-        }
+        if (lastMonth) { picker.value = lastMonth; loadMonthData(lastMonth); }
+        else { const now = new Date(); const d = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`; picker.value = d; loadMonthData(d); }
     }
 
     window.changeMonth = function() {
         const picker = document.getElementById('monthPicker');
-        
-        // 1. SALVAMENTO CRÍTICO DO MÊS ANTERIOR ANTES DE MUDAR
         const oldId = currentDocId;
-        if (oldId && !isReceiving) {
-            // Salva forçado no ID antigo
-            saveData(true, oldId); 
-        }
-        
-        // 2. AGORA MUDA PARA O NOVO
-        if (picker.value) {
-            localStorage.setItem('lastViewedMonth', picker.value);
-            loadMonthData(picker.value);
-        }
+        if (oldId && !isReceiving) saveData(true, oldId);
+        if (picker.value) { localStorage.setItem('lastViewedMonth', picker.value); loadMonthData(picker.value); }
     }
 
     window.copyPreviousMonth = async function() {
-        if(!confirm("Importar dados do mês anterior? (Valores atuais serão substituídos)")) return;
-
+        if(!confirm("Importar dados do mês anterior?")) return;
         const parts = currentDocId.split('-');
         let year = parseInt(parts[0]);
         let month = parseInt(parts[1]);
-
-        month--; 
-        if (month === 0) { month = 12; year--; }
-
+        month--; if (month === 0) { month = 12; year--; }
         const prevId = `${year}-${String(month).padStart(2, '0')}`;
         document.getElementById('syncStatus').innerText = "Buscando " + prevId + "...";
-
         try {
             const docSnap = await getDoc(doc(db, "meus_gastos", prevId));
             if (docSnap.exists()) {
                 const data = docSnap.data();
-                data.paidDebtors = []; 
-                isReceiving = true; 
-                updateScreen(data); 
-                setTimeout(() => { 
-                    isReceiving = false; 
-                    saveData(true); 
-                    alert("Importado de " + prevId);
-                }, 500);
-            } else {
-                alert("Sem dados em " + prevId);
-            }
-        } catch(e) {
-            console.error(e);
-            alert("Erro ao importar.");
-        }
+                data.paidDebtors = []; isReceiving = true; updateScreen(data); 
+                setTimeout(() => { isReceiving = false; saveData(true); alert("Importado!"); }, 500);
+            } else alert("Sem dados em " + prevId);
+        } catch(e) { console.error(e); alert("Erro ao importar."); }
     }
 
     function loadMonthData(dateString) {
@@ -364,32 +333,21 @@
         document.getElementById('syncStatus').innerText = "Carregando...";
         if (unsubscribe) unsubscribe();
         const docRef = doc(db, "meus_gastos", currentDocId);
-
         unsubscribe = onSnapshot(docRef, (docSnap) => {
             if (docSnap.exists()) {
-                if (docSnap.metadata.hasPendingWrites) {
-                    return;
-                }
-
-                isReceiving = true;
-                const data = docSnap.data();
-                window.paidDebtors = data.paidDebtors || [];
-                updateScreen(data);
+                if (docSnap.metadata.hasPendingWrites) return;
+                isReceiving = true; const data = docSnap.data();
+                window.paidDebtors = data.paidDebtors || []; updateScreen(data);
                 setTimeout(() => isReceiving = false, 500);
                 document.getElementById('syncStatus').innerHTML = '<span style="color:#10b981">☁ Sincronizado</span>';
-            } else {
-                window.paidDebtors = [];
-                updateScreen(null); 
-                saveData(true);     
-            }
+            } else { window.paidDebtors = []; updateScreen(null); saveData(true); }
         });
     }
 
     function updateScreen(data) {
         if (!data) data = getDefaultData();
-        if (data.main && !data.main.some(i => i.id === 'nubank_auto')) {
-             data.main.unshift({ icon: '💳', name: 'Nubank', value: 0, isMine: true, locked: true, id: 'nubank_auto' });
-        }
+        if (data.main && !data.main.some(i => i.id === 'nubank_auto')) data.main.unshift({ icon: '💳', name: 'Nubank', value: 0, isMine: true, locked: true, id: 'nubank_auto' });
+        
         document.getElementById('salary').value = data.salary || 0;
         document.getElementById('emergencyFund').value = data.emergency || 0;
         document.getElementById('bbTotalBill').value = data.bbTotal || 0;
@@ -397,6 +355,7 @@
         document.getElementById('passaiTotalBill').value = data.passaiTotal || 0;
         document.getElementById('nubankTotalBill').value = data.nubankTotal || 0;
 
+        renderTable('incomeTable', data.extraIncome || [], 'income');
         renderTable('mainTable', data.main || [], 'main');
         renderTable('bbTable', data.bb || [], 'split');
         renderTable('mpTable', data.mp || [], 'split');
@@ -415,14 +374,18 @@
                 { icon: '💳', name: 'Nubank', value: 0, isMine: true, locked: true, id: 'nubank_auto' },
                 { icon: '🏋️', name: 'Academia', value: 0, isMine: true },
                 { icon: '💡', name: 'Luz', value: 0, isMine: true }
-            ], bb: [], mp: [], passai: [], nubank: [], paidDebtors: []
+            ], bb: [], mp: [], passai: [], nubank: [], extraIncome: [], paidDebtors: []
         };
     }
 
     function renderTable(id, list, type) {
         const tbody = document.querySelector(`#${id} tbody`);
         tbody.innerHTML = "";
-        list.forEach(item => { if (type === 'main') addMainRowHTML(tbody, item); else addSplitRowHTML(tbody, item); });
+        list.forEach(item => { 
+            if (type === 'main') addMainRowHTML(tbody, item);
+            else if (type === 'income') addIncomeRowHTML(tbody, item);
+            else addSplitRowHTML(tbody, item); 
+        });
     }
 
     window.calculateAll = function() {
@@ -445,34 +408,31 @@
             if (!isCardAuto) fixedSum += val; 
         });
 
+        // Somar Rendas Extras
+        let extraIncomeTotal = 0;
+        document.querySelectorAll('#incomeTable tbody tr').forEach(tr => {
+            extraIncomeTotal += parseFloat(tr.querySelector('.val-input').value) || 0;
+        });
+        document.getElementById('extraIncomeTotal').innerText = fmt(extraIncomeTotal);
+
         const salary = parseFloat(document.getElementById('salary').value) || 0;
+        const totalIncome = salary + extraIncomeTotal;
+
         document.getElementById('totalExpenses').innerText = fmt(totalExpenses);
-        document.getElementById('remaining').innerText = fmt(salary - totalExpenses);
+        document.getElementById('remaining').innerText = fmt(totalIncome - totalExpenses);
         document.getElementById('myRealExpenses').innerText = fmt(myRealExpenses);
 
         updateDebtors({ ...bb.debtors }, { ...mp.debtors }, { ...passai.debtors }, { ...nubank.debtors });
         
         const cardsTotal = bb.myShare + mp.myShare + passai.myShare + nubank.myShare;
-        updateChart(fixedSum, cardsTotal, emergency, salary - totalExpenses);
+        updateChart(fixedSum, cardsTotal, emergency, totalIncome - totalExpenses);
     }
 
     function updateChart(fixed, cards, emerg, rest) {
         const ctx = document.getElementById('expenseChart').getContext('2d');
         if (chartInstance) chartInstance.destroy();
         if (rest < 0) rest = 0;
-
-        chartInstance = new Chart(ctx, {
-            type: 'doughnut',
-            data: {
-                labels: ['Gastos Fixos', 'Cartões', 'Emergência', 'Livre'],
-                datasets: [{
-                    data: [fixed, cards, emerg, rest],
-                    backgroundColor: ['#3b82f6', '#f59e0b', '#8b5cf6', '#10b981'],
-                    borderWidth: 0
-                }]
-            },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
-        });
+        chartInstance = new Chart(ctx, { type: 'doughnut', data: { labels: ['Gastos Fixos', 'Cartões', 'Emergência', 'Livre'], datasets: [{ data: [fixed, cards, emerg, rest], backgroundColor: ['#3b82f6', '#f59e0b', '#8b5cf6', '#10b981'], borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } } });
     }
 
     function processCard(tableId, totalId, displayId, autoInputId) {
@@ -499,9 +459,11 @@
         return { debtors, myShare };
     }
 
+    // TABLE BUILDERS
     window.addMainRow = () => { addMainRowHTML(document.querySelector("#mainTable tbody"), {icon:'💸',name:'',value:'',isMine:true}); calculateAndSchedule(); }
     window.addSplitRow = (id) => { addSplitRowHTML(document.querySelector(`#${id} tbody`), {name:'',desc:'',inst:'',value:''}); calculateAndSchedule(); }
-    
+    window.addIncomeRow = () => { addIncomeRowHTML(document.querySelector("#incomeTable tbody"), {desc:'', value:''}); calculateAndSchedule(); }
+
     function addMainRowHTML(tbody, item) {
         const tr = document.createElement("tr");
         let opts = window.iconsList.map(i => `<option value="${i}" ${i === item.icon ? 'selected' : ''}>${i}</option>`).join('');
@@ -516,6 +478,12 @@
         tbody.appendChild(tr);
         if(item.inst) updateBar(tr.querySelector('.split-inst'));
     }
+    function addIncomeRowHTML(tbody, item) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td><input type="text" class="td-input" value="${item.desc}" placeholder="Ex: Diária, Férias..." oninput="calculateAndSchedule()"></td><td><input type="number" class="td-input val-input" value="${item.value}" step="0.01" oninput="calculateAndSchedule()"></td><td><button class="btn-del" onclick="removeRow(this)">×</button></td>`;
+        tbody.appendChild(tr);
+    }
+
     window.removeRow = (btn) => { btn.closest('tr').remove(); calculateAndSchedule(); }
     window.updateBar = (input) => { const val = input.value; const bar = input.nextElementSibling.querySelector('.prog-fill'); if(val.includes('/')) { const [cur, tot] = val.split('/').map(Number); if(tot > 0) bar.style.width = Math.min((cur/tot)*100, 100) + '%'; } else bar.style.width = '0%'; }
     window.togglePaid = (name) => { const idx = window.paidDebtors.indexOf(name); if (idx > -1) window.paidDebtors.splice(idx, 1); else window.paidDebtors.push(name); calculateAndSchedule(); }
@@ -541,27 +509,33 @@
     function fmt(n) { return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
     window.calculateAndSchedule = () => { calculateAll(); if (isReceiving) return; document.getElementById('syncStatus').innerText = "..."; clearTimeout(saveTimer); saveTimer = setTimeout(() => saveData(), 1000); }
     
-    // --- FUNÇÃO DE SALVAMENTO CORRIGIDA (AGORA ACEITA O ID CORRETO) ---
     async function saveData(force = false, targetId = null) {
         if (isReceiving && !force) return;
-        
-        // Se um ID específico for passado (o mês antigo), usamos ele. 
-        // Se não, usamos o mês atual da tela.
         const idToSave = targetId || currentDocId;
         if (!idToSave) return;
 
-        const data = { salary: document.getElementById('salary').value, emergency: document.getElementById('emergencyFund').value, bbTotal: document.getElementById('bbTotalBill').value, mpTotal: document.getElementById('mpTotalBill').value, passaiTotal: document.getElementById('passaiTotalBill').value, nubankTotal: document.getElementById('nubankTotalBill').value, paidDebtors: window.paidDebtors, main: [], bb: [], mp: [], passai: [], nubank: [] };
+        const data = { 
+            salary: document.getElementById('salary').value, 
+            emergency: document.getElementById('emergencyFund').value, 
+            bbTotal: document.getElementById('bbTotalBill').value, 
+            mpTotal: document.getElementById('mpTotalBill').value, 
+            passaiTotal: document.getElementById('passaiTotalBill').value, 
+            nubankTotal: document.getElementById('nubankTotalBill').value, 
+            paidDebtors: window.paidDebtors, 
+            main: [], bb: [], mp: [], passai: [], nubank: [], extraIncome: [] 
+        };
+
+        // Salvar Rendas Extras
+        document.querySelectorAll('#incomeTable tbody tr').forEach(tr => {
+            const inputs = tr.querySelectorAll('input');
+            data.extraIncome.push({ desc: inputs[0].value, value: inputs[1].value });
+        });
+
         document.querySelectorAll('#mainTable tbody tr').forEach(tr => { data.main.push({ icon: tr.querySelector('.icon-select').value, name: tr.querySelector('input[type="text"]').value, value: tr.querySelector('.val-input').value, isMine: tr.querySelector('input[type="checkbox"]').checked, locked: tr.querySelector('.val-input').hasAttribute('readonly'), id: tr.querySelector('.val-input').id || null }); });
         const sc = (id, arr) => { document.querySelectorAll(`#${id} tbody tr`).forEach(tr => { const i = tr.querySelectorAll('input'); arr.push({ name: i[0].value, desc: i[1].value, inst: i[2].value, value: i[3].value }); }); };
         sc('bbTable', data.bb); sc('mpTable', data.mp); sc('passaiTable', data.passai); sc('nubankTable', data.nubank);
         
-        try { 
-            await setDoc(doc(db, "meus_gastos", idToSave), data); 
-            document.getElementById('syncStatus').innerHTML = '<span style="color:#10b981">☁ Salvo</span>'; 
-        } catch (e) { 
-            console.error(e); 
-            document.getElementById('syncStatus').innerText = "Erro Save"; 
-        }
+        try { await setDoc(doc(db, "meus_gastos", idToSave), data); document.getElementById('syncStatus').innerHTML = '<span style="color:#10b981">☁ Salvo</span>'; } catch (e) { console.error(e); document.getElementById('syncStatus').innerText = "Erro Save"; }
     }
 </script>
 </body>
