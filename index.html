@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Financeiro 15.0</title>
+    <title>Financeiro 15.2</title>
 
     <link rel="apple-touch-icon" href="icone.png">
     <link rel="icon" type="image/png" href="icone.png">
@@ -20,7 +20,7 @@
         :root {
             --primary: #2563eb; --bg-body: #f8fafc; --bg-card: #ffffff; --bg-sidebar: #ffffff;
             --text-main: #0f172a; --text-muted: #64748b; --border: #e2e8f0;
-            --success: #10b981; --danger: #ef4444; --warning: #f59e0b; --purple: #8b5cf6;
+            --success: #10b981; --success-dark: #059669; --danger: #ef4444; --warning: #f59e0b; --purple: #8b5cf6;
             --passai: #ea580c; --nubank: #820ad1;
             --shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
         }
@@ -33,7 +33,7 @@
 
         body { font-family: 'Inter', sans-serif; background-color: var(--bg-body); color: var(--text-main); margin: 0; display: flex; height: 100vh; overflow: hidden; transition: background 0.3s; }
         
-        /* --- LAYOUT --- */
+        /* SIDEBAR */
         #sidebar {
             width: 260px; background: var(--bg-sidebar); border-right: 1px solid var(--border);
             display: flex; flex-direction: column; padding: 20px; transition: transform 0.3s;
@@ -42,35 +42,34 @@
         
         #main-content { flex: 1; overflow-y: auto; padding: 20px; position: relative; }
         
-        /* MOBILE MENU */
-        .mobile-toggle { display: none; position: absolute; top: 15px; left: 15px; z-index: 200; background: var(--bg-card); border: 1px solid var(--border); padding: 8px; border-radius: 8px; cursor: pointer; }
+        /* MOBILE */
+        .mobile-toggle { display: none; position: absolute; top: 15px; left: 15px; z-index: 200; background: var(--bg-card); border: 1px solid var(--border); padding: 8px; border-radius: 8px; cursor: pointer; color: var(--text-main); }
         
         @media (max-width: 768px) {
-            #sidebar { position: fixed; left: -280px; height: 100%; box-shadow: 2px 0 10px rgba(0,0,0,0.1); }
-            #sidebar.active { transform: translateX(280px); }
+            #sidebar { position: fixed; left: -300px; height: 100%; box-shadow: 2px 0 10px rgba(0,0,0,0.1); }
+            #sidebar.active { transform: translateX(300px); }
             .mobile-toggle { display: block; }
             #main-content { padding-top: 60px; }
         }
 
-        /* --- SIDEBAR ITENS --- */
+        /* ITENS SIDEBAR */
         .brand { font-size: 1.4rem; font-weight: 800; color: var(--primary); margin-bottom: 30px; display: flex; align-items: center; gap: 10px; }
         .nav-btn {
             background: transparent; border: none; color: var(--text-muted); padding: 12px 15px;
             text-align: left; font-size: 0.95rem; font-weight: 600; cursor: pointer; border-radius: 10px;
-            margin-bottom: 5px; display: flex; align-items: center; gap: 10px; transition: 0.2s;
+            margin-bottom: 5px; display: flex; align-items: center; gap: 10px; transition: 0.2s; width: 100%;
         }
         .nav-btn:hover { background: rgba(100,116,139,0.1); color: var(--text-main); }
         .nav-btn.active { background: var(--primary); color: white; }
         .nav-btn i { font-size: 1.2rem; }
-
         .sidebar-footer { margin-top: auto; border-top: 1px solid var(--border); padding-top: 15px; }
 
-        /* --- VIEWS --- */
+        /* VIEWS */
         .view-section { display: none; animation: fadeIn 0.3s; }
         .view-section.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* --- ESTILOS GERAIS (Mantidos e Adaptados) --- */
+        /* CONTROLES */
         .controls-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; align-items: center; }
         .date-control { background: var(--bg-card); border: 1px solid var(--border); padding: 8px 15px; border-radius: 50px; display: flex; align-items: center; gap: 10px; color: var(--text-main); }
         input[type="month"] { background: transparent; border: none; color: inherit; font-weight: 600; font-family: inherit; }
@@ -80,19 +79,20 @@
         .btn-pdf { background: #ef4444; }
         .btn-theme { background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border); width: 100%; justify-content: center; margin-top: 10px; }
 
-        /* DASHBOARD CARDS */
+        /* DASHBOARD */
         .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; margin-bottom: 30px; }
-        .card-stat { background: var(--bg-card); padding: 15px; border-radius: 16px; border: 1px solid var(--border); box-shadow: var(--shadow); }
+        .card-stat { background: var(--bg-card); padding: 15px; border-radius: 16px; border: 1px solid var(--border); box-shadow: var(--shadow); position: relative; }
         .card-stat h3 { margin: 0 0 5px 0; font-size: 0.7rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; }
         .card-stat .val { font-size: 1.4rem; font-weight: 800; color: var(--text-main); }
         .stat-input { width: 100%; font-size: 1.4rem; font-weight: 800; background: transparent; border: none; border-bottom: 2px dashed var(--border); color: inherit; padding: 0; }
         .stat-input:focus { outline: none; border-color: var(--primary); }
         
-        /* Cores Stats */
+        /* CORES */
         .c-salary input { color: var(--success); } .c-total .val { color: var(--danger); }
         .c-rest .val { color: var(--primary); } .c-income .val { color: #059669; }
+        .c-mine .val { color: var(--warning); } .c-emerg input { color: var(--purple); }
 
-        /* Barra de Salário */
+        /* BARRA SALARIO */
         .salary-bar-bg { width: 100%; height: 6px; background: var(--border); border-radius: 3px; margin-top: 10px; overflow: hidden; }
         .salary-bar-fill { height: 100%; width: 0%; transition: width 0.5s, background-color 0.5s; background: var(--success); }
 
@@ -106,14 +106,14 @@
         td { padding: 10px; border-bottom: 1px solid var(--border); }
         input.td-input { background: var(--bg-body); border: 1px solid var(--border); color: var(--text-main); padding: 8px; border-radius: 6px; width: 100%; box-sizing: border-box; }
         
-        /* --- IMAGENS DOS CARTÕES --- */
+        /* IMAGENS CARTÕES */
         .card-banner { height: 100px; background-size: cover; background-position: center; position: relative; }
         .card-banner::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to bottom, transparent, rgba(0,0,0,0.7)); }
         .card-banner h2 { position: absolute; bottom: 15px; left: 20px; color: white; margin: 0; font-size: 1.5rem; text-shadow: 0 2px 4px rgba(0,0,0,0.5); z-index: 2; }
         .total-badge { position: absolute; top: 15px; right: 20px; background: rgba(0,0,0,0.6); color: #fff; padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; backdrop-filter: blur(5px); z-index: 2; border: 1px solid rgba(255,255,255,0.2); }
         .total-badge input { background: transparent; border: none; color: white; font-weight: bold; width: 80px; text-align: right; }
 
-        /* DEFINA SUAS IMAGENS AQUI */
+        /* CONFIG IMAGENS (Substitua url se tiver as imagens) */
         .bg-bb { background-color: #f59e0b; /* background-image: url('bb.png'); */ }
         .bg-mp { background-color: #3b82f6; /* background-image: url('mp.png'); */ }
         .bg-passai { background-color: #ea580c; /* background-image: url('passai.png'); */ }
@@ -194,7 +194,7 @@
             </div>
             <div class="card-stat c-income"><h3>Renda Extra</h3><div class="val" id="extraIncomeTotal">R$ 0,00</div></div>
             <div class="card-stat c-total"><h3>Total Saídas</h3><div class="val" id="totalExpenses">R$ 0,00</div></div>
-            <div class="card-stat c-rest"><h3>Resta (Geral)</h3><div class="val" id="remaining">R$ 0,00</div></div>
+            <div class="card-stat c-rest"><h3>Resta (Total)</h3><div class="val" id="remaining">R$ 0,00</div></div>
             <div class="card-stat c-mine"><h3>Meu Custo Real</h3><div class="val" id="myRealExpenses">R$ 0,00</div></div>
             <div class="card-stat c-emerg"><h3>Reserva</h3><input type="number" id="emergencyFund" class="stat-input" oninput="calculateAll()"></div>
         </div>
@@ -315,43 +315,41 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
-    const SENHA = "1234";
+    const SENHA = "1234"; // SUA SENHA AQUI
 
     // --- VARIÁVEIS GLOBAIS ---
     let currentDocId = "";
-    let isReceiving = false;
+    let isReceiving = true; // Bloqueado no início
+    let isLoaded = false;   // Trava de segurança inicial
     let saveTimer;
     let unsubscribe = null;
     let pieChart = null;
     let barChart = null;
+    
     window.paidDebtors = [];
     window.iconsList = ["💸", "🏠", "💡", "💧", "📶", "🏋️", "🚗", "⛽", "🍔", "💇", "💊", "💳", "🎓", "✈️"];
 
     // --- INICIALIZAÇÃO ---
     window.onload = () => {
-        // TEMA
         if(localStorage.getItem('theme') === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
-        
-        // DATA
         const lastMonth = localStorage.getItem('lastViewedMonth');
         const now = new Date();
         const d = lastMonth || `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
         document.getElementById('monthPicker').value = d;
-        
-        // SE TIVER LOGADO (SIMULADO PELA SENHA), CARREGA
-        // No lockScreen inicial, nada acontece até digitar senha
     };
 
-    // --- UI FUNCTIONS ---
+    // --- UI ---
     window.toggleSidebar = () => document.getElementById('sidebar').classList.toggle('active');
+    
     window.switchView = (viewName) => {
         document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
         document.getElementById('view-'+viewName).classList.add('active');
         document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
         event.currentTarget.classList.add('active');
-        if(window.innerWidth <= 768) toggleSidebar(); // Fecha menu no mobile
-        if(viewName === 'history') fetchHistoryData();
+        if(window.innerWidth <= 768) toggleSidebar(); 
+        if(viewName === 'history') setTimeout(fetchHistoryData, 100);
     };
+
     window.toggleTheme = () => {
         const html = document.documentElement;
         const newTheme = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
@@ -359,7 +357,7 @@
         localStorage.setItem('theme', newTheme);
     };
 
-    // --- LOGIC ---
+    // --- AUTH & DATA ---
     window.checkPassword = () => {
         if(document.getElementById('passInput').value === SENHA) {
             document.getElementById('lockScreen').style.display = 'none';
@@ -371,22 +369,46 @@
 
     window.changeMonth = () => {
         const picker = document.getElementById('monthPicker');
-        if (currentDocId && !isReceiving) saveData(true, currentDocId);
-        if (picker.value) { localStorage.setItem('lastViewedMonth', picker.value); loadMonthData(picker.value); }
+        // Salva com segurança antes de mudar
+        if (currentDocId && isLoaded && !isReceiving) saveData(true, currentDocId);
+        
+        if (picker.value) { 
+            localStorage.setItem('lastViewedMonth', picker.value); 
+            loadMonthData(picker.value); 
+        }
     };
 
+    // --- CARREGAMENTO BLINDADO ---
     function loadMonthData(dateString) {
         currentDocId = dateString;
+        isLoaded = false; 
+        isReceiving = true;
+        
         document.getElementById('syncStatus').innerText = "Carregando...";
         if (unsubscribe) unsubscribe();
+        
         unsubscribe = onSnapshot(doc(db, "meus_gastos", currentDocId), (docSnap) => {
             if (docSnap.exists()) {
+                // Se for minha própria escrita pendente, ignora para não fechar teclado
                 if (docSnap.metadata.hasPendingWrites) return;
-                isReceiving = true; const data = docSnap.data();
-                window.paidDebtors = data.paidDebtors || []; updateScreen(data);
-                setTimeout(() => isReceiving = false, 500);
-                document.getElementById('syncStatus').innerText = "Sincronizado";
-            } else { window.paidDebtors = []; updateScreen(null); saveData(true); }
+                
+                isReceiving = true; 
+                const data = docSnap.data();
+                window.paidDebtors = data.paidDebtors || []; 
+                updateScreen(data);
+                
+                setTimeout(() => { 
+                    isReceiving = false; 
+                    isLoaded = true; // Agora pode salvar
+                    document.getElementById('syncStatus').innerText = "Sincronizado";
+                }, 500);
+            } else { 
+                window.paidDebtors = []; 
+                updateScreen(null); 
+                isLoaded = true; // Libera
+                isReceiving = false;
+                saveData(true); // Cria documento
+            }
         });
     }
 
@@ -395,7 +417,8 @@
         if (data.main && !data.main.some(i => i.id === 'nubank_auto')) data.main.unshift({ icon: '💳', name: 'Nubank', value: 0, isMine: true, locked: true, id: 'nubank_auto' });
 
         ['salary','emergencyFund','bbTotalBill','mpTotalBill','passaiTotalBill','nubankTotalBill'].forEach(k => {
-            document.getElementById(k).value = data[k.replace('Fund','').replace('Bill','')] || (k==='emergencyFund' ? data.emergency : 0) || 0;
+            const val = data[k.replace('Fund','').replace('Bill','')] || (k==='emergencyFund' ? data.emergency : 0) || 0;
+            document.getElementById(k).value = val;
         });
 
         renderTable('incomeTable', data.extraIncome || [], 'income');
@@ -404,7 +427,7 @@
         renderTable('mpTable', data.mp || [], 'split');
         renderTable('passaiTable', data.passai || [], 'split');
         renderTable('nubankTable', data.nubank || [], 'split');
-        calculateAll();
+        calculateAll(); 
     }
 
     function getDefaultData() {
@@ -419,7 +442,7 @@
         };
     }
 
-    // --- CALCULATIONS ---
+    // --- CÁLCULOS ---
     window.calculateAll = () => {
         const bb = processCard('bbTable', 'bbTotalBill', 'bbMyShareDisplay', 'bb_auto');
         const mp = processCard('mpTable', 'mpTotalBill', 'mpMyShareDisplay', 'mp_auto');
@@ -449,7 +472,6 @@
         document.getElementById('remaining').innerText = fmt(totalIncome - totalExpenses);
         document.getElementById('myRealExpenses').innerText = fmt(myRealExpenses);
 
-        // Barra de Progresso
         const perc = totalIncome > 0 ? (totalExpenses/totalIncome)*100 : 0;
         const bar = document.getElementById('salaryBar');
         bar.style.width = Math.min(perc, 100)+'%';
@@ -457,7 +479,6 @@
 
         updateDebtors({...bb.debtors}, {...mp.debtors}, {...passai.debtors}, {...nubank.debtors});
         
-        // Gráfico Pizza
         const cardsTotal = bb.myShare + mp.myShare + passai.myShare + nubank.myShare;
         const emerg = parseFloat(document.getElementById('emergencyFund').value) || 0;
         const rest = Math.max(0, totalIncome - totalExpenses);
@@ -542,21 +563,15 @@
         doc.text("Relatório Mensal - " + currentDocId, 14, 20);
         
         const rows = [];
-        // Income
         rows.push(['ENTRADA', 'Salário', document.getElementById('salary').value]);
         document.querySelectorAll('#incomeTable tbody tr').forEach(tr => rows.push(['ENTRADA', tr.querySelectorAll('input')[0].value, tr.querySelectorAll('input')[1].value]));
-        // Fixos
         document.querySelectorAll('#mainTable tbody tr').forEach(tr => rows.push(['FIXO', tr.querySelectorAll('input')[0].value, tr.querySelectorAll('input')[1].value]));
         
-        doc.autoTable({
-            head: [['Tipo', 'Item', 'Valor']],
-            body: rows,
-            startY: 30,
-        });
+        doc.autoTable({ head: [['Tipo', 'Item', 'Valor']], body: rows, startY: 30 });
         doc.save(`Relatorio_${currentDocId}.pdf`);
     };
 
-    // --- HISTÓRICO (FETCH DATA) ---
+    // --- HISTÓRICO ---
     window.fetchHistoryData = async () => {
         const labels = [], dataIncome = [], dataExpense = [];
         const year = parseInt(currentDocId.split('-')[0]), month = parseInt(currentDocId.split('-')[1]);
@@ -565,19 +580,21 @@
             let m = month - i, y = year;
             if(m <= 0) { m += 12; y--; }
             const id = `${y}-${String(m).padStart(2,'0')}`;
+            
             const snap = await getDoc(doc(db, "meus_gastos", id));
-            labels.push(id);
+            labels.push(`${m}/${y}`);
+            
             if(snap.exists()) {
                 const d = snap.data();
-                // Calc Income
                 let income = (parseFloat(d.salary)||0);
                 if(d.extraIncome) d.extraIncome.forEach(x => income += (parseFloat(x.value)||0));
                 dataIncome.push(income);
                 
-                // Calc Expense (Aprox)
                 let expense = (parseFloat(d.emergency)||0);
                 if(d.main) d.main.forEach(x => { if(!x.locked) expense += parseFloat(x.value)||0; });
-                expense += (parseFloat(d.bbTotal)||0) + (parseFloat(d.mpTotal)||0) + (parseFloat(d.passaiTotal)||0) + (parseFloat(d.nubankTotal)||0);
+                const sumCard = (list) => { let s=0; if(list) list.forEach(k => s+=parseFloat(k.value)||0); return s; };
+                const calcBill = (bill, list) => (parseFloat(bill)||0) - sumCard(list);
+                expense += calcBill(d.bbTotal, d.bb) + calcBill(d.mpTotal, d.mp) + calcBill(d.passaiTotal, d.passai) + calcBill(d.nubankTotal, d.nubank);
                 dataExpense.push(expense);
             } else {
                 dataIncome.push(0); dataExpense.push(0);
@@ -601,8 +618,14 @@
 
     function fmt(n) { return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
     
-    // --- SAVE ---
-    window.calculateAndSchedule = () => { calculateAll(); if(isReceiving) return; document.getElementById('syncStatus').innerText = "..."; clearTimeout(saveTimer); saveTimer = setTimeout(() => saveData(), 1000); };
+    // --- SAVE SECURE ---
+    window.calculateAndSchedule = () => { 
+        calculateAll(); 
+        if(!isLoaded || isReceiving) return; 
+        document.getElementById('syncStatus').innerText = "Salvando..."; 
+        clearTimeout(saveTimer); 
+        saveTimer = setTimeout(() => saveData(), 1000); 
+    };
     
     window.copyPreviousMonth = async function() {
         if(!confirm("Importar dados do mês anterior?")) return;
@@ -619,7 +642,9 @@
     };
 
     async function saveData(force = false, targetId = null) {
+        if (!isLoaded && !force) return;
         if (isReceiving && !force) return;
+        
         const idToSave = targetId || currentDocId;
         if (!idToSave) return;
 
