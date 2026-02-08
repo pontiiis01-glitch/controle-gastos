@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Financeiro 15.2</title>
+    <title>Financeiro 16.0</title>
 
     <link rel="apple-touch-icon" href="icone2.0.png">
     <link rel="icon" type="image/png" href="icone2.0.png">
@@ -42,7 +42,6 @@
         
         #main-content { flex: 1; overflow-y: auto; padding: 20px; position: relative; }
         
-        /* MOBILE */
         .mobile-toggle { display: none; position: absolute; top: 15px; left: 15px; z-index: 200; background: var(--bg-card); border: 1px solid var(--border); padding: 8px; border-radius: 8px; cursor: pointer; color: var(--text-main); }
         
         @media (max-width: 768px) {
@@ -106,18 +105,22 @@
         td { padding: 10px; border-bottom: 1px solid var(--border); }
         input.td-input { background: var(--bg-body); border: 1px solid var(--border); color: var(--text-main); padding: 8px; border-radius: 6px; width: 100%; box-sizing: border-box; }
         
-        /* IMAGENS CARTÕES */
-        .card-banner { height: 100px; background-size: cover; background-position: center; position: relative; }
-        .card-banner::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to bottom, transparent, rgba(0,0,0,0.7)); }
-        .card-banner h2 { position: absolute; bottom: 15px; left: 20px; color: white; margin: 0; font-size: 1.5rem; text-shadow: 0 2px 4px rgba(0,0,0,0.5); z-index: 2; }
-        .total-badge { position: absolute; top: 15px; right: 20px; background: rgba(0,0,0,0.6); color: #fff; padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; backdrop-filter: blur(5px); z-index: 2; border: 1px solid rgba(255,255,255,0.2); }
-        .total-badge input { background: transparent; border: none; color: white; font-weight: bold; width: 80px; text-align: right; }
+        /* --- NOVO DESIGN DOS CARTÕES (MINIATURA) --- */
+        .card-row { display: flex; align-items: center; padding: 15px; border-bottom: 1px solid var(--border); gap: 15px; }
+        .card-thumb { 
+            width: 60px; height: 60px; border-radius: 12px; background-size: cover; background-position: center; 
+            flex-shrink: 0; box-shadow: 0 2px 5px rgba(0,0,0,0.1); 
+        }
+        .card-info { flex: 1; }
+        .card-info h2 { margin: 0 0 5px 0; font-size: 1.1rem; }
+        .card-info .bill-wrapper { display: flex; align-items: center; gap: 5px; font-size: 0.9rem; color: var(--text-muted); }
+        .card-info input { width: 100px; font-weight: bold; padding: 5px; border-radius: 5px; border: 1px solid var(--border); background: var(--bg-body); color: var(--text-main); }
 
-        /* CONFIG IMAGENS (Substitua url se tiver as imagens) */
-        .bg-bb { background-color: #f59e0b;  background-image: url('bb.jpeg'); }
-        .bg-mp { background-color: #3b82f6;  background-image: url('mp.jpeg');  }
-        .bg-passai { background-color: #ea580c;  background-image: url('passai.jpeg');  }
-        .bg-nubank { background-color: #820ad1;  background-image: url('nubank.jpeg');  }
+        /* IMAGENS (Substitua se precisar) */
+        .thumb-bb { background-color: #f59e0b; background-image: url('bb.jpeg'); }
+        .thumb-mp { background-color: #3b82f6; background-image: url('mp.jpeg'); }
+        .thumb-passai { background-color: #ea580c; background-image: url('passai.jpeg'); }
+        .thumb-nubank { background-color: #820ad1; background-image: url('nubank.jpeg'); }
 
         /* Lock Screen */
         #lockScreen { position: fixed; inset: 0; background: var(--bg-body); z-index: 999; display: flex; align-items: center; justify-content: center; }
@@ -126,6 +129,7 @@
 
         .btn-add { width: 100%; padding: 10px; margin-top: 10px; background: var(--bg-body); border: 2px dashed var(--border); color: var(--text-muted); cursor: pointer; border-radius: 8px; }
         .btn-del { background: none; border: none; color: var(--danger); cursor: pointer; font-size: 1.2rem; }
+        .chart-container { background: #fff; padding: 20px; border-radius: 20px; margin-bottom: 30px; border: 1px solid var(--border); height: 300px; display: flex; justify-content: center; }
     </style>
 </head>
 <body>
@@ -225,10 +229,15 @@
 
     <div id="view-cards" class="view-section">
         
-        <div class="section" style="border:none; padding:0;">
-            <div class="card-banner bg-bb">
-                <h2>Banco do Brasil</h2>
-                <div class="total-badge">Fatura: R$ <input type="number" id="bbTotalBill" oninput="calculateAll()"></div>
+        <div class="section" style="padding:0;">
+            <div class="card-row">
+                <div class="card-thumb thumb-bb"></div>
+                <div class="card-info">
+                    <h2 style="color:#b45309">Banco do Brasil</h2>
+                    <div class="bill-wrapper">
+                        Fatura: R$ <input type="number" id="bbTotalBill" oninput="calculateAll()">
+                    </div>
+                </div>
             </div>
             <div class="sec-body">
                 <div class="table-wrap"><table id="bbTable"><thead><tr><th>Quem</th><th>Desc.</th><th>Parc.</th><th>Valor</th><th></th></tr></thead><tbody></tbody></table></div>
@@ -237,10 +246,15 @@
             </div>
         </div>
 
-        <div class="section" style="border:none; padding:0;">
-            <div class="card-banner bg-mp">
-                <h2>Mercado Pago</h2>
-                <div class="total-badge">Fatura: R$ <input type="number" id="mpTotalBill" oninput="calculateAll()"></div>
+        <div class="section" style="padding:0;">
+            <div class="card-row">
+                <div class="card-thumb thumb-mp"></div>
+                <div class="card-info">
+                    <h2 style="color:#1d4ed8">Mercado Pago</h2>
+                    <div class="bill-wrapper">
+                        Fatura: R$ <input type="number" id="mpTotalBill" oninput="calculateAll()">
+                    </div>
+                </div>
             </div>
             <div class="sec-body">
                 <div class="table-wrap"><table id="mpTable"><thead><tr><th>Quem</th><th>Desc.</th><th>Parc.</th><th>Valor</th><th></th></tr></thead><tbody></tbody></table></div>
@@ -249,10 +263,15 @@
             </div>
         </div>
 
-        <div class="section" style="border:none; padding:0;">
-            <div class="card-banner bg-passai">
-                <h2>Passaí (Itaú)</h2>
-                <div class="total-badge">Fatura: R$ <input type="number" id="passaiTotalBill" oninput="calculateAll()"></div>
+        <div class="section" style="padding:0;">
+            <div class="card-row">
+                <div class="card-thumb thumb-passai"></div>
+                <div class="card-info">
+                    <h2 style="color:#c2410c">Passaí (Itaú)</h2>
+                    <div class="bill-wrapper">
+                        Fatura: R$ <input type="number" id="passaiTotalBill" oninput="calculateAll()">
+                    </div>
+                </div>
             </div>
             <div class="sec-body">
                 <div class="table-wrap"><table id="passaiTable"><thead><tr><th>Quem</th><th>Desc.</th><th>Parc.</th><th>Valor</th><th></th></tr></thead><tbody></tbody></table></div>
@@ -261,10 +280,15 @@
             </div>
         </div>
 
-        <div class="section" style="border:none; padding:0;">
-            <div class="card-banner bg-nubank">
-                <h2>Nubank</h2>
-                <div class="total-badge">Fatura: R$ <input type="number" id="nubankTotalBill" oninput="calculateAll()"></div>
+        <div class="section" style="padding:0;">
+            <div class="card-row">
+                <div class="card-thumb thumb-nubank"></div>
+                <div class="card-info">
+                    <h2 style="color:#820ad1">Nubank</h2>
+                    <div class="bill-wrapper">
+                        Fatura: R$ <input type="number" id="nubankTotalBill" oninput="calculateAll()">
+                    </div>
+                </div>
             </div>
             <div class="sec-body">
                 <div class="table-wrap"><table id="nubankTable"><thead><tr><th>Quem</th><th>Desc.</th><th>Parc.</th><th>Valor</th><th></th></tr></thead><tbody></tbody></table></div>
@@ -315,12 +339,12 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
-    const SENHA = "299792"; // SUA SENHA AQUI
+    const SENHA = "1234";
 
     // --- VARIÁVEIS GLOBAIS ---
     let currentDocId = "";
-    let isReceiving = true; // Bloqueado no início
-    let isLoaded = false;   // Trava de segurança inicial
+    let isReceiving = true; 
+    let isLoaded = false;
     let saveTimer;
     let unsubscribe = null;
     let pieChart = null;
@@ -369,7 +393,6 @@
 
     window.changeMonth = () => {
         const picker = document.getElementById('monthPicker');
-        // Salva com segurança antes de mudar
         if (currentDocId && isLoaded && !isReceiving) saveData(true, currentDocId);
         
         if (picker.value) { 
@@ -378,7 +401,7 @@
         }
     };
 
-    // --- CARREGAMENTO BLINDADO ---
+    // --- CARREGAMENTO ---
     function loadMonthData(dateString) {
         currentDocId = dateString;
         isLoaded = false; 
@@ -389,7 +412,6 @@
         
         unsubscribe = onSnapshot(doc(db, "meus_gastos", currentDocId), (docSnap) => {
             if (docSnap.exists()) {
-                // Se for minha própria escrita pendente, ignora para não fechar teclado
                 if (docSnap.metadata.hasPendingWrites) return;
                 
                 isReceiving = true; 
@@ -399,27 +421,31 @@
                 
                 setTimeout(() => { 
                     isReceiving = false; 
-                    isLoaded = true; // Agora pode salvar
+                    isLoaded = true; 
                     document.getElementById('syncStatus').innerText = "Sincronizado";
                 }, 500);
             } else { 
                 window.paidDebtors = []; 
                 updateScreen(null); 
-                isLoaded = true; // Libera
+                isLoaded = true; 
                 isReceiving = false;
-                saveData(true); // Cria documento
+                saveData(true); 
             }
         });
     }
 
+    // --- FIX: MAPEAMENTO MANUAL DE DADOS (EVITA PERDA) ---
     function updateScreen(data) {
         if (!data) data = getDefaultData();
         if (data.main && !data.main.some(i => i.id === 'nubank_auto')) data.main.unshift({ icon: '💳', name: 'Nubank', value: 0, isMine: true, locked: true, id: 'nubank_auto' });
 
-        ['salary','emergencyFund','bbTotalBill','mpTotalBill','passaiTotalBill','nubankTotalBill'].forEach(k => {
-            const val = data[k.replace('Fund','').replace('Bill','')] || (k==='emergencyFund' ? data.emergency : 0) || 0;
-            document.getElementById(k).value = val;
-        });
+        // Mapeamento explícito (Segurança contra erros de digitação de IDs)
+        document.getElementById('salary').value = data.salary || 0;
+        document.getElementById('emergencyFund').value = data.emergency || 0;
+        document.getElementById('bbTotalBill').value = data.bbTotal || 0;
+        document.getElementById('mpTotalBill').value = data.mpTotal || 0;
+        document.getElementById('passaiTotalBill').value = data.passaiTotal || 0;
+        document.getElementById('nubankTotalBill').value = data.nubankTotal || 0;
 
         renderTable('incomeTable', data.extraIncome || [], 'income');
         renderTable('mainTable', data.main || [], 'main');
@@ -673,6 +699,3 @@
 </script>
 </body>
 </html>
-
-
-
