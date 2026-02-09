@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Financeiro 29.0 (Anti-Leak)</title>
+    <title>Financeiro 31.0 (Clean)</title>
 
     <link rel="apple-touch-icon" href="icone2.0.png">
     <link rel="icon" type="image/png" href="icone2.0.png">
@@ -35,7 +35,6 @@
 
         body { font-family: 'Inter', sans-serif; background-color: var(--bg-body); color: var(--text-main); margin: 0; display: flex; height: 100vh; overflow: hidden; transition: background 0.3s; }
         
-        /* LOADING OVERLAY */
         #loadingOverlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95);
             z-index: 9999; display: none; align-items: center; justify-content: center; flex-direction: column;
@@ -43,7 +42,6 @@
         .spinner { width: 40px; height: 40px; border: 4px solid #e2e8f0; border-top: 4px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* SIDEBAR */
         #sidebar { width: 260px; background: var(--bg-sidebar); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 20px; transition: transform 0.3s; z-index: 100; height: 100%; }
         #main-content { flex: 1; overflow-y: auto; padding: 20px; position: relative; }
         .mobile-toggle { display: none; position: absolute; top: 15px; left: 15px; z-index: 200; background: var(--bg-card); border: 1px solid var(--border); padding: 8px; border-radius: 8px; cursor: pointer; color: var(--text-main); }
@@ -55,12 +53,16 @@
             #main-content { padding-top: 60px; }
         }
 
-        .brand { font-size: 1.4rem; font-weight: 800; color: var(--primary); margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+        .brand { font-size: 1.4rem; font-weight: 800; color: var(--primary); margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
+        
+        /* BOTÕES DE CONFIG (TOPO) */
+        .config-area { margin-bottom: 20px; display: flex; flex-direction: column; gap: 5px; }
+        
         .nav-btn { background: transparent; border: none; color: var(--text-muted); padding: 12px 15px; text-align: left; font-size: 0.95rem; font-weight: 600; cursor: pointer; border-radius: 10px; margin-bottom: 5px; display: flex; align-items: center; gap: 10px; transition: 0.2s; width: 100%; }
         .nav-btn:hover { background: rgba(37, 99, 235, 0.1); color: var(--text-main); }
         .nav-btn.active { background: var(--primary); color: white; }
         .menu-divider { height: 1px; background: var(--border); margin: 15px 0; }
-        .btn-theme { background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border); width: 100%; justify-content: center; margin-bottom: 5px; }
+        .btn-theme { background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border); justify-content: flex-start; }
 
         .view-section { display: none; animation: fadeIn 0.3s; }
         .view-section.active { display: block; }
@@ -74,6 +76,7 @@
         .btn-copy { background: #3b82f6; }
         .btn-pdf { background: #10b981; }
         .btn-reset { background: #ef4444; }
+        .btn-force { background: #f59e0b; }
 
         .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; margin-bottom: 30px; }
         .card-stat { background: var(--bg-card); padding: 15px; border-radius: 16px; border: 1px solid var(--border); box-shadow: var(--shadow); position: relative; }
@@ -99,7 +102,7 @@
         input.td-input { background: var(--bg-body); border: 1px solid var(--border); color: var(--text-main); padding: 8px; border-radius: 6px; width: 100%; box-sizing: border-box; }
         select.icon-select { border: none; background: transparent; font-size: 1.2rem; cursor: pointer; }
         
-        /* CARTÕES (HORIZONTAL) */
+        /* CARTÕES */
         .card-row { display: flex; align-items: center; padding: 20px; border-bottom: 1px solid var(--border); gap: 20px; }
         .card-thumb { 
             width: 120px; height: 75px; border-radius: 10px; 
@@ -180,7 +183,7 @@
 <nav id="sidebar">
     <div class="brand"><span class="material-icons-round">account_balance_wallet</span> Financeiro</div>
     
-    <div style="margin-bottom: 20px;">
+    <div class="config-area">
         <button class="nav-btn btn-theme" onclick="toggleTheme()">
             <span class="material-icons-round">dark_mode</span> Tema
         </button>
@@ -206,7 +209,8 @@
             <input type="month" id="monthPicker" onchange="changeMonthSafe()">
         </div>
         <div style="display:flex; gap:10px;">
-            <button class="btn-action btn-reset" title="Apagar dados deste mês" onclick="resetMonthData()"><span class="material-icons-round">delete</span></button>
+            <button class="btn-action btn-force" title="Forçar Salvar" onclick="saveData(true)"><span class="material-icons-round">save</span></button>
+            <button class="btn-action btn-reset" title="Apagar mês" onclick="resetMonthData()"><span class="material-icons-round">delete</span></button>
             <button class="btn-action btn-copy" onclick="copyPreviousMonth()">Importar</button>
             <button class="btn-action btn-pdf" onclick="openPDFPreview()">Relatório</button>
         </div>
@@ -361,7 +365,7 @@
     const SENHA = "1234"; 
 
     window.isEditing = false; 
-    window.isSwitching = false; // TRAVA DE TROCA DE MÊS
+    window.isSwitching = false; 
 
     let currentDocId = "";
     let isReceiving = false; 
@@ -415,7 +419,7 @@
         loadMonthData(d);
     }
 
-    // --- MUDANÇA DE MÊS SEGURA (FIX CRÍTICO MEMÓRIA E RACE CONDITION) ---
+    // --- TROCA DE MÊS SEGURA ---
     window.changeMonthSafe = async () => {
         const picker = document.getElementById('monthPicker');
         const newDate = picker.value;
@@ -423,27 +427,21 @@
 
         if (!newDate || newDate === oldDate) return;
 
-        window.isSwitching = true; // ATIVA TRAVA TOTAL
+        window.isSwitching = true;
         document.getElementById('loadingOverlay').style.display = 'flex';
         
         if (unsubscribe) unsubscribe();
         clearTimeout(saveTimer);
 
-        // 1. SALVA O VELHO FORÇADO
         if (oldDate && !isReceiving) {
-            console.log("Salvando fechamento:", oldDate);
-            await saveDataSync(oldDate);
+            await saveDataSync(oldDate); // Salva o velho antes de sair
         }
 
-        // 2. LIMPEZA PROFUNDA DA MEMÓRIA
-        clearScreen();
-        window.paidDebtors = []; 
+        clearScreen(); // Limpa visual
+        window.paidDebtors = []; // Limpa memória
         
-        // 3. TROCA O ID E CARREGA
         currentDocId = newDate;
         localStorage.setItem('lastViewedMonth', newDate);
-        
-        // 4. LIBERA TRAVA DEPOIS DE CARREGAR
         loadMonthData(newDate);
     }
 
@@ -458,11 +456,12 @@
         currentDocId = dateString;
         document.getElementById('syncStatus').innerText = "Carregando...";
         
-        const docRef = doc(db, "meus_gastos", currentDocId);
+        // NOVA COLEÇÃO LIMPA (Garante que não pega lixo)
+        const docRef = doc(db, "carteira_igor_v1", currentDocId);
         
         unsubscribe = onSnapshot(docRef, (docSnap) => {
             document.getElementById('loadingOverlay').style.display = 'none';
-            window.isSwitching = false; // DESTRAVA AQUI
+            window.isSwitching = false; 
             
             if (docSnap.exists()) {
                 if (docSnap.metadata.hasPendingWrites) return; 
@@ -483,6 +482,9 @@
                 saveDataSync(currentDocId); 
                 document.getElementById('syncStatus').innerText = "Novo Mês";
             }
+        }, (error) => {
+            alert("ERRO FIREBASE: " + error.message);
+            document.getElementById('syncStatus').innerText = "Erro!";
         });
     }
 
@@ -539,6 +541,8 @@
         document.querySelectorAll('#mainTable tbody tr').forEach(tr => { 
             const inputs = tr.querySelectorAll('input');
             const name = inputs[0].value;
+            const isCard = ['Cartão BB', 'Mercado Pago', 'Passaí', 'Nubank'].includes(name);
+            
             data.main.push({ 
                 icon: tr.querySelector('.icon-select').value, 
                 name: name, 
@@ -556,17 +560,30 @@
     }
 
     async function saveDataSync(targetId) {
-        if(window.isSwitching) return; // BLOQUEIA SE ESTIVER TROCANDO
+        if (!targetId || window.isSwitching) return;
         const data = captureScreenData();
-        try { await setDoc(doc(db, "meus_gastos", targetId), data); } catch(e) { console.error("Erro save sync", e); }
+        // COLEÇÃO NOVA: carteira_igor_v1
+        try { await setDoc(doc(db, "carteira_igor_v1", targetId), data); } 
+        catch(e) { 
+            console.error(e); 
+            alert("ERRO AO SALVAR: " + e.code); 
+        }
     }
 
     window.calculateAndSchedule = () => {
         calculateAll();
         if (isReceiving || window.isSwitching) return;
-        document.getElementById('syncStatus').innerText = "...";
+        document.getElementById('syncStatus').innerText = "Editando...";
         clearTimeout(saveTimer);
-        saveTimer = setTimeout(() => saveDataSync(currentDocId), 1000); 
+        saveTimer = setTimeout(() => {
+            saveDataSync(currentDocId);
+            document.getElementById('syncStatus').innerText = "Salvo";
+        }, 1000); 
+    }
+
+    window.saveData = async () => {
+        await saveDataSync(currentDocId);
+        alert("Salvo Manualmente!");
     }
 
     window.resetMonthData = async () => {
@@ -607,7 +624,7 @@
         });
 
         let totalExpenses = fixedSumTotal + cardsShareTotal + emergency;
-        let myRealExpenses = fixedSumMine + cardsShareTotal; 
+        let myRealExpenses = fixedSumMine + cardsShareTotal; // SEM EMERGENCIA
 
         let extraIncome = 0;
         document.querySelectorAll('#incomeTable tbody tr').forEach(tr => extraIncome += parseFloat(tr.querySelector('.val-input').value)||0);
