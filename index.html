@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Financeiro 16.0</title>
+    <title>Financeiro 18.0</title>
 
     <link rel="apple-touch-icon" href="icone2.0.png">
     <link rel="icon" type="image/png" href="icone2.0.png">
@@ -51,7 +51,6 @@
             #main-content { padding-top: 60px; }
         }
 
-        /* ITENS SIDEBAR */
         .brand { font-size: 1.4rem; font-weight: 800; color: var(--primary); margin-bottom: 30px; display: flex; align-items: center; gap: 10px; }
         .nav-btn {
             background: transparent; border: none; color: var(--text-muted); padding: 12px 15px;
@@ -63,22 +62,19 @@
         .nav-btn i { font-size: 1.2rem; }
         .sidebar-footer { margin-top: auto; border-top: 1px solid var(--border); padding-top: 15px; }
 
-        /* VIEWS */
         .view-section { display: none; animation: fadeIn 0.3s; }
         .view-section.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* CONTROLES */
         .controls-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; align-items: center; }
         .date-control { background: var(--bg-card); border: 1px solid var(--border); padding: 8px 15px; border-radius: 50px; display: flex; align-items: center; gap: 10px; color: var(--text-main); }
-        input[type="month"] { background: transparent; border: none; color: inherit; font-weight: 600; font-family: inherit; }
+        input[type="month"] { background: transparent; border: none; color: inherit; font-weight: 600; font-family: inherit; cursor: pointer; min-width: 150px; }
         
         .btn-action { border: none; padding: 8px 16px; border-radius: 50px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 5px; color: white; font-size: 0.85rem; }
         .btn-copy { background: #3b82f6; }
         .btn-pdf { background: #ef4444; }
         .btn-theme { background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border); width: 100%; justify-content: center; margin-top: 10px; }
 
-        /* DASHBOARD */
         .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; margin-bottom: 30px; }
         .card-stat { background: var(--bg-card); padding: 15px; border-radius: 16px; border: 1px solid var(--border); box-shadow: var(--shadow); position: relative; }
         .card-stat h3 { margin: 0 0 5px 0; font-size: 0.7rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; }
@@ -86,16 +82,13 @@
         .stat-input { width: 100%; font-size: 1.4rem; font-weight: 800; background: transparent; border: none; border-bottom: 2px dashed var(--border); color: inherit; padding: 0; }
         .stat-input:focus { outline: none; border-color: var(--primary); }
         
-        /* CORES */
         .c-salary input { color: var(--success); } .c-total .val { color: var(--danger); }
         .c-rest .val { color: var(--primary); } .c-income .val { color: #059669; }
         .c-mine .val { color: var(--warning); } .c-emerg input { color: var(--purple); }
 
-        /* BARRA SALARIO */
         .salary-bar-bg { width: 100%; height: 6px; background: var(--border); border-radius: 3px; margin-top: 10px; overflow: hidden; }
         .salary-bar-fill { height: 100%; width: 0%; transition: width 0.5s, background-color 0.5s; background: var(--success); }
 
-        /* TABLES */
         .section { background: var(--bg-card); border-radius: 16px; border: 1px solid var(--border); margin-bottom: 20px; overflow: hidden; box-shadow: var(--shadow); }
         .sec-header { padding: 15px; border-bottom: 1px solid var(--border); background: rgba(0,0,0,0.02); display: flex; justify-content: space-between; align-items: center; }
         .sec-header h2 { margin: 0; font-size: 1rem; font-weight: 700; }
@@ -105,30 +98,42 @@
         td { padding: 10px; border-bottom: 1px solid var(--border); }
         input.td-input { background: var(--bg-body); border: 1px solid var(--border); color: var(--text-main); padding: 8px; border-radius: 6px; width: 100%; box-sizing: border-box; }
         
-        /* --- NOVO DESIGN DOS CARTÕES (MINIATURA) --- */
+        /* CARD MINIATURES (CORRIGIDO PARA MOSTRAR TUDO) */
         .card-row { display: flex; align-items: center; padding: 15px; border-bottom: 1px solid var(--border); gap: 15px; }
         .card-thumb { 
-            width: 60px; height: 60px; border-radius: 12px; background-size: cover; background-position: center; 
-            flex-shrink: 0; box-shadow: 0 2px 5px rgba(0,0,0,0.1); 
+            width: 86px; 
+            height: 54px; 
+            border-radius: 8px; 
+            background-size: contain; /* MOSTRA A IMAGEM INTEIRA */
+            background-repeat: no-repeat;
+            background-position: center; 
+            flex-shrink: 0; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            background-color: var(--bg-body);
         }
         .card-info { flex: 1; }
         .card-info h2 { margin: 0 0 5px 0; font-size: 1.1rem; }
         .card-info .bill-wrapper { display: flex; align-items: center; gap: 5px; font-size: 0.9rem; color: var(--text-muted); }
         .card-info input { width: 100px; font-weight: bold; padding: 5px; border-radius: 5px; border: 1px solid var(--border); background: var(--bg-body); color: var(--text-main); }
 
-        /* IMAGENS (Substitua se precisar) */
-        .thumb-bb { background-color: #f59e0b; background-image: url('bb.jpeg'); }
-        .thumb-mp { background-color: #3b82f6; background-image: url('mp.jpeg'); }
-        .thumb-passai { background-color: #ea580c; background-image: url('passai.jpeg'); }
-        .thumb-nubank { background-color: #820ad1; background-image: url('nubank.jpeg'); }
+        /* IMAGENS ATIVADAS */
+        .thumb-bb { background-image: url('bb.jpeg'); }
+        .thumb-mp { background-image: url('mp.jpeg'); }
+        .thumb-passai { background-image: url('passai.jpeg'); }
+        .thumb-nubank { background-image: url('nubank.jpeg'); }
 
-        /* Lock Screen */
         #lockScreen { position: fixed; inset: 0; background: var(--bg-body); z-index: 999; display: flex; align-items: center; justify-content: center; }
         .lock-box { background: var(--bg-card); padding: 40px; border-radius: 20px; text-align: center; border: 1px solid var(--border); }
         .lock-input { padding: 10px; font-size: 1.5rem; text-align: center; margin: 20px 0; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-body); color: var(--text-main); }
 
         .btn-add { width: 100%; padding: 10px; margin-top: 10px; background: var(--bg-body); border: 2px dashed var(--border); color: var(--text-muted); cursor: pointer; border-radius: 8px; }
         .btn-del { background: none; border: none; color: var(--danger); cursor: pointer; font-size: 1.2rem; }
+        
+        .chart-controls { display: flex; gap: 5px; background: var(--bg-body); padding: 4px; border-radius: 8px; border: 1px solid var(--border); }
+        .chart-btn { border: none; background: transparent; color: var(--text-muted); padding: 5px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; cursor: pointer; transition: 0.2s; }
+        .chart-btn:hover { color: var(--text-main); }
+        .chart-btn.active { background: var(--bg-card); color: var(--primary); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        
         .chart-container { background: #fff; padding: 20px; border-radius: 20px; margin-bottom: 30px; border: 1px solid var(--border); height: 300px; display: flex; justify-content: center; }
     </style>
 </head>
@@ -148,30 +153,14 @@
 
 <nav id="sidebar">
     <div class="brand"><span class="material-icons-round">account_balance_wallet</span> Financeiro</div>
-    
-    <button class="nav-btn active" onclick="switchView('dashboard')">
-        <span class="material-icons-round">dashboard</span> Resumo
-    </button>
-    <button class="nav-btn" onclick="switchView('income')">
-        <span class="material-icons-round">attach_money</span> Rendas & Fixos
-    </button>
-    <button class="nav-btn" onclick="switchView('cards')">
-        <span class="material-icons-round">credit_card</span> Cartões
-    </button>
-    <button class="nav-btn" onclick="switchView('debts')">
-        <span class="material-icons-round">people</span> Devedores
-    </button>
-    <button class="nav-btn" onclick="switchView('history')">
-        <span class="material-icons-round">bar_chart</span> Histórico
-    </button>
-
+    <button class="nav-btn active" onclick="switchView('dashboard')"><span class="material-icons-round">dashboard</span> Resumo</button>
+    <button class="nav-btn" onclick="switchView('income')"><span class="material-icons-round">attach_money</span> Rendas & Fixos</button>
+    <button class="nav-btn" onclick="switchView('cards')"><span class="material-icons-round">credit_card</span> Cartões</button>
+    <button class="nav-btn" onclick="switchView('debts')"><span class="material-icons-round">people</span> Devedores</button>
+    <button class="nav-btn" onclick="switchView('history')"><span class="material-icons-round">bar_chart</span> Histórico</button>
     <div class="sidebar-footer">
-        <button class="nav-btn btn-theme" onclick="toggleTheme()">
-            <span class="material-icons-round">dark_mode</span> Tema
-        </button>
-        <button class="nav-btn" style="color:var(--danger)" onclick="lockApp()">
-            <span class="material-icons-round">lock</span> Bloquear
-        </button>
+        <button class="nav-btn btn-theme" onclick="toggleTheme()"><span class="material-icons-round">dark_mode</span> Tema</button>
+        <button class="nav-btn" style="color:var(--danger)" onclick="lockApp()"><span class="material-icons-round">lock</span> Bloquear</button>
     </div>
 </nav>
 
@@ -193,14 +182,17 @@
         <div class="dashboard-grid">
             <div class="card-stat c-salary">
                 <h3>Salário Base</h3>
-                <input type="number" id="salary" class="stat-input" value="0" oninput="calculateAll()">
+                <input type="number" id="salary" class="stat-input" value="0" oninput="calculateAndSchedule()">
                 <div class="salary-bar-bg"><div class="salary-bar-fill" id="salaryBar"></div></div>
             </div>
             <div class="card-stat c-income"><h3>Renda Extra</h3><div class="val" id="extraIncomeTotal">R$ 0,00</div></div>
             <div class="card-stat c-total"><h3>Total Saídas</h3><div class="val" id="totalExpenses">R$ 0,00</div></div>
             <div class="card-stat c-rest"><h3>Resta (Total)</h3><div class="val" id="remaining">R$ 0,00</div></div>
             <div class="card-stat c-mine"><h3>Meu Custo Real</h3><div class="val" id="myRealExpenses">R$ 0,00</div></div>
-            <div class="card-stat c-emerg"><h3>Reserva</h3><input type="number" id="emergencyFund" class="stat-input" oninput="calculateAll()"></div>
+            <div class="card-stat c-emerg">
+                <h3>Reserva</h3>
+                <input type="number" id="emergencyFund" class="stat-input" oninput="calculateAndSchedule()">
+            </div>
         </div>
         <div class="section">
             <div class="sec-header"><h2>Distribuição de Gastos</h2></div>
@@ -228,15 +220,12 @@
     </div>
 
     <div id="view-cards" class="view-section">
-        
         <div class="section" style="padding:0;">
             <div class="card-row">
                 <div class="card-thumb thumb-bb"></div>
                 <div class="card-info">
                     <h2 style="color:#b45309">Banco do Brasil</h2>
-                    <div class="bill-wrapper">
-                        Fatura: R$ <input type="number" id="bbTotalBill" oninput="calculateAll()">
-                    </div>
+                    <div class="bill-wrapper">Fatura: R$ <input type="number" id="bbTotalBill" oninput="calculateAndSchedule()"></div>
                 </div>
             </div>
             <div class="sec-body">
@@ -245,15 +234,12 @@
                 <div style="text-align:right; margin-top:10px; color:var(--warning)">Minha parte: <strong id="bbMyShareDisplay">R$ 0,00</strong></div>
             </div>
         </div>
-
         <div class="section" style="padding:0;">
             <div class="card-row">
                 <div class="card-thumb thumb-mp"></div>
                 <div class="card-info">
                     <h2 style="color:#1d4ed8">Mercado Pago</h2>
-                    <div class="bill-wrapper">
-                        Fatura: R$ <input type="number" id="mpTotalBill" oninput="calculateAll()">
-                    </div>
+                    <div class="bill-wrapper">Fatura: R$ <input type="number" id="mpTotalBill" oninput="calculateAndSchedule()"></div>
                 </div>
             </div>
             <div class="sec-body">
@@ -262,15 +248,12 @@
                 <div style="text-align:right; margin-top:10px; color:var(--primary)">Minha parte: <strong id="mpMyShareDisplay">R$ 0,00</strong></div>
             </div>
         </div>
-
         <div class="section" style="padding:0;">
             <div class="card-row">
                 <div class="card-thumb thumb-passai"></div>
                 <div class="card-info">
                     <h2 style="color:#c2410c">Passaí (Itaú)</h2>
-                    <div class="bill-wrapper">
-                        Fatura: R$ <input type="number" id="passaiTotalBill" oninput="calculateAll()">
-                    </div>
+                    <div class="bill-wrapper">Fatura: R$ <input type="number" id="passaiTotalBill" oninput="calculateAndSchedule()"></div>
                 </div>
             </div>
             <div class="sec-body">
@@ -279,15 +262,12 @@
                 <div style="text-align:right; margin-top:10px; color:var(--passai)">Minha parte: <strong id="passaiMyShareDisplay">R$ 0,00</strong></div>
             </div>
         </div>
-
         <div class="section" style="padding:0;">
             <div class="card-row">
                 <div class="card-thumb thumb-nubank"></div>
                 <div class="card-info">
                     <h2 style="color:#820ad1">Nubank</h2>
-                    <div class="bill-wrapper">
-                        Fatura: R$ <input type="number" id="nubankTotalBill" oninput="calculateAll()">
-                    </div>
+                    <div class="bill-wrapper">Fatura: R$ <input type="number" id="nubankTotalBill" oninput="calculateAndSchedule()"></div>
                 </div>
             </div>
             <div class="sec-body">
@@ -313,7 +293,16 @@
 
     <div id="view-history" class="view-section">
         <div class="section">
-            <div class="sec-header"><h2>Comparativo (Últimos 6 Meses)</h2> <button class="btn-action btn-copy" onclick="fetchHistoryData()">Atualizar</button></div>
+            <div class="sec-header">
+                <h2>Performance Financeira</h2>
+                <div class="chart-controls">
+                    <button class="chart-btn" onclick="fetchHistoryData(3, this)">3M</button>
+                    <button class="chart-btn active" onclick="fetchHistoryData(6, this)">6M</button>
+                    <button class="chart-btn" onclick="fetchHistoryData(12, this)">1A</button>
+                    <button class="chart-btn" onclick="fetchHistoryData(60, this)">5A</button>
+                    <button class="chart-btn" onclick="fetchHistoryData(120, this)">MAX</button>
+                </div>
+            </div>
             <div class="sec-body" style="height:300px;">
                 <canvas id="historyChart"></canvas>
             </div>
@@ -326,7 +315,6 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
     import { getFirestore, doc, onSnapshot, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
-    // CONFIG FIREBASE
     const firebaseConfig = {
         apiKey: "AIzaSyDBcLEJw2PiFoBvocr3Zq01sRjjakteHfs",
         authDomain: "app-controle-gastos-1e658.firebaseapp.com",
@@ -339,9 +327,8 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
-    const SENHA = "1234";
+    const SENHA = "299792"; 
 
-    // --- VARIÁVEIS GLOBAIS ---
     let currentDocId = "";
     let isReceiving = true; 
     let isLoaded = false;
@@ -353,7 +340,6 @@
     window.paidDebtors = [];
     window.iconsList = ["💸", "🏠", "💡", "💧", "📶", "🏋️", "🚗", "⛽", "🍔", "💇", "💊", "💳", "🎓", "✈️"];
 
-    // --- INICIALIZAÇÃO ---
     window.onload = () => {
         if(localStorage.getItem('theme') === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
         const lastMonth = localStorage.getItem('lastViewedMonth');
@@ -362,7 +348,6 @@
         document.getElementById('monthPicker').value = d;
     };
 
-    // --- UI ---
     window.toggleSidebar = () => document.getElementById('sidebar').classList.toggle('active');
     
     window.switchView = (viewName) => {
@@ -371,7 +356,7 @@
         document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
         event.currentTarget.classList.add('active');
         if(window.innerWidth <= 768) toggleSidebar(); 
-        if(viewName === 'history') setTimeout(fetchHistoryData, 100);
+        if(viewName === 'history') setTimeout(() => fetchHistoryData(6), 100);
     };
 
     window.toggleTheme = () => {
@@ -381,7 +366,6 @@
         localStorage.setItem('theme', newTheme);
     };
 
-    // --- AUTH & DATA ---
     window.checkPassword = () => {
         if(document.getElementById('passInput').value === SENHA) {
             document.getElementById('lockScreen').style.display = 'none';
@@ -394,52 +378,32 @@
     window.changeMonth = () => {
         const picker = document.getElementById('monthPicker');
         if (currentDocId && isLoaded && !isReceiving) saveData(true, currentDocId);
-        
-        if (picker.value) { 
-            localStorage.setItem('lastViewedMonth', picker.value); 
-            loadMonthData(picker.value); 
-        }
+        if (picker.value) { localStorage.setItem('lastViewedMonth', picker.value); loadMonthData(picker.value); }
     };
 
-    // --- CARREGAMENTO ---
     function loadMonthData(dateString) {
         currentDocId = dateString;
-        isLoaded = false; 
-        isReceiving = true;
-        
+        isLoaded = false; isReceiving = true;
         document.getElementById('syncStatus').innerText = "Carregando...";
         if (unsubscribe) unsubscribe();
-        
         unsubscribe = onSnapshot(doc(db, "meus_gastos", currentDocId), (docSnap) => {
             if (docSnap.exists()) {
                 if (docSnap.metadata.hasPendingWrites) return;
-                
-                isReceiving = true; 
-                const data = docSnap.data();
+                isReceiving = true; const data = docSnap.data();
                 window.paidDebtors = data.paidDebtors || []; 
                 updateScreen(data);
-                
-                setTimeout(() => { 
-                    isReceiving = false; 
-                    isLoaded = true; 
-                    document.getElementById('syncStatus').innerText = "Sincronizado";
-                }, 500);
+                setTimeout(() => { isReceiving = false; isLoaded = true; document.getElementById('syncStatus').innerText = "Sincronizado"; }, 500);
             } else { 
-                window.paidDebtors = []; 
-                updateScreen(null); 
-                isLoaded = true; 
-                isReceiving = false;
-                saveData(true); 
+                window.paidDebtors = []; updateScreen(null); 
+                isLoaded = true; isReceiving = false; saveData(true); 
             }
         });
     }
 
-    // --- FIX: MAPEAMENTO MANUAL DE DADOS (EVITA PERDA) ---
     function updateScreen(data) {
         if (!data) data = getDefaultData();
         if (data.main && !data.main.some(i => i.id === 'nubank_auto')) data.main.unshift({ icon: '💳', name: 'Nubank', value: 0, isMine: true, locked: true, id: 'nubank_auto' });
 
-        // Mapeamento explícito (Segurança contra erros de digitação de IDs)
         document.getElementById('salary').value = data.salary || 0;
         document.getElementById('emergencyFund').value = data.emergency || 0;
         document.getElementById('bbTotalBill').value = data.bbTotal || 0;
@@ -468,24 +432,31 @@
         };
     }
 
-    // --- CÁLCULOS ---
     window.calculateAll = () => {
         const bb = processCard('bbTable', 'bbTotalBill', 'bbMyShareDisplay', 'bb_auto');
         const mp = processCard('mpTable', 'mpTotalBill', 'mpMyShareDisplay', 'mp_auto');
         const passai = processCard('passaiTable', 'passaiTotalBill', 'passaiMyShareDisplay', 'passai_auto');
         const nubank = processCard('nubankTable', 'nubankTotalBill', 'nubankMyShareDisplay', 'nubank_auto');
 
-        let totalExpenses = 0, myRealExpenses = 0, fixedSum = 0;
-        totalExpenses += parseFloat(document.getElementById('emergencyFund').value) || 0;
+        const cardsShareTotal = bb.myShare + mp.myShare + passai.myShare + nubank.myShare;
+
+        let fixedSumMine = 0;
+        let fixedSumTotal = 0;
+        const emergency = parseFloat(document.getElementById('emergencyFund').value) || 0;
 
         document.querySelectorAll('#mainTable tbody tr').forEach(tr => {
             const val = parseFloat(tr.querySelector('.val-input').value) || 0;
             const isMine = tr.querySelector('input[type="checkbox"]').checked;
             const isCardAuto = tr.querySelector('.val-input').hasAttribute('readonly');
-            totalExpenses += val;
-            if (isMine) myRealExpenses += val;
-            if (!isCardAuto) fixedSum += val;
+            
+            if (!isCardAuto) {
+                fixedSumTotal += val;
+                if (isMine) fixedSumMine += val;
+            }
         });
+
+        let totalExpenses = fixedSumTotal + cardsShareTotal + emergency;
+        let myRealExpenses = fixedSumMine + cardsShareTotal + emergency; 
 
         let extraIncome = 0;
         document.querySelectorAll('#incomeTable tbody tr').forEach(tr => extraIncome += parseFloat(tr.querySelector('.val-input').value)||0);
@@ -505,13 +476,9 @@
 
         updateDebtors({...bb.debtors}, {...mp.debtors}, {...passai.debtors}, {...nubank.debtors});
         
-        const cardsTotal = bb.myShare + mp.myShare + passai.myShare + nubank.myShare;
-        const emerg = parseFloat(document.getElementById('emergencyFund').value) || 0;
-        const rest = Math.max(0, totalIncome - totalExpenses);
-        
         const ctx = document.getElementById('expenseChart').getContext('2d');
         if(pieChart) pieChart.destroy();
-        pieChart = new Chart(ctx, { type: 'doughnut', data: { labels: ['Fixos', 'Cartões', 'Reserva', 'Livre'], datasets: [{ data: [fixedSum, cardsTotal, emerg, rest], backgroundColor: ['#3b82f6','#f59e0b','#8b5cf6','#10b981'], borderWidth:0 }] }, options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'bottom'}} } });
+        pieChart = new Chart(ctx, { type: 'doughnut', data: { labels: ['Fixos', 'Cartões', 'Reserva', 'Livre'], datasets: [{ data: [fixedSumTotal, cardsShareTotal, emergency, Math.max(0, totalIncome - totalExpenses)], backgroundColor: ['#3b82f6','#f59e0b','#8b5cf6','#10b981'], borderWidth:0 }] }, options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'bottom'}} } });
     };
 
     function processCard(tid, totId, dispId, autoId) {
@@ -582,76 +549,54 @@
         document.getElementById('totalReceived').innerText = fmt(r);
     }
 
-    // --- PDF EXPORT ---
     window.generatePDF = () => {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
         doc.text("Relatório Mensal - " + currentDocId, 14, 20);
-        
         const rows = [];
         rows.push(['ENTRADA', 'Salário', document.getElementById('salary').value]);
         document.querySelectorAll('#incomeTable tbody tr').forEach(tr => rows.push(['ENTRADA', tr.querySelectorAll('input')[0].value, tr.querySelectorAll('input')[1].value]));
         document.querySelectorAll('#mainTable tbody tr').forEach(tr => rows.push(['FIXO', tr.querySelectorAll('input')[0].value, tr.querySelectorAll('input')[1].value]));
-        
         doc.autoTable({ head: [['Tipo', 'Item', 'Valor']], body: rows, startY: 30 });
         doc.save(`Relatorio_${currentDocId}.pdf`);
     };
 
-    // --- HISTÓRICO ---
-    window.fetchHistoryData = async () => {
+    window.fetchHistoryData = async (range = 6, btnElement = null) => {
+        if(btnElement) {
+            document.querySelectorAll('.chart-btn').forEach(b => b.classList.remove('active'));
+            btnElement.classList.add('active');
+        }
+
         const labels = [], dataIncome = [], dataExpense = [];
         const year = parseInt(currentDocId.split('-')[0]), month = parseInt(currentDocId.split('-')[1]);
         
-        for(let i=5; i>=0; i--) {
+        for(let i=range-1; i>=0; i--) {
             let m = month - i, y = year;
-            if(m <= 0) { m += 12; y--; }
+            while(m <= 0) { m += 12; y--; }
             const id = `${y}-${String(m).padStart(2,'0')}`;
-            
             const snap = await getDoc(doc(db, "meus_gastos", id));
             labels.push(`${m}/${y}`);
-            
             if(snap.exists()) {
                 const d = snap.data();
                 let income = (parseFloat(d.salary)||0);
                 if(d.extraIncome) d.extraIncome.forEach(x => income += (parseFloat(x.value)||0));
                 dataIncome.push(income);
-                
                 let expense = (parseFloat(d.emergency)||0);
                 if(d.main) d.main.forEach(x => { if(!x.locked) expense += parseFloat(x.value)||0; });
                 const sumCard = (list) => { let s=0; if(list) list.forEach(k => s+=parseFloat(k.value)||0); return s; };
                 const calcBill = (bill, list) => (parseFloat(bill)||0) - sumCard(list);
                 expense += calcBill(d.bbTotal, d.bb) + calcBill(d.mpTotal, d.mp) + calcBill(d.passaiTotal, d.passai) + calcBill(d.nubankTotal, d.nubank);
                 dataExpense.push(expense);
-            } else {
-                dataIncome.push(0); dataExpense.push(0);
-            }
+            } else { dataIncome.push(0); dataExpense.push(0); }
         }
-
         const ctx = document.getElementById('historyChart').getContext('2d');
         if(barChart) barChart.destroy();
-        barChart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: labels,
-                datasets: [
-                    { label: 'Entradas', data: dataIncome, backgroundColor: '#10b981' },
-                    { label: 'Saídas', data: dataExpense, backgroundColor: '#ef4444' }
-                ]
-            },
-            options: { responsive:true, maintainAspectRatio:false }
-        });
+        barChart = new Chart(ctx, { type: 'bar', data: { labels: labels, datasets: [{ label: 'Entradas', data: dataIncome, backgroundColor: '#10b981', borderRadius: 4 }, { label: 'Saídas', data: dataExpense, backgroundColor: '#ef4444', borderRadius: 4 }] }, options: { responsive:true, maintainAspectRatio:false, scales: { y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } }, x: { grid: { display: false } } }, plugins: { legend: { position: 'top' } } } });
     };
 
     function fmt(n) { return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
     
-    // --- SAVE SECURE ---
-    window.calculateAndSchedule = () => { 
-        calculateAll(); 
-        if(!isLoaded || isReceiving) return; 
-        document.getElementById('syncStatus').innerText = "Salvando..."; 
-        clearTimeout(saveTimer); 
-        saveTimer = setTimeout(() => saveData(), 1000); 
-    };
+    window.calculateAndSchedule = () => { calculateAll(); if(!isLoaded || isReceiving) return; document.getElementById('syncStatus').innerText = "Salvando..."; clearTimeout(saveTimer); saveTimer = setTimeout(() => saveData(), 1000); };
     
     window.copyPreviousMonth = async function() {
         if(!confirm("Importar dados do mês anterior?")) return;
@@ -670,7 +615,6 @@
     async function saveData(force = false, targetId = null) {
         if (!isLoaded && !force) return;
         if (isReceiving && !force) return;
-        
         const idToSave = targetId || currentDocId;
         if (!idToSave) return;
 
