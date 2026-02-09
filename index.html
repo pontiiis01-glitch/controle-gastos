@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Financeiro 18.0</title>
+    <title>Financeiro 19.0 (PDF Pro)</title>
 
     <link rel="apple-touch-icon" href="icone2.0.png">
     <link rel="icon" type="image/png" href="icone2.0.png">
@@ -98,25 +98,22 @@
         td { padding: 10px; border-bottom: 1px solid var(--border); }
         input.td-input { background: var(--bg-body); border: 1px solid var(--border); color: var(--text-main); padding: 8px; border-radius: 6px; width: 100%; box-sizing: border-box; }
         
-        /* CARD MINIATURES (CORRIGIDO PARA MOSTRAR TUDO) */
-        .card-row { display: flex; align-items: center; padding: 15px; border-bottom: 1px solid var(--border); gap: 15px; }
+        /* CARD MINIATURES */
+        .card-row { display: flex; align-items: center; padding: 20px; border-bottom: 1px solid var(--border); gap: 20px; }
         .card-thumb { 
-            width: 86px; 
-            height: 54px; 
-            border-radius: 8px; 
-            background-size: contain; /* MOSTRA A IMAGEM INTEIRA */
-            background-repeat: no-repeat;
-            background-position: center; 
-            flex-shrink: 0; 
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            width: 120px; height: 75px; border-radius: 10px; 
+            background-size: contain; background-repeat: no-repeat; background-position: center; 
+            flex-shrink: 0; box-shadow: 0 4px 10px rgba(0,0,0,0.15); 
             background-color: var(--bg-body);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
+        .card-thumb:hover { transform: translateY(-5px) scale(1.05); box-shadow: 0 15px 25px rgba(0,0,0,0.2); }
         .card-info { flex: 1; }
-        .card-info h2 { margin: 0 0 5px 0; font-size: 1.1rem; }
-        .card-info .bill-wrapper { display: flex; align-items: center; gap: 5px; font-size: 0.9rem; color: var(--text-muted); }
-        .card-info input { width: 100px; font-weight: bold; padding: 5px; border-radius: 5px; border: 1px solid var(--border); background: var(--bg-body); color: var(--text-main); }
+        .card-info h2 { margin: 0 0 8px 0; font-size: 1.2rem; font-weight: 800; }
+        .card-info .bill-wrapper { display: flex; align-items: center; gap: 10px; font-size: 1rem; color: var(--text-muted); font-weight: 500; }
+        .card-info input { width: 120px; font-size: 1.1rem; font-weight: 800; padding: 8px; border-radius: 8px; border: 2px solid var(--border); background: var(--bg-body); color: var(--text-main); transition: 0.2s; }
+        .card-info input:focus { border-color: var(--primary); outline: none; }
 
-        /* IMAGENS ATIVADAS */
         .thumb-bb { background-image: url('bb.jpeg'); }
         .thumb-mp { background-image: url('mp.jpeg'); }
         .thumb-passai { background-image: url('passai.jpeg'); }
@@ -126,7 +123,8 @@
         .lock-box { background: var(--bg-card); padding: 40px; border-radius: 20px; text-align: center; border: 1px solid var(--border); }
         .lock-input { padding: 10px; font-size: 1.5rem; text-align: center; margin: 20px 0; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-body); color: var(--text-main); }
 
-        .btn-add { width: 100%; padding: 10px; margin-top: 10px; background: var(--bg-body); border: 2px dashed var(--border); color: var(--text-muted); cursor: pointer; border-radius: 8px; }
+        .btn-add { width: 100%; padding: 12px; margin-top: 15px; background: var(--bg-body); border: 2px dashed var(--border); color: var(--text-muted); cursor: pointer; border-radius: 12px; font-weight: 600; transition: 0.2s; }
+        .btn-add:hover { border-color: var(--primary); color: var(--primary); background: rgba(37,99,235,0.05); }
         .btn-del { background: none; border: none; color: var(--danger); cursor: pointer; font-size: 1.2rem; }
         
         .chart-controls { display: flex; gap: 5px; background: var(--bg-body); padding: 4px; border-radius: 8px; border: 1px solid var(--border); }
@@ -173,7 +171,7 @@
         </div>
         <div style="display:flex; gap:10px;">
             <button class="btn-action btn-copy" onclick="copyPreviousMonth()">Importar Mês</button>
-            <button class="btn-action btn-pdf" onclick="generatePDF()">PDF</button>
+            <button class="btn-action btn-pdf" onclick="generatePDF()">PDF Completo</button>
         </div>
         <div id="syncStatus" style="font-size:0.75rem; font-weight:bold; color:var(--text-muted);">...</div>
     </div>
@@ -549,18 +547,169 @@
         document.getElementById('totalReceived').innerText = fmt(r);
     }
 
+    // --- PDF COMPLETO (VERSÃO 19.0) ---
     window.generatePDF = () => {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
-        doc.text("Relatório Mensal - " + currentDocId, 14, 20);
-        const rows = [];
-        rows.push(['ENTRADA', 'Salário', document.getElementById('salary').value]);
-        document.querySelectorAll('#incomeTable tbody tr').forEach(tr => rows.push(['ENTRADA', tr.querySelectorAll('input')[0].value, tr.querySelectorAll('input')[1].value]));
-        document.querySelectorAll('#mainTable tbody tr').forEach(tr => rows.push(['FIXO', tr.querySelectorAll('input')[0].value, tr.querySelectorAll('input')[1].value]));
-        doc.autoTable({ head: [['Tipo', 'Item', 'Valor']], body: rows, startY: 30 });
-        doc.save(`Relatorio_${currentDocId}.pdf`);
+        
+        // --- 1. TÍTULO E CABEÇALHO ---
+        doc.setFontSize(22);
+        doc.setTextColor(37, 99, 235); // Azul Primary
+        doc.text("Relatório Financeiro", 14, 20);
+        
+        doc.setFontSize(12);
+        doc.setTextColor(100);
+        doc.text(`Referência: ${document.getElementById('monthPicker').value}`, 14, 28);
+        doc.line(14, 32, 196, 32); // Linha separadora
+
+        let finalY = 40; // Posição vertical inicial
+
+        // --- 2. RESUMO EXECUTIVO ---
+        doc.setFontSize(14);
+        doc.setTextColor(0);
+        doc.text("Resumo Executivo", 14, finalY);
+        
+        const salary = parseFloat(document.getElementById('salary').value) || 0;
+        const extraIncome = parseFloat(document.getElementById('extraIncomeTotal').innerText.replace('R$','').replace('.','').replace(',','.')) || 0;
+        const totalExpenses = parseFloat(document.getElementById('totalExpenses').innerText.replace('R$','').replace('.','').replace(',','.')) || 0;
+        const remaining = parseFloat(document.getElementById('remaining').innerText.replace('R$','').replace('.','').replace(',','.')) || 0;
+
+        doc.autoTable({
+            startY: finalY + 5,
+            head: [['Conceito', 'Valor']],
+            body: [
+                ['Entradas (Salário + Extras)', fmt(salary + extraIncome)],
+                ['Saídas Totais', fmt(totalExpenses)],
+                ['Saldo Restante', fmt(remaining)]
+            ],
+            theme: 'striped',
+            headStyles: { fillColor: [37, 99, 235] }, // Azul
+            styles: { fontSize: 11, fontStyle: 'bold' }
+        });
+        finalY = doc.lastAutoTable.finalY + 15;
+
+        // --- 3. RENDAS EXTRAS ---
+        const incomeRows = [];
+        document.querySelectorAll('#incomeTable tbody tr').forEach(tr => {
+            const desc = tr.querySelectorAll('input')[0].value;
+            const val = tr.querySelectorAll('input')[1].value;
+            if(desc || val) incomeRows.push([desc, `R$ ${val}`]);
+        });
+
+        if (incomeRows.length > 0) {
+            doc.text("Detalhamento de Rendas Extras", 14, finalY);
+            doc.autoTable({
+                startY: finalY + 5,
+                head: [['Descrição', 'Valor']],
+                body: incomeRows,
+                theme: 'grid',
+                headStyles: { fillColor: [16, 185, 129] } // Verde
+            });
+            finalY = doc.lastAutoTable.finalY + 15;
+        }
+
+        // --- 4. GASTOS FIXOS ---
+        const fixedRows = [];
+        document.querySelectorAll('#mainTable tbody tr').forEach(tr => {
+            const item = tr.querySelectorAll('input')[0].value;
+            const val = tr.querySelectorAll('input')[1].value;
+            if(item || val) fixedRows.push([item, `R$ ${val}`]);
+        });
+
+        if (fixedRows.length > 0) {
+            doc.text("Gastos Fixos", 14, finalY);
+            doc.autoTable({
+                startY: finalY + 5,
+                head: [['Item', 'Valor']],
+                body: fixedRows,
+                theme: 'grid',
+                headStyles: { fillColor: [245, 158, 11] } // Laranja/Amarelo
+            });
+            finalY = doc.lastAutoTable.finalY + 15;
+        }
+
+        // --- 5. CARTÕES DE CRÉDITO ---
+        const cards = [
+            { id: 'bbTable', name: 'Banco do Brasil', color: [245, 158, 11] },
+            { id: 'mpTable', name: 'Mercado Pago', color: [37, 99, 235] },
+            { id: 'passaiTable', name: 'Passaí', color: [234, 88, 12] },
+            { id: 'nubankTable', name: 'Nubank', color: [130, 10, 209] }
+        ];
+
+        for (const card of cards) {
+            const cardRows = [];
+            let cardTotal = 0;
+            
+            document.querySelectorAll(`#${card.id} tbody tr`).forEach(tr => {
+                const who = tr.querySelectorAll('input')[0].value;
+                const desc = tr.querySelectorAll('input')[1].value;
+                const valStr = tr.querySelectorAll('input')[3].value;
+                const val = parseFloat(valStr) || 0;
+                
+                if (val > 0) {
+                    cardRows.push([who, desc, `R$ ${valStr}`]);
+                    cardTotal += val;
+                }
+            });
+
+            if (cardRows.length > 0) {
+                // Check page break
+                if (finalY > 250) { doc.addPage(); finalY = 20; }
+                
+                doc.text(`${card.name} (Total Rateado: ${fmt(cardTotal)})`, 14, finalY);
+                doc.autoTable({
+                    startY: finalY + 5,
+                    head: [['Quem', 'Descrição', 'Valor']],
+                    body: cardRows,
+                    theme: 'grid',
+                    headStyles: { fillColor: card.color }
+                });
+                finalY = doc.lastAutoTable.finalY + 15;
+            }
+        }
+
+        // --- 6. DEVEDORES ---
+        // Coleta dados dos devedores calculados
+        // Como o cálculo é complexo e visual, vamos simplificar pegando o resumo se possível, 
+        // ou recalculando rápido aqui. Vamos recalcular para ser preciso no PDF.
+        const debtorsMap = {};
+        const processDebts = (tid) => {
+            document.querySelectorAll(`#${tid} tbody tr`).forEach(tr => {
+                const name = tr.querySelector('.split-name').value.trim();
+                const val = parseFloat(tr.querySelector('.split-val').value) || 0;
+                if(name && val > 0) {
+                    const k = name.toLowerCase();
+                    if(!debtorsMap[k]) debtorsMap[k] = { name: name, total: 0 };
+                    debtorsMap[k].total += val;
+                }
+            });
+        };
+        cards.forEach(c => processDebts(c.id));
+
+        const debtRows = [];
+        for (let k in debtorsMap) {
+            const d = debtorsMap[k];
+            const status = window.paidDebtors.includes(d.name) ? "PAGO" : "PENDENTE";
+            debtRows.push([d.name, fmt(d.total), status]);
+        }
+
+        if (debtRows.length > 0) {
+            if (finalY > 250) { doc.addPage(); finalY = 20; }
+            doc.text("Controle de Devedores", 14, finalY);
+            doc.autoTable({
+                startY: finalY + 5,
+                head: [['Nome', 'Valor Total', 'Status']],
+                body: debtRows,
+                theme: 'grid',
+                headStyles: { fillColor: [239, 68, 68] } // Vermelho
+            });
+        }
+
+        // Save
+        doc.save(`Relatorio_Completo_${currentDocId}.pdf`);
     };
 
+    // --- HISTÓRICO ---
     window.fetchHistoryData = async (range = 6, btnElement = null) => {
         if(btnElement) {
             document.querySelectorAll('.chart-btn').forEach(b => b.classList.remove('active'));
