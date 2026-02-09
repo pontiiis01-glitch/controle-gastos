@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Financeiro 42.0 (Premium & Fix)</title>
+    <title>Financeiro 42.0 (Pro)</title>
 
     <link rel="icon" type="image/png" href="icone2.0.png">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -65,8 +65,6 @@
         
         .menu-divider { height: 1px; background: var(--border); margin: 15px 0; }
         
-        /* CORREÇÃO: Força o grupo de config para o final */
-        .config-group { display: flex; flex-direction: column; gap: 5px; margin-bottom: 20px; margin-top: auto; }
         .btn-config { color: var(--text-main); } 
         .btn-lock { color: var(--danger); }
 
@@ -81,21 +79,38 @@
             #main-content { padding-top: 70px; padding-left: 15px; padding-right: 15px; }
         }
 
-        /* CONTROLS */
-        .controls-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 25px; align-items: center; justify-content: space-between; }
+        /* CONTROLS (HEADER) - OTIMIZADO PARA MOBILE */
+        .controls-row { display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 25px; align-items: center; justify-content: space-between; }
+        
         .date-control { 
             background: var(--bg-card); border: 1px solid var(--border); padding: 8px 20px; 
             border-radius: 50px; display: flex; align-items: center; gap: 10px; 
-            color: var(--text-main); box-shadow: var(--shadow);
+            color: var(--text-main); box-shadow: var(--shadow); flex-shrink: 0;
         }
         input[type="month"] { background: transparent; border: none; font-family: 'Inter'; font-weight: 700; color: inherit; cursor: pointer; }
         
-        .btn-action { padding: 10px 20px; border-radius: 50px; border: none; color: white; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.2s; font-size: 0.9rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .actions-group { display: flex; gap: 10px; }
+
+        .btn-action { padding: 10px 20px; border-radius: 50px; border: none; color: white; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; font-size: 0.9rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         .btn-action:hover { transform: translateY(-2px); }
+        
         .btn-copy { background: linear-gradient(135deg, #3b82f6, #2563eb); }
         .btn-pdf { background: linear-gradient(135deg, #10b981, #059669); }
         .btn-reset { background: linear-gradient(135deg, #ef4444, #b91c1c); }
         .btn-save { background: linear-gradient(135deg, #f59e0b, #d97706); }
+
+        /* MOBILE ADJUSTMENTS FOR BUTTONS */
+        @media (max-width: 768px) {
+            .controls-row { flex-direction: column; align-items: stretch; gap: 15px; }
+            .date-control { justify-content: center; width: 100%; box-sizing: border-box; }
+            .actions-group { 
+                display: grid; 
+                grid-template-columns: 1fr 1fr; /* 2 buttons per row */
+                gap: 10px; 
+                width: 100%;
+            }
+            .btn-action { width: 100%; padding: 12px; font-size: 0.85rem; }
+        }
 
         /* DASHBOARD CARDS */
         .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 20px; margin-bottom: 30px; }
@@ -202,7 +217,7 @@
 <div id="pdfModal">
     <div class="pdf-box">
         <div class="pdf-header">
-            <h3 style="margin:0; color:var(--text-main);">Visualizar Relatório</h3>
+            <h3 style="margin:0; color:var(--text-main);">Relatório Detalhado</h3>
             <div style="display:flex; gap:10px;">
                 <button class="btn-action btn-pdf" id="btnDownloadPDF">Baixar PDF</button>
                 <button class="btn-action btn-reset" style="background:#64748b" onclick="closePDFModal()">Fechar</button>
@@ -240,14 +255,12 @@
     
     <div class="menu-divider"></div>
 
-    <div class="config-group">
-        <button class="nav-btn btn-config" onclick="toggleTheme()">
-            <span class="material-icons-round">dark_mode</span> Tema
-        </button>
-        <button class="nav-btn btn-lock" onclick="lockApp()">
-            <span class="material-icons-round">lock</span> Bloquear
-        </button>
-    </div>
+    <button class="nav-btn btn-config" onclick="toggleTheme()">
+        <span class="material-icons-round">dark_mode</span> Tema
+    </button>
+    <button class="nav-btn btn-lock" onclick="lockApp()">
+        <span class="material-icons-round">lock</span> Bloquear
+    </button>
 </nav>
 
 <main id="main-content">
@@ -257,7 +270,7 @@
             <span class="material-icons-round">calendar_today</span>
             <input type="month" id="monthPicker" onchange="changeMonthSafe()">
         </div>
-        <div style="display:flex; gap:10px;">
+        <div class="actions-group">
             <button class="btn-action btn-save" onclick="scheduleSave(true)"><span class="material-icons-round">save</span> Salvar</button>
             <button class="btn-action btn-reset" onclick="resetMonthData()"><span class="material-icons-round">delete</span> Limpar</button>
             <button class="btn-action btn-copy" onclick="copyPreviousMonth()"><span class="material-icons-round">content_copy</span> Importar</button>
@@ -481,7 +494,6 @@
         if (unsubscribe) unsubscribe();
         clearTimeout(saveTimer);
 
-        // CORREÇÃO: Não usamos 'await' aqui. Capturamos e salvamos em background para não travar a troca.
         if (currentDocId && !isReceiving) saveDataSync(currentDocId); 
 
         clearScreen();
@@ -504,7 +516,7 @@
         
         unsubscribe = onSnapshot(docRef, (docSnap) => {
             if (docSnap.exists()) {
-                if (window.isEditing) return; // Não atualiza se usuário estiver digitando
+                if (window.isEditing) return; 
 
                 isReceiving = true;
                 const data = docSnap.data();
@@ -586,7 +598,6 @@
         });
 
         document.querySelectorAll('#mainTable tbody tr').forEach(tr => { 
-            // CORREÇÃO: O primeiro input em Gastos Fixos é o sys-input (nome), o select é anterior.
             const name = tr.querySelector('.sys-input').value; 
             const val = tr.querySelector('.val-input').value; 
             const isMine = tr.querySelector('input[type="checkbox"]').checked;
@@ -611,12 +622,10 @@
     }
 
     async function saveDataSync(targetId) {
-        // Se estiver carregando, evita salvar para não sobrescrever com zeros
         if(isLoading) return; 
         
         const data = captureScreenData();
         try { 
-            // setDoc retorna uma Promise, mas deixamos rodar em background se não for await
             await setDoc(doc(db, "carteira_igor_v42", targetId), data); 
             showToast(); 
         } 
@@ -668,7 +677,6 @@
             }
         });
 
-        // CORREÇÃO: Emergência não entra em 'Meu Custo' (myRealExpenses)
         let totalExpenses = fixedSumTotal + cardsShareTotal + emergency;
         let myRealExpenses = fixedSumMine + cardsShareTotal; 
 
@@ -794,38 +802,148 @@
         document.getElementById('totalReceived').innerText = fmt(r);
     }
 
+    // --- PDF DETALHADO REESCRITO ---
     window.openPDFPreview = () => {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
-        doc.setFillColor(37, 99, 235); doc.rect(0, 0, 210, 40, 'F');
-        doc.setFontSize(22); doc.setTextColor(255, 255, 255); doc.text("Relatório Financeiro", 14, 20);
-        doc.setFontSize(12); doc.text(`Referência: ${document.getElementById('monthPicker').value}`, 14, 30);
-        let finalY = 50; doc.setTextColor(0); doc.setFontSize(14); doc.text("Resumo Geral", 14, finalY);
+        
+        // Cabeçalho Principal
+        doc.setFillColor(37, 99, 235); doc.rect(0, 0, 210, 30, 'F');
+        doc.setFontSize(18); doc.setTextColor(255, 255, 255); 
+        doc.text("Relatório Financeiro Detalhado", 14, 18);
+        doc.setFontSize(10); 
+        doc.text(`Referência: ${document.getElementById('monthPicker').value} | Gerado em: ${new Date().toLocaleDateString()}`, 14, 26);
+        
+        let y = 40;
+        doc.setTextColor(0);
+
+        // 1. Resumo Geral
+        doc.setFontSize(14); doc.text("1. Resumo Geral", 14, y);
         const salary = parseFloat(document.getElementById('salary').value)||0;
         const extra = parseFloat(document.getElementById('extraIncomeTotal').innerText.replace(/[^\d,]/g,'').replace(',','.'))||0;
         const out = parseFloat(document.getElementById('totalExpenses').innerText.replace(/[^\d,]/g,'').replace(',','.'))||0;
         const rest = parseFloat(document.getElementById('remaining').innerText.replace(/[^\d,-]/g,'').replace(',','.'))||0;
-        doc.autoTable({ startY: finalY+5, head:[['Descrição','Valor']], body:[['Salário Base',fmt(salary)],['Rendas Extras',fmt(extra)],['Total Saídas',fmt(out)],['Saldo Restante',fmt(rest)]], theme:'striped', headStyles:{fillColor:[37,99,235]} });
-        finalY = doc.lastAutoTable.finalY + 15;
-        
-        const extract = (sel, tit, col) => {
-            const rows=[]; document.querySelectorAll(`${sel} tbody tr`).forEach(tr=>{
-                const n = tr.querySelector('.sys-input').value;
-                const v = tr.querySelector('.val-input').value;
-                if(parseFloat(v)>0) rows.push([n,`R$ ${v}`]);
+        const myCost = parseFloat(document.getElementById('myRealExpenses').innerText.replace(/[^\d,]/g,'').replace(',','.'))||0;
+
+        doc.autoTable({
+            startY: y+5,
+            head: [['Conceito', 'Valor']],
+            body: [
+                ['Salário Base', fmt(salary)],
+                ['Rendas Extras', fmt(extra)],
+                ['Total Recebido', fmt(salary+extra)],
+                ['Total Saídas', fmt(out)],
+                ['Meu Custo Real', fmt(myCost)],
+                ['Saldo Restante', fmt(rest)]
+            ],
+            theme: 'grid',
+            headStyles: { fillColor: [37, 99, 235] },
+            columnStyles: { 1: { fontStyle: 'bold', halign: 'right' } }
+        });
+        y = doc.lastAutoTable.finalY + 15;
+
+        // 2. Rendas Extras (se houver)
+        const incomeRows = [];
+        document.querySelectorAll('#incomeTable tbody tr').forEach(tr => {
+            const d = tr.querySelector('.sys-input').value;
+            const v = tr.querySelector('.val-input').value;
+            if(parseFloat(v)>0) incomeRows.push([d, fmt(parseFloat(v))]);
+        });
+        if(incomeRows.length > 0) {
+            doc.text("2. Rendas Extras", 14, y);
+            doc.autoTable({ startY: y+5, head: [['Descrição', 'Valor']], body: incomeRows, theme: 'striped', headStyles: {fillColor:[16, 185, 129]} });
+            y = doc.lastAutoTable.finalY + 15;
+        }
+
+        // 3. Gastos Fixos
+        const fixedRows = [];
+        document.querySelectorAll('#mainTable tbody tr').forEach(tr => {
+            const n = tr.querySelector('.sys-input').value;
+            const v = tr.querySelector('.val-input').value;
+            const mine = tr.querySelector('input[type="checkbox"]').checked ? "Sim" : "Não";
+            if(parseFloat(v)>0) fixedRows.push([n, mine, fmt(parseFloat(v))]);
+        });
+        if(fixedRows.length > 0) {
+            if(y > 250) { doc.addPage(); y=20; }
+            doc.text("3. Gastos Fixos", 14, y);
+            doc.autoTable({ startY: y+5, head: [['Item', 'Meu Gasto?', 'Valor']], body: fixedRows, theme: 'striped', headStyles: {fillColor:[245, 158, 11]} });
+            y = doc.lastAutoTable.finalY + 15;
+        }
+
+        // 4. Cartões Detalhados
+        const cards = [
+            {id: 'bbTable', name: 'Banco do Brasil', tot: 'bbTotalBill'},
+            {id: 'mpTable', name: 'Mercado Pago', tot: 'mpTotalBill'},
+            {id: 'passaiTable', name: 'Passaí', tot: 'passaiTotalBill'},
+            {id: 'nubankTable', name: 'Nubank', tot: 'nubankTotalBill'}
+        ];
+
+        cards.forEach(card => {
+            const rows = [];
+            let subTotal = 0;
+            document.querySelectorAll(`#${card.id} tbody tr`).forEach(tr => {
+                const inputs = tr.querySelectorAll('.sys-input');
+                const v = parseFloat(tr.querySelector('.val-input').value)||0;
+                if(v>0) {
+                    rows.push([inputs[0].value, inputs[1].value, inputs[2].value, fmt(v)]);
+                    subTotal += v;
+                }
             });
-            if(rows.length>0){ if(finalY>250){doc.addPage();finalY=20;} doc.text(tit,14,finalY); doc.autoTable({startY:finalY+5,head:[['Item','Valor']],body:rows,theme:'striped',headStyles:{fillColor:col}}); finalY=doc.lastAutoTable.finalY+15; }
-        };
-        extract('#incomeTable','Rendas Extras',[16,185,129]); extract('#mainTable','Gastos Fixos',[245,158,11]);
-        ['bbTable','mpTable','passaiTable','nubankTable'].forEach(id=>extract(`#${id}`,`Cartão: ${id.replace('Table','').toUpperCase()}`,[100,100,100]));
-        
+
+            if(rows.length > 0 || parseFloat(document.getElementById(card.tot).value)>0) {
+                if(y > 230) { doc.addPage(); y=20; }
+                const totalBill = parseFloat(document.getElementById(card.tot).value)||0;
+                doc.setFontSize(12); doc.text(`Cartão: ${card.name}`, 14, y);
+                doc.setFontSize(10); doc.text(`Fatura Total: ${fmt(totalBill)} | Terceiros: ${fmt(subTotal)} | Minha Parte: ${fmt(totalBill-subTotal)}`, 14, y+5);
+                
+                if(rows.length > 0) {
+                    doc.autoTable({ 
+                        startY: y+8, 
+                        head: [['Quem', 'Item', 'Parc.', 'Valor']], 
+                        body: rows, 
+                        theme: 'striped',
+                        headStyles: { fillColor: [100, 116, 139] } 
+                    });
+                    y = doc.lastAutoTable.finalY + 15;
+                } else {
+                    y += 20;
+                }
+            }
+        });
+
+        // 5. Devedores (Status)
+        const debtors = [];
+        const debtDivs = document.querySelectorAll('.debt-card');
+        if(debtDivs.length > 0) {
+            debtDivs.forEach(d => {
+                const name = d.querySelector('.debt-header span').innerText;
+                const val = d.querySelector('.debt-amount').innerText;
+                const status = d.classList.contains('paid') ? "PAGO" : "PENDENTE";
+                debtors.push([name, status, val]);
+            });
+            if(y > 250) { doc.addPage(); y=20; }
+            doc.setFontSize(14); doc.text("5. Controle de Devedores", 14, y);
+            doc.autoTable({
+                startY: y+5,
+                head: [['Devedor', 'Status', 'Valor']],
+                body: debtors,
+                theme: 'grid',
+                headStyles: { fillColor: [220, 38, 38] },
+                didParseCell: function(data) {
+                    if (data.section === 'body' && data.column.index === 1) {
+                        if (data.cell.raw === 'PAGO') data.cell.styles.textColor = [22, 101, 52];
+                        else data.cell.styles.textColor = [180, 83, 9];
+                    }
+                }
+            });
+        }
+
         document.getElementById('pdfPreviewFrame').src = doc.output('bloburl');
         document.getElementById('pdfModal').style.display = 'flex';
-        document.getElementById('btnDownloadPDF').onclick = () => doc.save(`Relatorio_${currentDocId}.pdf`);
+        document.getElementById('btnDownloadPDF').onclick = () => doc.save(`Relatorio_Financeiro_${currentDocId}.pdf`);
     }
     window.closePDFModal = () => document.getElementById('pdfModal').style.display = 'none';
 
-    // CORREÇÃO: Busca paralela (Promise.all) para acelerar gráfico
     window.fetchHistoryData = async (range = 6, btnElement = null) => {
         if(btnElement) { document.querySelectorAll('.chart-btn').forEach(b => b.classList.remove('active')); btnElement.classList.add('active'); }
         
