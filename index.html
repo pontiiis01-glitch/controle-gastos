@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Financeiro 24.0 (Repair)</title>
+    <title>Financeiro 25.0 (Bug Fix)</title>
 
     <link rel="apple-touch-icon" href="icone2.0.png">
     <link rel="icon" type="image/png" href="icone2.0.png">
@@ -92,7 +92,7 @@
         td { padding: 10px; border-bottom: 1px solid var(--border); }
         input.td-input { background: var(--bg-body); border: 1px solid var(--border); color: var(--text-main); padding: 8px; border-radius: 6px; width: 100%; box-sizing: border-box; }
         
-        /* CARTÕES */
+        /* CARTÕES (HORIZONTAL) */
         .card-row { display: flex; align-items: center; padding: 20px; border-bottom: 1px solid var(--border); gap: 20px; }
         .card-thumb { 
             width: 120px; height: 75px; border-radius: 10px; 
@@ -342,7 +342,7 @@
     const SENHA = "1234"; 
 
     let currentDocId = "";
-    let isPopulating = false; 
+    let isReceiving = true; 
     let saveTimer;
     let unsubscribe = null;
     let pieChart = null;
@@ -389,31 +389,49 @@
 
     window.changeMonth = () => {
         const picker = document.getElementById('monthPicker');
-        if (picker.value) { localStorage.setItem('lastViewedMonth', picker.value); loadMonthData(picker.value); }
+        
+        // LIMPA A TELA IMEDIATAMENTE AO TROCAR O MÊS (EVITA VAZAMENTO DE DADOS)
+        updateScreen(getDefaultData());
+        document.getElementById('syncStatus').innerText = "Buscando...";
+
+        if (picker.value) { 
+            localStorage.setItem('lastViewedMonth', picker.value); 
+            loadMonthData(picker.value); 
+        }
     };
 
     function loadMonthData(dateString) {
         currentDocId = dateString;
-        document.getElementById('syncStatus').innerText = "Carregando...";
+        isReceiving = true; // Bloqueia salvamento enquanto carrega
+        
         if (unsubscribe) unsubscribe();
+        
         unsubscribe = onSnapshot(doc(db, "meus_gastos", currentDocId), (docSnap) => {
             if (docSnap.exists()) {
                 if (docSnap.metadata.hasPendingWrites) return; 
                 const data = docSnap.data();
                 window.paidDebtors = data.paidDebtors || []; 
                 updateScreen(data);
-                document.getElementById('syncStatus').innerText = "Sincronizado";
+                isReceiving = false; // Libera salvamento
+                document.getElementById('syncStatus').innerHTML = '<span style="color:var(--success)">Sincronizado</span>';
             } else { 
-                window.paidDebtors = []; updateScreen(null); 
-                // Força criação imediata se não existir
+                // Se documento não existe, cria um novo zerado
+                window.paidDebtors = []; 
+                updateScreen(getDefaultData()); 
+                isReceiving = false;
                 saveData(true); 
+                document.getElementById('syncStatus').innerText = "Novo Mês Criado";
             }
+        }, (error) => {
+            console.error("Erro Firebase:", error);
+            document.getElementById('syncStatus').innerText = "Erro Conexão";
+            alert("Erro ao conectar com o banco de dados. Verifique sua internet ou as regras do Firebase.");
         });
     }
 
     function updateScreen(data) {
-        isPopulating = true;
         if (!data) data = getDefaultData();
+        // Garante campos obrigatórios
         if (data.main && !data.main.some(i => i.id === 'nubank_auto')) data.main.unshift({ icon: '💳', name: 'Nubank', value: 0, isMine: true, locked: true, id: 'nubank_auto' });
 
         document.getElementById('salary').value = data.salary || 0;
@@ -430,7 +448,6 @@
         renderTable('passaiTable', data.passai || [], 'split');
         renderTable('nubankTable', data.nubank || [], 'split');
         calculateAll(); 
-        isPopulating = false;
     }
 
     function getDefaultData() {
@@ -707,11 +724,11 @@
     function fmt(n) { return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
     
     window.calculateAndSchedule = () => { 
-        if(isPopulating) return; 
+        if(isReceiving) return; // Se estiver trocando de mês, não salva
         calculateAll(); 
         document.getElementById('syncStatus').innerText = "Salvando..."; 
         clearTimeout(saveTimer); 
-        saveTimer = setTimeout(() => saveData(), 1000); 
+        saveTimer = setTimeout(() => saveData(), 800); 
     };
     
     window.copyPreviousMonth = async function() {
@@ -729,8 +746,7 @@
     };
 
     async function saveData(force = false, targetId = null) {
-        if (isPopulating && !force) return;
-        
+        if (isReceiving && !force) return;
         const idToSave = targetId || currentDocId;
         if (!idToSave) return;
 
@@ -754,10 +770,7 @@
         const sc = (id, arr) => { document.querySelectorAll(`#${id} tbody tr`).forEach(tr => { const i = tr.querySelectorAll('input'); arr.push({ name: i[0].value, desc: i[1].value, inst: i[2].value, value: i[3].value }); }); };
         sc('bbTable', data.bb); sc('mpTable', data.mp); sc('passaiTable', data.passai); sc('nubankTable', data.nubank);
         
-        try { await setDoc(doc(db, "meus_gastos", idToSave), data); document.getElementById('syncStatus').innerText = "Salvo"; } catch (e) { 
-            console.error(e);
-            alert("Erro ao salvar: " + e.message); // ALERTA DE ERRO
-        }
+        try { await setDoc(doc(db, "meus_gastos", idToSave), data); document.getElementById('syncStatus').innerHTML = '<span style="color:var(--success)">Salvo</span>'; } catch (e) { console.error(e); }
     }
 </script>
 </body>
