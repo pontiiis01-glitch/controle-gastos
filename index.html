@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Financeiro 35.0</title>
+    <title>Financeiro 36.0</title>
 
     <link rel="apple-touch-icon" href="icone2.0.png">
     <link rel="icon" type="image/png" href="icone2.0.png">
@@ -40,12 +40,9 @@
         #sidebar { 
             width: 260px; background: var(--bg-sidebar); border-right: 1px solid var(--border); 
             display: flex; flex-direction: column; padding: 25px; z-index: 100; height: 100%; box-sizing: border-box;
-            transition: transform 0.3s;
+            transition: transform 0.3s; overflow-y: auto;
         }
-        .brand { font-size: 1.5rem; font-weight: 800; color: var(--primary); margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
-        
-        /* BOTÕES DE CONFIGURAÇÃO (MOVIDOS PARA CIMA) */
-        .config-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+        .brand { font-size: 1.5rem; font-weight: 800; color: var(--primary); margin-bottom: 30px; display: flex; align-items: center; gap: 10px; }
         
         .nav-btn { 
             background: transparent; border: none; color: var(--text-muted); padding: 12px 15px; 
@@ -54,7 +51,12 @@
         }
         .nav-btn:hover { background: var(--primary-light); color: var(--primary); }
         .nav-btn.active { background: var(--primary); color: white; box-shadow: 0 4px 6px rgba(37,99,235,0.2); }
-        .menu-divider { height: 1px; background: var(--border); margin: 10px 0 20px 0; }
+        
+        .menu-divider { height: 1px; background: var(--border); margin: 15px 0; }
+
+        /* CONFIG BUTTONS STYLE */
+        .btn-config { color: var(--text-main); }
+        .btn-lock { color: var(--danger); }
 
         #main-content { flex: 1; overflow-y: auto; padding: 25px; position: relative; }
         .mobile-toggle { display: none; position: absolute; top: 15px; left: 15px; z-index: 200; background: var(--bg-card); padding: 8px; border-radius: 8px; border: 1px solid var(--border); color: var(--text-main); }
@@ -127,6 +129,7 @@
         .card-info h2 { margin: 0 0 5px 0; font-size: 1.2rem; font-weight: 800; }
         .card-info .bill-wrapper { display: flex; align-items: center; gap: 10px; font-size: 0.95rem; color: var(--text-muted); font-weight: 600; }
         .card-info input { width: 120px; font-size: 1.1rem; font-weight: 800; padding: 8px; border-radius: 8px; border: 2px solid var(--border); background: var(--bg-body); color: var(--text-main); }
+        .my-share-text { margin-top: 5px; font-size: 0.9rem; color: var(--primary); font-weight: 700; }
 
         .thumb-bb { background-image: url('bb.jpeg'); background-color: #fcd34d; }
         .thumb-mp { background-image: url('mp.jpeg'); background-color: #3b82f6; }
@@ -198,18 +201,22 @@
 <nav id="sidebar">
     <div class="brand"><span class="material-icons-round">account_balance_wallet</span> Financeiro</div>
     
-    <div class="config-group">
-        <button class="nav-btn btn-theme" onclick="toggleTheme()"><span class="material-icons-round">dark_mode</span> Tema</button>
-        <button class="nav-btn" style="color:var(--danger)" onclick="lockApp()"><span class="material-icons-round">lock</span> Bloquear</button>
-    </div>
-
-    <div class="menu-divider"></div>
-
     <button class="nav-btn active" onclick="switchView('dashboard')"><span class="material-icons-round">dashboard</span> Resumo</button>
     <button class="nav-btn" onclick="switchView('income')"><span class="material-icons-round">attach_money</span> Rendas & Fixos</button>
     <button class="nav-btn" onclick="switchView('cards')"><span class="material-icons-round">credit_card</span> Cartões</button>
     <button class="nav-btn" onclick="switchView('debts')"><span class="material-icons-round">people</span> Devedores</button>
     <button class="nav-btn" onclick="switchView('history')"><span class="material-icons-round">bar_chart</span> Histórico</button>
+    
+    <div class="menu-divider"></div>
+
+    <div class="config-group">
+        <button class="nav-btn btn-config" onclick="toggleTheme()">
+            <span class="material-icons-round">dark_mode</span> Tema
+        </button>
+        <button class="nav-btn btn-lock" onclick="lockApp()">
+            <span class="material-icons-round">lock</span> Bloquear
+        </button>
+    </div>
 </nav>
 
 <main id="main-content">
@@ -271,8 +278,9 @@
             <div class="card-row">
                 <div class="card-thumb thumb-bb"></div>
                 <div class="card-info">
-                    <h2 style="color:#b45309">Banco do Brasil</h2>
+                    <h2>Banco do Brasil</h2>
                     <div class="bill-wrapper">Fatura: R$ <input type="number" id="bbTotalBill" oninput="calculateAndSchedule()" onfocus="window.isEditing=true" onblur="window.isEditing=false"></div>
+                    <div class="my-share-text" id="bbMyShareDisplay">Minha Parte: R$ 0,00</div>
                 </div>
             </div>
             <div class="sec-body">
@@ -284,8 +292,9 @@
             <div class="card-row">
                 <div class="card-thumb thumb-mp"></div>
                 <div class="card-info">
-                    <h2 style="color:#1d4ed8">Mercado Pago</h2>
+                    <h2>Mercado Pago</h2>
                     <div class="bill-wrapper">Fatura: R$ <input type="number" id="mpTotalBill" oninput="calculateAndSchedule()" onfocus="window.isEditing=true" onblur="window.isEditing=false"></div>
+                    <div class="my-share-text" id="mpMyShareDisplay">Minha Parte: R$ 0,00</div>
                 </div>
             </div>
             <div class="sec-body">
@@ -297,8 +306,9 @@
             <div class="card-row">
                 <div class="card-thumb thumb-passai"></div>
                 <div class="card-info">
-                    <h2 style="color:#c2410c">Passaí (Itaú)</h2>
+                    <h2>Passaí (Itaú)</h2>
                     <div class="bill-wrapper">Fatura: R$ <input type="number" id="passaiTotalBill" oninput="calculateAndSchedule()" onfocus="window.isEditing=true" onblur="window.isEditing=false"></div>
+                    <div class="my-share-text" id="passaiMyShareDisplay">Minha Parte: R$ 0,00</div>
                 </div>
             </div>
             <div class="sec-body">
@@ -310,8 +320,9 @@
             <div class="card-row">
                 <div class="card-thumb thumb-nubank"></div>
                 <div class="card-info">
-                    <h2 style="color:#820ad1">Nubank</h2>
+                    <h2>Nubank</h2>
                     <div class="bill-wrapper">Fatura: R$ <input type="number" id="nubankTotalBill" oninput="calculateAndSchedule()" onfocus="window.isEditing=true" onblur="window.isEditing=false"></div>
+                    <div class="my-share-text" id="nubankMyShareDisplay">Minha Parte: R$ 0,00</div>
                 </div>
             </div>
             <div class="sec-body">
@@ -373,7 +384,7 @@
     let isReceiving = false; 
     let saveTimer;
     let unsubscribe = null;
-    let summaryChart = null; // RENOMEADO PARA EVITAR CONFLITO
+    let summaryChart = null; 
     let barChart = null;
     let pdfDocInstance = null;
     
@@ -549,9 +560,12 @@
     window.calculateAndSchedule = () => {
         calculateAll();
         if (isReceiving) return;
-        document.getElementById('syncStatus').innerText = "...";
+        document.getElementById('syncStatus').innerText = "Editando...";
         clearTimeout(saveTimer);
-        saveTimer = setTimeout(() => saveDataSync(currentDocId), 800); 
+        saveTimer = setTimeout(() => {
+            saveDataSync(currentDocId);
+            document.getElementById('syncStatus').innerHTML = '<span style="color:var(--success)">Salvo</span>';
+        }, 1000); 
     }
 
     window.resetMonthData = async () => {
@@ -565,10 +579,10 @@
     }
 
     window.calculateAll = () => {
-        const bb = processCard('bbTable', 'bbTotalBill', 'bb_auto');
-        const mp = processCard('mpTable', 'mpTotalBill', 'mp_auto');
-        const passai = processCard('passaiTable', 'passaiTotalBill', 'passai_auto');
-        const nubank = processCard('nubankTable', 'nubankTotalBill', 'nubank_auto');
+        const bb = processCard('bbTable', 'bbTotalBill', 'bbMyShareDisplay', 'bb_auto');
+        const mp = processCard('mpTable', 'mpTotalBill', 'mpMyShareDisplay', 'mp_auto');
+        const passai = processCard('passaiTable', 'passaiTotalBill', 'passaiMyShareDisplay', 'passai_auto');
+        const nubank = processCard('nubankTable', 'nubankTotalBill', 'nubankMyShareDisplay', 'nubank_auto');
 
         const cardsShareTotal = bb.myShare + mp.myShare + passai.myShare + nubank.myShare;
 
@@ -615,16 +629,16 @@
         mergeDebts(bb.debtors); mergeDebts(mp.debtors); mergeDebts(passai.debtors); mergeDebts(nubank.debtors);
         updateDebtors(allDebts);
         
-        // GRÁFICO CORRIGIDO AQUI
+        // GRÁFICO DETALHADO (SOLICITADO)
         const ctx = document.getElementById('expenseChart').getContext('2d');
         if(summaryChart) summaryChart.destroy();
         summaryChart = new Chart(ctx, { 
             type: 'doughnut', 
             data: { 
-                labels: ['Gastos', 'Livre'], 
+                labels: ['Fixos', 'Cartões', 'Reserva', 'Livre'], 
                 datasets: [{ 
-                    data: [totalExpenses, Math.max(0, totalIncome - totalExpenses)], 
-                    backgroundColor: ['#ef4444', '#10b981'], 
+                    data: [fixedSumTotal, cardsShareTotal, emergency, Math.max(0, totalIncome - totalExpenses)], 
+                    backgroundColor: ['#ef4444', '#f59e0b', '#8b5cf6', '#10b981'], 
                     borderWidth: 0 
                 }] 
             }, 
@@ -644,7 +658,7 @@
         }
     }
 
-    function processCard(tid, totId, autoName) {
+    function processCard(tid, totId, displayId, autoName) {
         const bill = parseFloat(document.getElementById(totId).value) || 0;
         let others = 0, debtors = {};
         document.querySelectorAll(`#${tid} tbody tr`).forEach(tr => {
@@ -659,7 +673,12 @@
                 }
             }
         });
-        return { myShare: bill - others, debtors };
+        const myShare = bill - others;
+        // ATUALIZA O TEXTO "MINHA PARTE"
+        const displayEl = document.getElementById(displayId);
+        if(displayEl) displayEl.innerText = "Minha Parte: " + fmt(myShare);
+        
+        return { myShare, debtors };
     }
 
     window.addMainRow = () => { addMainRowHTML(document.querySelector("#mainTable tbody"), {icon:'💸',name:'',value:'',isMine:true}); calculateAndSchedule(); }
