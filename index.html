@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Financeiro 28.0 (Final Fix)</title>
+    <title>Financeiro 29.0 (Anti-Leak)</title>
 
     <link rel="apple-touch-icon" href="icone2.0.png">
     <link rel="icon" type="image/png" href="icone2.0.png">
@@ -361,6 +361,7 @@
     const SENHA = "1234"; 
 
     window.isEditing = false; 
+    window.isSwitching = false; // TRAVA DE TROCA DE MÊS
 
     let currentDocId = "";
     let isReceiving = false; 
@@ -414,7 +415,7 @@
         loadMonthData(d);
     }
 
-    // --- MUDANÇA DE MÊS SEGURA (FIX CRÍTICO MEMÓRIA) ---
+    // --- MUDANÇA DE MÊS SEGURA (FIX CRÍTICO MEMÓRIA E RACE CONDITION) ---
     window.changeMonthSafe = async () => {
         const picker = document.getElementById('monthPicker');
         const newDate = picker.value;
@@ -422,21 +423,27 @@
 
         if (!newDate || newDate === oldDate) return;
 
+        window.isSwitching = true; // ATIVA TRAVA TOTAL
         document.getElementById('loadingOverlay').style.display = 'flex';
         
         if (unsubscribe) unsubscribe();
         clearTimeout(saveTimer);
 
+        // 1. SALVA O VELHO FORÇADO
         if (oldDate && !isReceiving) {
+            console.log("Salvando fechamento:", oldDate);
             await saveDataSync(oldDate);
         }
 
-        // LIMPEZA PROFUNDA DE MEMÓRIA
+        // 2. LIMPEZA PROFUNDA DA MEMÓRIA
         clearScreen();
-        window.paidDebtors = []; // Zera a memória de devedores!
+        window.paidDebtors = []; 
         
+        // 3. TROCA O ID E CARREGA
         currentDocId = newDate;
         localStorage.setItem('lastViewedMonth', newDate);
+        
+        // 4. LIBERA TRAVA DEPOIS DE CARREGAR
         loadMonthData(newDate);
     }
 
@@ -444,6 +451,7 @@
         document.getElementById('salary').value = 0;
         document.getElementById('totalExpenses').innerText = "R$ 0,00";
         document.querySelectorAll('tbody').forEach(b => b.innerHTML = "");
+        document.querySelectorAll('input').forEach(i => { if(!i.type.match(/month|button/)) i.value = "" });
     }
 
     function loadMonthData(dateString) {
@@ -454,6 +462,7 @@
         
         unsubscribe = onSnapshot(docRef, (docSnap) => {
             document.getElementById('loadingOverlay').style.display = 'none';
+            window.isSwitching = false; // DESTRAVA AQUI
             
             if (docSnap.exists()) {
                 if (docSnap.metadata.hasPendingWrites) return; 
@@ -468,7 +477,7 @@
                 setTimeout(() => isReceiving = false, 500);
                 document.getElementById('syncStatus').innerHTML = '<span style="color:var(--success)">Sincronizado</span>';
             } else { 
-                window.paidDebtors = []; // Zera novamente para garantir
+                window.paidDebtors = []; 
                 const defData = getDefaultData();
                 updateScreen(defData); 
                 saveDataSync(currentDocId); 
@@ -530,8 +539,6 @@
         document.querySelectorAll('#mainTable tbody tr').forEach(tr => { 
             const inputs = tr.querySelectorAll('input');
             const name = inputs[0].value;
-            const isCard = ['Cartão BB', 'Mercado Pago', 'Passaí', 'Nubank'].includes(name);
-            
             data.main.push({ 
                 icon: tr.querySelector('.icon-select').value, 
                 name: name, 
@@ -549,13 +556,14 @@
     }
 
     async function saveDataSync(targetId) {
+        if(window.isSwitching) return; // BLOQUEIA SE ESTIVER TROCANDO
         const data = captureScreenData();
         try { await setDoc(doc(db, "meus_gastos", targetId), data); } catch(e) { console.error("Erro save sync", e); }
     }
 
     window.calculateAndSchedule = () => {
         calculateAll();
-        if (isReceiving) return;
+        if (isReceiving || window.isSwitching) return;
         document.getElementById('syncStatus').innerText = "...";
         clearTimeout(saveTimer);
         saveTimer = setTimeout(() => saveDataSync(currentDocId), 1000); 
