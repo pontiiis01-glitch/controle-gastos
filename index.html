@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Financeiro 39.0</title>
+    <title>Financeiro 40.0 (Final)</title>
 
     <link rel="apple-touch-icon" href="icone2.0.png">
     <link rel="icon" type="image/png" href="icone2.0.png">
@@ -37,6 +37,14 @@
 
         body { font-family: 'Inter', sans-serif; background-color: var(--bg-body); color: var(--text-main); margin: 0; display: flex; height: 100vh; overflow: hidden; transition: background 0.3s; }
         
+        #saveToast {
+            position: fixed; top: 20px; right: 20px; background: var(--success); color: white;
+            padding: 12px 24px; border-radius: 50px; font-weight: 600; box-shadow: 0 10px 15px rgba(0,0,0,0.2);
+            z-index: 9999; transform: translateY(-100px); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex; align-items: center; gap: 8px;
+        }
+        #saveToast.show { transform: translateY(0); }
+
         #sidebar { 
             width: 260px; background: var(--bg-sidebar); border-right: 1px solid var(--border); 
             display: flex; flex-direction: column; padding: 25px; z-index: 100; height: 100%; box-sizing: border-box;
@@ -112,8 +120,13 @@
         table { width: 100%; border-collapse: collapse; min-width: 500px; }
         th { text-align: left; padding: 12px; font-size: 0.75rem; color: var(--text-muted); border-bottom: 2px solid var(--border); text-transform: uppercase; }
         td { padding: 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
-        input.td-input { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg-body); color: var(--text-main); font-family: 'Inter'; transition: 0.2s; }
-        input.td-input:focus { border-color: var(--primary); background: var(--bg-card); outline: none; }
+        /* CLASSES ESPECÍFICAS PARA CAPTURA */
+        input.input-val, input.input-name, input.input-desc, input.input-inst { 
+            width: 100%; padding: 10px; border: 1px solid var(--border); 
+            border-radius: 8px; background: var(--bg-body); color: var(--text-main); 
+            font-family: 'Inter'; transition: 0.2s; 
+        }
+        input:focus { border-color: var(--primary); background: var(--bg-card); outline: none; }
         select.icon-select { border: none; background: transparent; font-size: 1.3rem; cursor: pointer; }
         input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--primary); cursor: pointer; }
 
@@ -156,14 +169,6 @@
         .pdf-box { width: 90%; height: 90%; background: #fff; border-radius: 20px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); }
         .pdf-header { padding: 20px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; background: #f8fafc; }
         iframe { flex: 1; border: none; }
-        
-        #saveToast {
-            position: fixed; top: 20px; right: 20px; background: var(--success); color: white;
-            padding: 12px 24px; border-radius: 50px; font-weight: 600; box-shadow: 0 10px 15px rgba(0,0,0,0.2);
-            z-index: 9999; transform: translateY(-100px); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            display: flex; align-items: center; gap: 8px;
-        }
-        #saveToast.show { transform: translateY(0); }
 
         #lockScreen { position: fixed; inset: 0; background: var(--bg-body); z-index: 999; display: flex; align-items: center; justify-content: center; }
         .lock-box { background: var(--bg-card); padding: 50px; border-radius: 30px; text-align: center; border: 1px solid var(--border); box-shadow: var(--shadow); width: 300px; }
@@ -193,7 +198,7 @@
 
 <div id="loadingOverlay">
     <div class="spinner"></div>
-    <div style="font-weight:700; color:var(--primary); font-size:1.1rem;">Sincronizando...</div>
+    <div style="font-weight:700; color:var(--primary); font-size:1.1rem;">Carregando...</div>
 </div>
 
 <div id="lockScreen">
@@ -392,6 +397,7 @@
     window.isEditing = false; 
     let currentDocId = "";
     let isReceiving = false; 
+    let isLoading = false; // TRAVA MESTRA DE CARREGAMENTO
     let saveTimer;
     let unsubscribe = null;
     let summaryChart = null; 
@@ -402,7 +408,6 @@
     window.iconsList = ["💸", "🏠", "💡", "💧", "📶", "🏋️", "🚗", "⛽", "🍔", "💇", "💊", "💳", "🎓", "✈️"];
 
     window.onload = () => {
-        if(localStorage.getItem('theme') === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
         const lastMonth = localStorage.getItem('lastViewedMonth');
         const now = new Date();
         const d = lastMonth || `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
@@ -441,7 +446,7 @@
         loadMonthData(d);
     }
 
-    // --- TOAST ---
+    // --- FUNÇÕES DE TOAST (NOTIFICAÇÃO) ---
     function showToast() {
         const toast = document.getElementById('saveToast');
         toast.classList.add('show');
@@ -452,14 +457,22 @@
         const newDate = document.getElementById('monthPicker').value;
         if (!newDate || newDate === currentDocId) return;
 
+        // ATIVA A TRAVA
+        isLoading = true;
         document.getElementById('loadingOverlay').style.display = 'flex';
         
         if (unsubscribe) unsubscribe();
         clearTimeout(saveTimer);
 
+        // SALVA O ANTERIOR ANTES DE LIMPAR (SE JÁ ESTAVA CARREGADO)
         if (currentDocId && !isReceiving) await saveDataSync(currentDocId); 
 
+        // LIMPA TUDO
         clearScreen();
+        window.paidDebtors = [];
+        
+        // CARREGA O NOVO
+        currentDocId = newDate;
         localStorage.setItem('lastViewedMonth', newDate);
         loadMonthData(newDate);
     }
@@ -469,35 +482,46 @@
         document.getElementById('totalExpenses').innerText = "R$ 0,00";
         document.querySelectorAll('tbody').forEach(b => b.innerHTML = "");
         ['bbTotalBill', 'mpTotalBill', 'passaiTotalBill', 'nubankTotalBill'].forEach(id => document.getElementById(id).value = "");
-        if(summaryChart) { summaryChart.destroy(); summaryChart = null; }
     }
 
     function loadMonthData(dateString) {
         currentDocId = dateString;
         document.getElementById('syncStatus').innerText = "Carregando...";
         
-        // NOVA COLEÇÃO LIMPA (v2026)
-        const docRef = doc(db, "financas_igor_final_v39", currentDocId);
+        const docRef = doc(db, "financas_igor_v40", currentDocId);
         
         unsubscribe = onSnapshot(docRef, (docSnap) => {
-            document.getElementById('loadingOverlay').style.display = 'none';
+            // SÓ LIBERA A TRAVA DEPOIS DE RENDERIZAR
             
             if (docSnap.exists()) {
                 if (docSnap.metadata.hasPendingWrites) return; 
-                if (window.isEditing) return; 
+                
+                // SE O USUARIO ESTA EDITANDO, NAO SOBRESCREVE
+                if (window.isEditing) return;
 
                 isReceiving = true;
                 const data = docSnap.data();
                 window.paidDebtors = data.paidDebtors || []; 
                 updateScreen(data);
                 
-                setTimeout(() => isReceiving = false, 500);
+                setTimeout(() => {
+                    isReceiving = false;
+                    isLoading = false; // LIBERA AQUI
+                    document.getElementById('loadingOverlay').style.display = 'none';
+                }, 500);
+                
                 document.getElementById('syncStatus').innerHTML = '<span style="color:var(--success)">Sincronizado</span>';
             } else { 
+                // CRIA NOVO
                 window.paidDebtors = []; 
                 const defData = getDefaultData();
                 updateScreen(defData); 
                 saveDataSync(currentDocId); 
+                
+                isLoading = false; // LIBERA
+                isReceiving = false;
+                document.getElementById('loadingOverlay').style.display = 'none';
+                document.getElementById('syncStatus').innerText = "Novo Mês";
             }
         });
     }
@@ -534,7 +558,7 @@
         };
     }
 
-    // --- CAPTURA ESTRUTURADA (CORRIGIDA) ---
+    // --- CAPTURA SEGURA (USANDO CLASSES) ---
     function captureScreenData() {
         const data = { 
             salary: document.getElementById('salary').value, 
@@ -549,31 +573,31 @@
 
         // Rendas
         document.querySelectorAll('#incomeTable tbody tr').forEach(tr => {
-            const inputs = tr.querySelectorAll('input'); // 0: desc, 1: val
-            data.extraIncome.push({ desc: inputs[0].value, value: inputs[1].value });
+            const desc = tr.querySelector('.input-desc').value;
+            const val = tr.querySelector('.input-val').value;
+            data.extraIncome.push({ desc: desc, value: val });
         });
 
-        // Fixos
+        // Fixos (Main)
         document.querySelectorAll('#mainTable tbody tr').forEach(tr => { 
-            const inputs = tr.querySelectorAll('input'); // 0: name, 1: val, 2: check
-            const name = inputs[0].value;
-            // Filtra os cartões para manter a estrutura limpa
-            const isCard = ['Cartão BB', 'Mercado Pago', 'Passaí', 'Nubank'].includes(name);
-            
-            data.main.push({ 
-                icon: tr.querySelector('.icon-select').value, 
-                name: name, value: inputs[1].value, 
-                isMine: inputs[2].checked, 
-                locked: inputs[1].hasAttribute('readonly'), 
-                id: inputs[1].id || null 
-            }); 
+            const name = tr.querySelector('.input-name').value;
+            const val = tr.querySelector('.input-val').value;
+            const isMine = tr.querySelector('input[type="checkbox"]').checked;
+            const locked = tr.querySelector('.input-val').hasAttribute('readonly');
+            const icon = tr.querySelector('.icon-select').value;
+            const id = tr.querySelector('.input-val').id || null;
+
+            data.main.push({ icon, name, value: val, isMine, locked, id }); 
         });
 
-        // Cartões
+        // Cartões (Split)
         const scrape = (tid, arr) => { 
             document.querySelectorAll(`#${tid} tbody tr`).forEach(tr => { 
-                const inputs = tr.querySelectorAll('input'); // 0: name, 1: desc, 2: inst, 3: val
-                arr.push({ name: inputs[0].value, desc: inputs[1].value, inst: inputs[2].value, value: inputs[3].value }); 
+                const name = tr.querySelector('.input-name').value;
+                const desc = tr.querySelector('.input-desc').value;
+                const inst = tr.querySelector('.input-inst').value;
+                const val = tr.querySelector('.input-val').value;
+                arr.push({ name, desc, inst, value: val }); 
             }); 
         };
         scrape('bbTable', data.bb); scrape('mpTable', data.mp); scrape('passaiTable', data.passai); scrape('nubankTable', data.nubank);
@@ -581,28 +605,36 @@
     }
 
     async function saveDataSync(targetId) {
+        // SEGURANÇA: Se estiver carregando, NÃO SALVA (evita sobrescrever com vazio)
+        if (isLoading) return;
+
         const data = captureScreenData();
         try { 
-            await setDoc(doc(db, "financas_igor_final_v39", targetId), data); 
-            showToast(); // MOSTRA TOAST VERDE
+            await setDoc(doc(db, "financas_igor_v40", targetId), data); 
+            showToast(); 
         } 
         catch(e) { console.error("Erro save sync", e); }
     }
 
     window.calculateAndSchedule = () => {
         calculateAll();
-        if (isReceiving) return;
+        if (isReceiving || isLoading) return; // BLOQUEIA SE ESTIVER RECEBENDO OU CARREGANDO
+        document.getElementById('syncStatus').innerText = "Editando...";
         clearTimeout(saveTimer);
-        saveTimer = setTimeout(() => saveDataSync(currentDocId), 800); 
+        saveTimer = setTimeout(() => {
+            saveDataSync(currentDocId);
+            document.getElementById('syncStatus').innerHTML = '<span style="color:var(--success)">Salvo</span>';
+        }, 1000); 
     }
 
     window.resetMonthData = async () => {
         if(!confirm("ATENÇÃO: Apagar TODOS os dados deste mês?")) return;
-        isReceiving = true;
+        // TRAVA MANUAL
+        isLoading = true;
         const emptyData = getDefaultData();
         updateScreen(emptyData); 
+        isLoading = false; // LIBERA PARA SALVAR O RESET
         await saveDataSync(currentDocId); 
-        isReceiving = false;
         alert("Mês limpo.");
     }
 
@@ -624,9 +656,9 @@
         const emergency = parseFloat(document.getElementById('emergencyFund').value) || 0;
 
         document.querySelectorAll('#mainTable tbody tr').forEach(tr => {
-            const val = parseFloat(tr.querySelector('.val-input').value) || 0;
+            const val = parseFloat(tr.querySelector('.input-val').value) || 0;
             const isMine = tr.querySelector('input[type="checkbox"]').checked;
-            const isCardAuto = tr.querySelector('.val-input').hasAttribute('readonly');
+            const isCardAuto = tr.querySelector('.input-val').hasAttribute('readonly');
             if (!isCardAuto) {
                 fixedSumTotal += val;
                 if (isMine) fixedSumMine += val;
@@ -637,7 +669,7 @@
         let myRealExpenses = fixedSumMine + cardsShareTotal; 
 
         let extraIncome = 0;
-        document.querySelectorAll('#incomeTable tbody tr').forEach(tr => extraIncome += parseFloat(tr.querySelector('.val-input').value)||0);
+        document.querySelectorAll('#incomeTable tbody tr').forEach(tr => extraIncome += parseFloat(tr.querySelector('.input-val').value)||0);
         document.getElementById('extraIncomeTotal').innerText = fmt(extraIncome);
 
         const salary = parseFloat(document.getElementById('salary').value) || 0;
@@ -665,7 +697,7 @@
                 labels: ['Fixos', 'Cartões', 'Reserva', 'Livre'], 
                 datasets: [{ 
                     data: [fixedSumTotal, cardsShareTotal, emergency, Math.max(0, totalIncome - totalExpenses)], 
-                    backgroundColor: ['#ef4444', '#f59e0b', '#8b5cf6', '#10b981'], 
+                    backgroundColor: ['#3b82f6','#f59e0b','#8b5cf6','#10b981'], 
                     borderWidth: 0 
                 }] 
             }, 
@@ -674,11 +706,11 @@
     };
 
     function updateAutoRow(name, value) {
-        const inputs = document.querySelectorAll('#mainTable tbody input[type="text"]');
+        const inputs = document.querySelectorAll('#mainTable tbody input.input-name');
         for (let input of inputs) {
             if (input.value === name) {
                 const row = input.closest('tr');
-                const valInput = row.querySelector('.val-input');
+                const valInput = row.querySelector('.input-val');
                 if (valInput) valInput.value = value.toFixed(2);
                 break;
             }
@@ -689,8 +721,8 @@
         const bill = parseFloat(document.getElementById(totId).value) || 0;
         let others = 0, debtors = {};
         document.querySelectorAll(`#${tid} tbody tr`).forEach(tr => {
-            const name = tr.querySelector('.split-name').value.trim();
-            const val = parseFloat(tr.querySelector('.val-input').value) || 0;
+            const name = tr.querySelector('.input-name').value.trim();
+            const val = parseFloat(tr.querySelector('.input-val').value) || 0;
             if(val>0) {
                 others += val;
                 if(name) {
@@ -715,19 +747,19 @@
         let opts = window.iconsList.map(i => `<option value="${i}" ${i === item.icon ? 'selected' : ''}>${i}</option>`).join('');
         const locked = item.locked ? 'readonly style="background:rgba(0,0,0,0.05); color:#999"' : 'onfocus="window.isEditing=true" onblur="window.isEditing=false"';
         const del = item.locked ? '' : `<button class="btn-del" onclick="removeRow(this)">×</button>`;
-        tr.innerHTML = `<td><select class="icon-select" onchange="calculateAndSchedule()">${opts}</select></td><td><input type="text" class="td-input" value="${item.name}" ${locked} oninput="calculateAndSchedule()"></td><td><input type="number" class="td-input val-input" value="${item.value}" step="0.01" id="${item.id||''}" ${locked} oninput="calculateAndSchedule()"></td><td style="text-align:center"><input type="checkbox" ${item.isMine?'checked':''} onchange="calculateAndSchedule()"></td><td>${del}</td>`;
+        tr.innerHTML = `<td><select class="icon-select" onchange="calculateAndSchedule()">${opts}</select></td><td><input type="text" class="input-name" value="${item.name}" ${locked} oninput="calculateAndSchedule()"></td><td><input type="number" class="input-val" value="${item.value}" step="0.01" id="${item.id||''}" ${locked} oninput="calculateAndSchedule()"></td><td style="text-align:center"><input type="checkbox" ${item.isMine?'checked':''} onchange="calculateAndSchedule()"></td><td>${del}</td>`;
         tbody.appendChild(tr);
     }
     function addIncomeRowHTML(tbody, item) {
         const tr = document.createElement("tr");
-        tr.innerHTML = `<td><input type="text" class="td-input" value="${item.desc}" placeholder="Descrição" oninput="calculateAndSchedule()" onfocus="window.isEditing=true" onblur="window.isEditing=false"></td><td><input type="number" class="td-input val-input" value="${item.value}" step="0.01" oninput="calculateAndSchedule()" onfocus="window.isEditing=true" onblur="window.isEditing=false"></td><td><button class="btn-del" onclick="removeRow(this)">×</button></td>`;
+        tr.innerHTML = `<td><input type="text" class="input-desc" value="${item.desc}" placeholder="Descrição" oninput="calculateAndSchedule()" onfocus="window.isEditing=true" onblur="window.isEditing=false"></td><td><input type="number" class="input-val" value="${item.value}" step="0.01" oninput="calculateAndSchedule()" onfocus="window.isEditing=true" onblur="window.isEditing=false"></td><td><button class="btn-del" onclick="removeRow(this)">×</button></td>`;
         tbody.appendChild(tr);
     }
     function addSplitRowHTML(tbody, item) {
         const tr = document.createElement("tr");
-        tr.innerHTML = `<td><input type="text" class="td-input split-name" value="${item.name}" placeholder="Nome" oninput="calculateAndSchedule()" onfocus="window.isEditing=true" onblur="window.isEditing=false"></td><td><input type="text" class="td-input" value="${item.desc}" placeholder="Item" oninput="calculateAndSchedule()" onfocus="window.isEditing=true" onblur="window.isEditing=false"></td><td><input type="text" class="td-input split-inst" value="${item.inst||''}" placeholder="1/10" oninput="updateBar(this);calculateAndSchedule()" onfocus="window.isEditing=true" onblur="window.isEditing=false"><div class="prog-bar"><div class="prog-fill"></div></div></td><td><input type="number" class="td-input val-input" value="${item.value}" step="0.01" oninput="calculateAndSchedule()" onfocus="window.isEditing=true" onblur="window.isEditing=false"></td><td><button class="btn-del" onclick="removeRow(this)">×</button></td>`;
+        tr.innerHTML = `<td><input type="text" class="input-name" value="${item.name}" placeholder="Nome" oninput="calculateAndSchedule()" onfocus="window.isEditing=true" onblur="window.isEditing=false"></td><td><input type="text" class="input-desc" value="${item.desc}" placeholder="Item" oninput="calculateAndSchedule()" onfocus="window.isEditing=true" onblur="window.isEditing=false"></td><td><input type="text" class="input-inst" value="${item.inst||''}" placeholder="1/10" oninput="updateBar(this);calculateAndSchedule()" onfocus="window.isEditing=true" onblur="window.isEditing=false"><div class="prog-bar"><div class="prog-fill"></div></div></td><td><input type="number" class="input-val" value="${item.value}" step="0.01" oninput="calculateAndSchedule()" onfocus="window.isEditing=true" onblur="window.isEditing=false"></td><td><button class="btn-del" onclick="removeRow(this)">×</button></td>`;
         tbody.appendChild(tr);
-        if(item.inst) updateBar(tr.querySelector('.split-inst'));
+        if(item.inst) updateBar(tr.querySelector('.input-inst'));
     }
 
     window.removeRow = (btn) => { btn.closest('tr').remove(); calculateAndSchedule(); }
@@ -774,8 +806,8 @@
         
         const extract = (sel, tit, col) => {
             const rows=[]; document.querySelectorAll(`${sel} tbody tr`).forEach(tr=>{
-                const n = tr.querySelector('.td-input') ? tr.querySelector('.td-input').value : tr.querySelector('.split-name').value;
-                const v = tr.querySelector('.val-input').value;
+                const n = tr.querySelector('.input-name') ? tr.querySelector('.input-name').value : (tr.querySelector('.input-desc') ? tr.querySelector('.input-desc').value : '');
+                const v = tr.querySelector('.input-val').value;
                 if(parseFloat(v)>0) rows.push([n,`R$ ${v}`]);
             });
             if(rows.length>0){ if(finalY>250){doc.addPage();finalY=20;} doc.text(tit,14,finalY); doc.autoTable({startY:finalY+5,head:[['Item','Valor']],body:rows,theme:'striped',headStyles:{fillColor:col}}); finalY=doc.lastAutoTable.finalY+15; }
@@ -799,7 +831,7 @@
         for(let i=range-1; i>=0; i--) {
             let m = month - i, y = year; while(m <= 0) { m += 12; y--; }
             const id = `${y}-${String(m).padStart(2,'0')}`;
-            const snap = await getDoc(doc(db, "financas_igor_final_v39", id));
+            const snap = await getDoc(doc(db, "financas_igor_v40", id));
             labels.push(`${m}/${y}`);
             if(snap.exists()) {
                 const d = snap.data();
@@ -820,19 +852,46 @@
     function fmt(n) { return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
     window.copyPreviousMonth = async function() {
         if(!confirm("Importar dados do mês anterior?")) return;
+        
+        // BLOQUEIA SALVAMENTO
+        isLoading = true;
+        document.getElementById('loadingOverlay').style.display = 'flex';
+
         const parts = currentDocId.split('-'); let year = parseInt(parts[0]); let month = parseInt(parts[1]);
         month--; if(month===0) { month=12; year--; }
         const prevId = `${year}-${String(month).padStart(2,'0')}`;
-        const snap = await getDoc(doc(db, "financas_igor_final_v39", prevId));
+        
+        const snap = await getDoc(doc(db, "financas_igor_v40", prevId));
         if(snap.exists()) {
             const data = snap.data(); data.paidDebtors = [];
             if(data.main) data.main.forEach(i => i.paid = false); 
             const inc = (arr) => arr.forEach(i => { if(i.inst && i.inst.includes('/')){ let [c,t]=i.inst.split('/'); if(c<t) i.inst=`${parseInt(c)+1}/${t}`; } });
             if(data.bb) inc(data.bb); if(data.mp) inc(data.mp); if(data.passai) inc(data.passai); if(data.nubank) inc(data.nubank);
+            
+            // GRAVA DIRETO NO BANCO SEM PASSAR PELA TELA
+            await saveDataSync(currentDocId, data); 
+            
+            // RECARREGA TELA
             updateScreen(data);
-            setTimeout(() => saveDataSync(currentDocId), 500);
-        } else alert("Mês anterior vazio.");
+            alert("Dados importados com sucesso!");
+        } else {
+            alert("Mês anterior vazio.");
+        }
+        
+        isLoading = false;
+        document.getElementById('loadingOverlay').style.display = 'none';
     };
+    
+    // SOBRECARGA PARA O COPYMONTH
+    async function saveDataSync(targetId, specificData = null) {
+        if (!specificData && isLoading) return; 
+        const data = specificData || captureScreenData();
+        try { 
+            await setDoc(doc(db, "financas_igor_v40", targetId), data); 
+            if(!specificData) showToast(); 
+        } 
+        catch(e) { console.error("Erro save sync", e); }
+    }
 </script>
 </body>
 </html>
