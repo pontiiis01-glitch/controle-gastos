@@ -3,9 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Financeiro 38.0 (Final)</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Financeiro 39.0</title>
 
+    <link rel="apple-touch-icon" href="icone2.0.png">
     <link rel="icon" type="image/png" href="icone2.0.png">
+
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -14,186 +18,355 @@
     
     <style>
         :root {
-            --primary: #2563eb; --bg-body: #f8fafc; --bg-card: #ffffff; 
+            --primary: #2563eb; --primary-light: #eff6ff;
+            --bg-body: #f1f5f9; --bg-card: #ffffff; --bg-sidebar: #ffffff;
             --text-main: #0f172a; --text-muted: #64748b; --border: #e2e8f0;
-            --success: #10b981; --danger: #ef4444; --warning: #f59e0b;
+            --success: #10b981; --success-bg: #dcfce7; --success-text: #166534;
+            --danger: #ef4444; --warning: #f59e0b; --purple: #8b5cf6;
+            --passai: #ea580c; --nubank: #820ad1;
+            --shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
         }
+
         [data-theme="dark"] {
-            --primary: #60a5fa; --bg-body: #0f172a; --bg-card: #1e293b; 
+            --primary: #60a5fa; --primary-light: #1e293b;
+            --bg-body: #0f172a; --bg-card: #1e293b; --bg-sidebar: #1e293b;
             --text-main: #f1f5f9; --text-muted: #94a3b8; --border: #334155;
+            --success-bg: #064e3b; --success-text: #4ade80;
+            --shadow: 0 10px 15px -3px rgba(0,0,0,0.5);
         }
-        body { font-family: 'Inter', sans-serif; background-color: var(--bg-body); color: var(--text-main); margin: 0; display: flex; height: 100vh; overflow: hidden; }
+
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg-body); color: var(--text-main); margin: 0; display: flex; height: 100vh; overflow: hidden; transition: background 0.3s; }
         
-        /* LAYOUT */
-        #sidebar { width: 260px; background: var(--bg-card); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 25px; z-index: 100; transition: 0.3s; }
-        #main-content { flex: 1; overflow-y: auto; padding: 20px; position: relative; }
+        #sidebar { 
+            width: 260px; background: var(--bg-sidebar); border-right: 1px solid var(--border); 
+            display: flex; flex-direction: column; padding: 25px; z-index: 100; height: 100%; box-sizing: border-box;
+            transition: transform 0.3s; overflow-y: auto;
+        }
+        .brand { font-size: 1.5rem; font-weight: 800; color: var(--primary); margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
         
-        .mobile-toggle { display: none; position: absolute; top: 15px; left: 15px; z-index: 200; background: var(--bg-card); padding: 8px; border-radius: 8px; border: 1px solid var(--border); }
+        .nav-btn { 
+            background: transparent; border: none; color: var(--text-muted); padding: 12px 15px; 
+            text-align: left; font-size: 0.95rem; font-weight: 600; cursor: pointer; border-radius: 12px; 
+            margin-bottom: 5px; display: flex; align-items: center; gap: 12px; transition: 0.2s; width: 100%; 
+        }
+        .nav-btn:hover { background: var(--primary-light); color: var(--primary); }
+        .nav-btn.active { background: var(--primary); color: white; box-shadow: 0 4px 6px rgba(37,99,235,0.2); }
+        
+        .menu-divider { height: 1px; background: var(--border); margin: 15px 0; }
+
+        /* CONFIG BUTTONS STYLE */
+        .btn-config { color: var(--text-main); }
+        .btn-lock { color: var(--danger); }
+
+        #main-content { flex: 1; overflow-y: auto; padding: 25px; position: relative; }
+        .mobile-toggle { display: none; position: absolute; top: 15px; left: 15px; z-index: 200; background: var(--bg-card); padding: 8px; border-radius: 8px; border: 1px solid var(--border); color: var(--text-main); }
+        
         @media (max-width: 768px) {
             #sidebar { position: fixed; left: -300px; height: 100%; box-shadow: 2px 0 10px rgba(0,0,0,0.1); }
             #sidebar.active { transform: translateX(300px); }
             .mobile-toggle { display: block; }
-            #main-content { padding-top: 70px; }
+            #main-content { padding-top: 70px; padding-left: 15px; padding-right: 15px; }
         }
 
-        /* COMPONENTES */
-        .brand { font-size: 1.5rem; font-weight: 800; color: var(--primary); margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+        .controls-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 25px; align-items: center; justify-content: space-between; }
+        .date-control { 
+            background: var(--bg-card); border: 1px solid var(--border); padding: 8px 20px; 
+            border-radius: 50px; display: flex; align-items: center; gap: 10px; 
+            color: var(--text-main); box-shadow: var(--shadow);
+        }
+        input[type="month"] { background: transparent; border: none; font-family: 'Inter'; font-weight: 700; color: inherit; cursor: pointer; }
         
-        .nav-btn { background: transparent; border: none; color: var(--text-muted); padding: 12px; width: 100%; text-align: left; font-weight: 600; cursor: pointer; border-radius: 8px; margin-bottom: 5px; display: flex; align-items: center; gap: 10px; }
-        .nav-btn:hover { background: rgba(37,99,235,0.1); color: var(--primary); }
-        .nav-btn.active { background: var(--primary); color: white; }
-        
-        .config-area { margin-bottom: 20px; }
-        .menu-divider { height: 1px; background: var(--border); margin: 15px 0; }
+        .btn-action { padding: 10px 20px; border-radius: 50px; border: none; color: white; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.2s; font-size: 0.9rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .btn-action:hover { transform: translateY(-2px); }
+        .btn-copy { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+        .btn-pdf { background: linear-gradient(135deg, #10b981, #059669); }
+        .btn-reset { background: linear-gradient(135deg, #ef4444, #b91c1c); }
 
-        .controls-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; align-items: center; }
-        .date-control { background: var(--bg-card); border: 1px solid var(--border); padding: 8px 15px; border-radius: 50px; display: flex; align-items: center; gap: 10px; }
-        input[type="month"] { background: transparent; border: none; font-weight: 700; color: inherit; cursor: pointer; }
-
-        .btn-action { padding: 8px 16px; border-radius: 50px; border: none; color: white; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 5px; }
-        .btn-copy { background: #3b82f6; } .btn-reset { background: #ef4444; } .btn-pdf { background: #10b981; } .btn-save { background: #f59e0b; }
-
-        /* DASHBOARD */
-        .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 20px; }
-        .card-stat { background: var(--bg-card); padding: 15px; border-radius: 15px; border: 1px solid var(--border); }
-        .stat-input { width: 100%; font-size: 1.4rem; font-weight: 800; background: transparent; border: none; border-bottom: 2px dashed var(--border); color: inherit; }
-        .val { font-size: 1.4rem; font-weight: 800; }
-        .c-salary input { color: var(--success); } .c-total .val { color: var(--danger); } 
-
-        /* TABELAS */
-        .section { background: var(--bg-card); border-radius: 15px; border: 1px solid var(--border); margin-bottom: 20px; overflow: hidden; }
-        .sec-header { padding: 15px; border-bottom: 1px solid var(--border); background: rgba(0,0,0,0.02); display: flex; justify-content: space-between; align-items: center; }
-        .sec-body { padding: 15px; }
+        .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .card-stat { 
+            background: var(--bg-card); padding: 20px; border-radius: 20px; 
+            border: 1px solid var(--border); box-shadow: var(--shadow); position: relative; 
+            display: flex; flex-direction: column; justify-content: space-between;
+        }
+        .card-stat h3 { margin: 0 0 10px 0; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; letter-spacing: 0.5px; }
+        .val { font-size: 1.5rem; font-weight: 800; color: var(--text-main); }
+        .stat-input { width: 100%; font-size: 1.5rem; font-weight: 800; background: transparent; border: none; border-bottom: 2px dashed var(--border); color: var(--text-main); padding-bottom: 5px; font-family: 'Inter'; }
+        .stat-input:focus { outline: none; border-color: var(--primary); }
         
-        table { width: 100%; border-collapse: collapse; }
-        td, th { padding: 10px; border-bottom: 1px solid var(--border); text-align: left; }
+        .c-salary input { color: var(--success); } 
+        .c-total .val { color: var(--danger); }
+        .c-rest .val { color: var(--primary); } 
+        .c-income .val { color: #059669; }
+        .c-mine .val { color: var(--warning); } 
+        .c-emerg input { color: var(--purple); }
+
+        .salary-bar-bg { width: 100%; height: 6px; background: var(--border); border-radius: 10px; margin-top: 15px; overflow: hidden; }
+        .salary-bar-fill { height: 100%; width: 0%; transition: width 0.5s ease-out; background: var(--success); border-radius: 10px; }
+
+        .section { background: var(--bg-card); border-radius: 24px; border: 1px solid var(--border); margin-bottom: 30px; overflow: hidden; box-shadow: var(--shadow); }
+        .sec-header { padding: 20px 25px; border-bottom: 1px solid var(--border); background: rgba(0,0,0,0.01); display: flex; justify-content: space-between; align-items: center; }
+        .sec-header h2 { margin: 0; font-size: 1.1rem; font-weight: 800; }
+        .sec-body { padding: 25px; }
         
-        /* INPUTS DA TABELA - ESSENCIAIS */
-        .input-nome, .input-desc, .input-inst { width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 5px; background: var(--bg-body); color: inherit; }
-        .input-val { width: 100px; padding: 8px; border: 1px solid var(--border); border-radius: 5px; background: var(--bg-body); color: inherit; font-weight: bold; }
-        
-        /* CARTÕES */
-        .card-row { display: flex; align-items: center; padding: 15px; border-bottom: 1px solid var(--border); gap: 15px; }
-        .card-thumb { width: 100px; height: 63px; border-radius: 8px; background-size: cover; flex-shrink: 0; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .table-wrap { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; min-width: 500px; }
+        th { text-align: left; padding: 12px; font-size: 0.75rem; color: var(--text-muted); border-bottom: 2px solid var(--border); text-transform: uppercase; }
+        td { padding: 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+        input.td-input { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg-body); color: var(--text-main); font-family: 'Inter'; transition: 0.2s; }
+        input.td-input:focus { border-color: var(--primary); background: var(--bg-card); outline: none; }
+        select.icon-select { border: none; background: transparent; font-size: 1.3rem; cursor: pointer; }
+        input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--primary); cursor: pointer; }
+
+        .btn-add { width: 100%; padding: 15px; margin-top: 15px; border-radius: 12px; border: 2px dashed var(--border); background: transparent; color: var(--text-muted); font-weight: 700; cursor: pointer; transition: 0.2s; }
+        .btn-add:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-light); }
+        .btn-del { background: none; border: none; color: var(--danger); cursor: pointer; font-size: 1.2rem; opacity: 0.5; }
+        .btn-del:hover { opacity: 1; }
+
+        .card-row { display: flex; align-items: center; padding: 20px 25px; border-bottom: 1px solid var(--border); gap: 20px; }
+        .card-thumb { width: 120px; height: 75px; border-radius: 12px; background-size: cover; background-position: center; flex-shrink: 0; box-shadow: 0 4px 10px rgba(0,0,0,0.1); transition: transform 0.3s; }
+        .card-thumb:hover { transform: scale(1.05) rotate(1deg); }
+        .card-info { flex: 1; }
+        .card-info h2 { margin: 0 0 5px 0; font-size: 1.2rem; font-weight: 800; }
+        .card-info .bill-wrapper { display: flex; align-items: center; gap: 10px; font-size: 0.95rem; color: var(--text-muted); font-weight: 600; }
+        .card-info input { width: 120px; font-size: 1.1rem; font-weight: 800; padding: 8px; border-radius: 8px; border: 2px solid var(--border); background: var(--bg-body); color: var(--text-main); }
+        .my-share-text { margin-top: 5px; font-size: 0.9rem; color: var(--primary); font-weight: 700; }
+
         .thumb-bb { background-image: url('bb.jpeg'); background-color: #fcd34d; }
         .thumb-mp { background-image: url('mp.jpeg'); background-color: #3b82f6; }
         .thumb-passai { background-image: url('passai.jpeg'); background-color: #f97316; }
         .thumb-nubank { background-image: url('nubank.jpeg'); background-color: #a855f7; }
 
-        /* UTILITARIOS */
-        #loadingOverlay { position: fixed; inset: 0; background: rgba(255,255,255,0.9); z-index: 999; display: none; align-items: center; justify-content: center; flex-direction: column; }
-        #saveToast { position: fixed; top: 20px; right: 20px; background: var(--success); color: white; padding: 10px 20px; border-radius: 50px; display: none; z-index: 1000; font-weight: bold; }
-        
-        .view-section { display: none; }
-        .view-section.active { display: block; animation: fadeIn 0.3s; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .debt-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; }
+        .debt-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 15px; box-shadow: var(--shadow); transition: 0.2s; }
+        .debt-card.paid { border-color: var(--success); background: var(--success-bg); opacity: 0.8; }
+        .debt-header { display: flex; justify-content: space-between; font-weight: 700; font-size: 1.1rem; }
+        .debt-amount { font-size: 1.5rem; font-weight: 800; color: var(--text-main); }
+        .status-btn { padding: 8px; border-radius: 10px; border: none; font-size: 0.8rem; font-weight: 800; cursor: pointer; width: 100%; transition: 0.2s; }
+        .status-btn.pending { background: #fef3c7; color: #b45309; }
+        .status-btn.paid { background: #10b981; color: white; }
 
-        #lockScreen { position: fixed; inset: 0; background: var(--bg-body); z-index: 9999; display: flex; align-items: center; justify-content: center; }
-        .lock-box { background: var(--bg-card); padding: 40px; border-radius: 20px; text-align: center; border: 1px solid var(--border); box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
-        .lock-input { padding: 15px; font-size: 2rem; width: 150px; text-align: center; margin: 20px 0; border-radius: 10px; border: 2px solid var(--border); }
+        .chart-controls { display: flex; gap: 5px; background: var(--bg-body); padding: 5px; border-radius: 10px; border: 1px solid var(--border); }
+        .chart-btn { border: none; background: transparent; color: var(--text-muted); padding: 5px 15px; border-radius: 8px; font-size: 0.8rem; font-weight: 700; cursor: pointer; flex: 1; }
+        .chart-btn.active { background: var(--bg-card); color: var(--primary); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+
+        #loadingOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); z-index: 9999; display: none; align-items: center; justify-content: center; flex-direction: column; backdrop-filter: blur(5px); }
+        .spinner { width: 50px; height: 50px; border: 5px solid #e2e8f0; border-top: 5px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
         
-        #pdfModal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1000; display: none; align-items: center; justify-content: center; }
-        .pdf-box { width: 90%; height: 90%; background: #fff; border-radius: 15px; display: flex; flex-direction: column; }
+        #pdfModal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
+        .pdf-box { width: 90%; height: 90%; background: #fff; border-radius: 20px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); }
+        .pdf-header { padding: 20px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; background: #f8fafc; }
         iframe { flex: 1; border: none; }
+        
+        #saveToast {
+            position: fixed; top: 20px; right: 20px; background: var(--success); color: white;
+            padding: 12px 24px; border-radius: 50px; font-weight: 600; box-shadow: 0 10px 15px rgba(0,0,0,0.2);
+            z-index: 9999; transform: translateY(-100px); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex; align-items: center; gap: 8px;
+        }
+        #saveToast.show { transform: translateY(0); }
+
+        #lockScreen { position: fixed; inset: 0; background: var(--bg-body); z-index: 999; display: flex; align-items: center; justify-content: center; }
+        .lock-box { background: var(--bg-card); padding: 50px; border-radius: 30px; text-align: center; border: 1px solid var(--border); box-shadow: var(--shadow); width: 300px; }
+        .lock-input { padding: 15px; font-size: 2rem; text-align: center; margin: 30px 0; border-radius: 15px; border: 2px solid var(--border); background: var(--bg-body); color: var(--text-main); width: 100%; box-sizing: border-box; }
+        .lock-input:focus { border-color: var(--primary); outline: none; }
+
+        .view-section { display: none; }
+        .view-section.active { display: block; animation: fadeIn 0.4s ease-out; }
     </style>
 </head>
 <body>
 
-<div id="saveToast">✅ Salvo com Sucesso!</div>
-<div id="loadingOverlay"><div style="font-size:2rem;">🔄</div><div>Carregando...</div></div>
+<div id="saveToast"><span class="material-icons-round">check_circle</span> Salvo com sucesso!</div>
 
 <div id="pdfModal">
     <div class="pdf-box">
-        <div style="padding:15px; border-bottom:1px solid #ddd; display:flex; justify-content:space-between;">
-            <h3>Relatório PDF</h3>
-            <button class="btn-action btn-reset" onclick="document.getElementById('pdfModal').style.display='none'">Fechar</button>
+        <div class="pdf-header">
+            <h3 style="margin:0; color:var(--text-main);">Visualizar Relatório</h3>
+            <div style="display:flex; gap:10px;">
+                <button class="btn-action btn-pdf" id="btnDownloadPDF">Baixar PDF</button>
+                <button class="btn-action btn-reset" style="background:#64748b" onclick="closePDFModal()">Fechar</button>
+            </div>
         </div>
         <iframe id="pdfPreviewFrame"></iframe>
     </div>
 </div>
 
+<div id="loadingOverlay">
+    <div class="spinner"></div>
+    <div style="font-weight:700; color:var(--primary); font-size:1.1rem;">Sincronizando...</div>
+</div>
+
 <div id="lockScreen">
     <div class="lock-box">
-        <h1>🔒</h1>
-        <input type="password" id="passInput" class="lock-input" placeholder="PIN" inputmode="numeric">
-        <button class="btn-action btn-copy" style="width:100%; justify-content:center;" onclick="checkPassword()">ENTRAR</button>
+        <h1 style="margin:0; font-size:3rem;">🔒</h1>
+        <p style="color:var(--text-muted)">Digite o PIN</p>
+        <input type="password" id="passInput" class="lock-input" placeholder="****" inputmode="numeric">
+        <div id="passError" style="color:var(--danger); font-weight:bold; height:20px;"></div>
+        <button class="btn-action btn-copy" style="width:100%; justify-content:center; padding:15px; font-size:1rem;" onclick="checkPassword()">Desbloquear</button>
     </div>
 </div>
 
-<button class="mobile-toggle" onclick="document.getElementById('sidebar').classList.toggle('active')">☰</button>
+<button class="mobile-toggle" onclick="document.getElementById('sidebar').classList.toggle('active')"><span class="material-icons-round">menu</span></button>
 
 <nav id="sidebar">
-    <div class="brand">💳 Financeiro</div>
+    <div class="brand"><span class="material-icons-round">account_balance_wallet</span> Financeiro</div>
     
-    <div class="config-area">
-        <button class="nav-btn" onclick="toggleTheme()">🌙 Tema</button>
-        <button class="nav-btn" style="color:var(--danger)" onclick="location.reload()">🔒 Bloquear</button>
-    </div>
+    <button class="nav-btn active" onclick="switchView('dashboard')"><span class="material-icons-round">dashboard</span> Resumo</button>
+    <button class="nav-btn" onclick="switchView('income')"><span class="material-icons-round">attach_money</span> Rendas & Fixos</button>
+    <button class="nav-btn" onclick="switchView('cards')"><span class="material-icons-round">credit_card</span> Cartões</button>
+    <button class="nav-btn" onclick="switchView('debts')"><span class="material-icons-round">people</span> Devedores</button>
+    <button class="nav-btn" onclick="switchView('history')"><span class="material-icons-round">bar_chart</span> Histórico</button>
     
     <div class="menu-divider"></div>
 
-    <button class="nav-btn active" onclick="switchView('dashboard')">📊 Resumo</button>
-    <button class="nav-btn" onclick="switchView('income')">💰 Rendas e Fixos</button>
-    <button class="nav-btn" onclick="switchView('cards')">💳 Cartões</button>
-    <button class="nav-btn" onclick="switchView('debts')">👥 Devedores</button>
-    <button class="nav-btn" onclick="switchView('history')">📈 Histórico</button>
+    <div class="config-group">
+        <button class="nav-btn btn-config" onclick="toggleTheme()">
+            <span class="material-icons-round">dark_mode</span> Tema
+        </button>
+        <button class="nav-btn btn-lock" onclick="lockApp()">
+            <span class="material-icons-round">lock</span> Bloquear
+        </button>
+    </div>
 </nav>
 
 <main id="main-content">
+    
     <div class="controls-row">
-        <div class="date-control">📅 <input type="month" id="monthPicker" onchange="changeMonth()"></div>
-        <div style="display:flex; gap:5px">
-            <button class="btn-action btn-save" onclick="saveData(true)">💾 Salvar</button>
-            <button class="btn-action btn-copy" onclick="copyPreviousMonth()">Importar</button>
-            <button class="btn-action btn-reset" onclick="resetMonth()">🗑️ Limpar</button>
-            <button class="btn-action btn-pdf" onclick="openPDF()">PDF</button>
+        <div class="date-control">
+            <span class="material-icons-round">calendar_today</span>
+            <input type="month" id="monthPicker" onchange="changeMonthSafe()">
         </div>
-        <div id="syncStatus" style="color:var(--text-muted); font-size:0.8rem;">...</div>
+        <div style="display:flex; gap:10px;">
+            <button class="btn-action btn-reset" onclick="resetMonthData()"><span class="material-icons-round">delete</span> Limpar</button>
+            <button class="btn-action btn-copy" onclick="copyPreviousMonth()"><span class="material-icons-round">content_copy</span> Importar</button>
+            <button class="btn-action btn-pdf" onclick="openPDFPreview()"><span class="material-icons-round">picture_as_pdf</span> Relatório</button>
+        </div>
+        <div id="syncStatus" style="font-size:0.8rem; font-weight:bold; color:var(--text-muted); display:flex; align-items:center; gap:5px;">...</div>
     </div>
 
     <div id="view-dashboard" class="view-section active">
         <div class="dashboard-grid">
-            <div class="card-stat c-salary"><h3>Salário</h3><input type="number" id="salary" class="stat-input" value="0" oninput="scheduleSave()"></div>
+            <div class="card-stat c-salary">
+                <h3>Salário Base</h3>
+                <input type="number" id="salary" class="stat-input" value="0" oninput="calculateAndSchedule()" onfocus="window.isEditing=true" onblur="window.isEditing=false">
+                <div class="salary-bar-bg"><div class="salary-bar-fill" id="salaryBar"></div></div>
+            </div>
+            <div class="card-stat c-income"><h3>Renda Extra</h3><div class="val" id="extraIncomeTotal">R$ 0,00</div></div>
             <div class="card-stat c-total"><h3>Total Saídas</h3><div class="val" id="totalExpenses">R$ 0,00</div></div>
-            <div class="card-stat c-rest"><h3>Livre</h3><div class="val" id="remaining">R$ 0,00</div></div>
-            <div class="card-stat c-income"><h3>Extras</h3><div class="val" id="extraTotal">R$ 0,00</div></div>
-            <div class="card-stat c-emerg"><h3>Reserva</h3><input type="number" id="emergency" class="stat-input" value="0" oninput="scheduleSave()"></div>
-        </div>
-        <div class="section"><div class="sec-body" style="height:300px; display:flex; justify-content:center;"><canvas id="chart"></canvas></div></div>
-    </div>
-
-    <div id="view-income" class="view-section">
-        <div class="section">
-            <div class="sec-header"><h2>Entradas Extras</h2></div>
-            <div class="sec-body">
-                <table id="incomeTable"><tbody></tbody></table>
-                <button class="btn-action btn-copy" style="width:100%; margin-top:10px; justify-content:center;" onclick="addIncomeRow()">+ Adicionar</button>
+            <div class="card-stat c-rest"><h3>Livre (Total)</h3><div class="val" id="remaining">R$ 0,00</div></div>
+            <div class="card-stat c-mine"><h3>Meu Custo</h3><div class="val" id="myRealExpenses">R$ 0,00</div></div>
+            <div class="card-stat c-emerg">
+                <h3>Reserva</h3>
+                <input type="number" id="emergencyFund" class="stat-input" oninput="calculateAndSchedule()" onfocus="window.isEditing=true" onblur="window.isEditing=false">
             </div>
         </div>
         <div class="section">
-            <div class="sec-header"><h2>Gastos Fixos</h2></div>
+            <div class="sec-header"><h2>📊 Distribuição de Gastos</h2></div>
+            <div class="sec-body" style="height:350px; display:flex; justify-content:center;"><canvas id="expenseChart"></canvas></div>
+        </div>
+    </div>
+
+    <div id="view-income" class="view-section">
+        <div class="section" style="border-left: 5px solid var(--success);">
+            <div class="sec-header"><h2 style="color:var(--success-dark)">💰 Entradas Extras</h2></div>
             <div class="sec-body">
-                <table id="mainTable"><tbody></tbody></table>
-                <button class="btn-action btn-copy" style="width:100%; margin-top:10px; justify-content:center;" onclick="addMainRow()">+ Adicionar</button>
+                <div class="table-wrap"><table id="incomeTable"><thead><tr><th>Descrição</th><th style="width:150px">Valor</th><th style="width:50px"></th></tr></thead><tbody></tbody></table></div>
+                <button class="btn-add" onclick="addIncomeRow()">+ Nova Renda</button>
+            </div>
+        </div>
+        <div class="section">
+            <div class="sec-header"><h2>📉 Gastos Fixos</h2></div>
+            <div class="sec-body">
+                <div class="table-wrap"><table id="mainTable"><thead><tr><th style="width:60px">Ícone</th><th>Item</th><th style="width:150px">Valor</th><th style="width:50px; text-align:center;">Meu?</th><th style="width:50px"></th></tr></thead><tbody></tbody></table></div>
+                <button class="btn-add" onclick="addMainRow()">+ Novo Gasto Fixo</button>
             </div>
         </div>
     </div>
 
     <div id="view-cards" class="view-section">
-        <div id="cardsContainer"></div> </div>
+        <div class="section" style="padding:0;">
+            <div class="card-row">
+                <div class="card-thumb thumb-bb"></div>
+                <div class="card-info">
+                    <h2>Banco do Brasil</h2>
+                    <div class="bill-wrapper">Fatura: R$ <input type="number" id="bbTotalBill" oninput="calculateAndSchedule()" onfocus="window.isEditing=true" onblur="window.isEditing=false"></div>
+                    <div class="my-share-text" id="bbMyShareDisplay">Minha Parte: R$ 0,00</div>
+                </div>
+            </div>
+            <div class="sec-body">
+                <div class="table-wrap"><table id="bbTable"><thead><tr><th>Quem</th><th>Desc.</th><th>Parc.</th><th>Valor</th><th></th></tr></thead><tbody></tbody></table></div>
+                <button class="btn-add" onclick="addSplitRow('bbTable')">+ Item no BB</button>
+            </div>
+        </div>
+        <div class="section" style="padding:0;">
+            <div class="card-row">
+                <div class="card-thumb thumb-mp"></div>
+                <div class="card-info">
+                    <h2>Mercado Pago</h2>
+                    <div class="bill-wrapper">Fatura: R$ <input type="number" id="mpTotalBill" oninput="calculateAndSchedule()" onfocus="window.isEditing=true" onblur="window.isEditing=false"></div>
+                    <div class="my-share-text" id="mpMyShareDisplay">Minha Parte: R$ 0,00</div>
+                </div>
+            </div>
+            <div class="sec-body">
+                <div class="table-wrap"><table id="mpTable"><thead><tr><th>Quem</th><th>Desc.</th><th>Parc.</th><th>Valor</th><th></th></tr></thead><tbody></tbody></table></div>
+                <button class="btn-add" onclick="addSplitRow('mpTable')">+ Item no MP</button>
+            </div>
+        </div>
+        <div class="section" style="padding:0;">
+            <div class="card-row">
+                <div class="card-thumb thumb-passai"></div>
+                <div class="card-info">
+                    <h2>Passaí (Itaú)</h2>
+                    <div class="bill-wrapper">Fatura: R$ <input type="number" id="passaiTotalBill" oninput="calculateAndSchedule()" onfocus="window.isEditing=true" onblur="window.isEditing=false"></div>
+                    <div class="my-share-text" id="passaiMyShareDisplay">Minha Parte: R$ 0,00</div>
+                </div>
+            </div>
+            <div class="sec-body">
+                <div class="table-wrap"><table id="passaiTable"><thead><tr><th>Quem</th><th>Desc.</th><th>Parc.</th><th>Valor</th><th></th></tr></thead><tbody></tbody></table></div>
+                <button class="btn-add" onclick="addSplitRow('passaiTable')">+ Item no Passaí</button>
+            </div>
+        </div>
+        <div class="section" style="padding:0;">
+            <div class="card-row">
+                <div class="card-thumb thumb-nubank"></div>
+                <div class="card-info">
+                    <h2>Nubank</h2>
+                    <div class="bill-wrapper">Fatura: R$ <input type="number" id="nubankTotalBill" oninput="calculateAndSchedule()" onfocus="window.isEditing=true" onblur="window.isEditing=false"></div>
+                    <div class="my-share-text" id="nubankMyShareDisplay">Minha Parte: R$ 0,00</div>
+                </div>
+            </div>
+            <div class="sec-body">
+                <div class="table-wrap"><table id="nubankTable"><thead><tr><th>Quem</th><th>Desc.</th><th>Parc.</th><th>Valor</th><th></th></tr></thead><tbody></tbody></table></div>
+                <button class="btn-add" onclick="addSplitRow('nubankTable')">+ Item no Nubank</button>
+            </div>
+        </div>
+    </div>
 
     <div id="view-debts" class="view-section">
         <div class="section">
-            <div class="sec-header">
-                <div>A Receber: <span id="totalReceivable" style="color:var(--danger)">R$ 0,00</span></div>
-                <div>Já Pago: <span id="totalPaid" style="color:var(--success)">R$ 0,00</span></div>
+            <div class="sec-header"><h2>👥 Controle de Devedores</h2></div>
+            <div class="sec-body">
+                <div class="debt-summary" style="display:flex; justify-content:space-around; margin-bottom:25px; padding-bottom:15px; border-bottom:1px solid var(--border);">
+                    <div style="text-align:center"><small style="color:var(--danger); font-weight:bold;">A RECEBER</small><div style="font-size:1.5rem; font-weight:800; color:var(--danger);" id="totalToReceive">R$ 0,00</div></div>
+                    <div style="text-align:center; border-left:1px solid var(--border); padding-left:20px;"><small style="color:var(--success); font-weight:bold;">JÁ PAGO</small><div style="font-size:1.5rem; font-weight:800; color:var(--success);" id="totalReceived">R$ 0,00</div></div>
+                </div>
+                <div id="debtorsList" class="debt-list"></div>
             </div>
-            <div class="sec-body" id="debtorsList" style="display:grid; gap:10px; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));"></div>
         </div>
     </div>
 
     <div id="view-history" class="view-section">
-        <div class="section"><div class="sec-body" style="height:300px;"><canvas id="histChart"></canvas></div></div>
+        <div class="section">
+            <div class="sec-header">
+                <h2>📈 Performance Financeira</h2>
+                <div class="chart-controls">
+                    <button class="chart-btn" onclick="fetchHistoryData(3, this)">3M</button>
+                    <button class="chart-btn active" onclick="fetchHistoryData(6, this)">6M</button>
+                    <button class="chart-btn" onclick="fetchHistoryData(12, this)">1A</button>
+                </div>
+            </div>
+            <div class="sec-body" style="height:350px;"><canvas id="historyChart"></canvas></div>
+        </div>
     </div>
 
 </main>
@@ -214,384 +387,452 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
-    const SENHA = "1234";
+    const SENHA = "1234"; 
 
+    window.isEditing = false; 
     let currentDocId = "";
+    let isReceiving = false; 
     let saveTimer;
-    let unsubscribe;
-    let chartInstance = null;
-    let histChartInstance = null;
-    let isLocked = false; // Impede salvamento durante carregamento
+    let unsubscribe = null;
+    let summaryChart = null; 
+    let barChart = null;
+    let pdfDocInstance = null;
+    
+    window.paidDebtors = [];
+    window.iconsList = ["💸", "🏠", "💡", "💧", "📶", "🏋️", "🚗", "⛽", "🍔", "💇", "💊", "💳", "🎓", "✈️"];
 
-    window.paidDebtors = []; // Lista de nomes pagos
-
-    // --- INICIALIZAÇÃO ---
     window.onload = () => {
-        const d = new Date();
-        const m = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
-        document.getElementById('monthPicker').value = m;
+        if(localStorage.getItem('theme') === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+        const lastMonth = localStorage.getItem('lastViewedMonth');
+        const now = new Date();
+        const d = lastMonth || `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+        document.getElementById('monthPicker').value = d;
+    };
+
+    window.toggleSidebar = () => document.getElementById('sidebar').classList.toggle('active');
+    
+    window.switchView = (viewName) => {
+        document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+        document.getElementById('view-'+viewName).classList.add('active');
+        document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+        event.currentTarget.classList.add('active');
+        if(window.innerWidth <= 768) toggleSidebar(); 
+        if(viewName === 'history') setTimeout(() => fetchHistoryData(6), 100);
+    };
+
+    window.toggleTheme = () => {
+        const html = document.documentElement;
+        const newTheme = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        html.setAttribute('data-theme', newTheme);
+        localStorage.setItem('theme', newTheme);
     };
 
     window.checkPassword = () => {
         if(document.getElementById('passInput').value === SENHA) {
             document.getElementById('lockScreen').style.display = 'none';
-            changeMonth();
-        } else {
-            document.getElementById('passError').innerText = "Senha incorreta";
-        }
+            initApp();
+        } else document.getElementById('passError').innerText = "Senha incorreta";
     };
     document.getElementById('passInput').addEventListener("keypress", (e) => { if(e.key==="Enter") window.checkPassword() });
+    window.lockApp = () => { location.reload(); };
 
-    window.switchView = (v) => {
-        document.querySelectorAll('.view-section').forEach(e => e.classList.remove('active'));
-        document.getElementById('view-'+v).classList.add('active');
-        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-        event.currentTarget.classList.add('active');
-        if(v==='history') loadHistory();
-    };
+    function initApp() {
+        const d = document.getElementById('monthPicker').value;
+        loadMonthData(d);
+    }
 
-    window.toggleTheme = () => {
-        const html = document.documentElement;
-        html.setAttribute('data-theme', html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
-    };
+    // --- TOAST ---
+    function showToast() {
+        const toast = document.getElementById('saveToast');
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 2000);
+    }
 
-    // --- CARREGAMENTO DE DADOS ---
-    window.changeMonth = () => {
-        currentDocId = document.getElementById('monthPicker').value;
-        if(!currentDocId) return;
+    window.changeMonthSafe = async () => {
+        const newDate = document.getElementById('monthPicker').value;
+        if (!newDate || newDate === currentDocId) return;
 
         document.getElementById('loadingOverlay').style.display = 'flex';
-        isLocked = true; // Bloqueia salvamento
+        
+        if (unsubscribe) unsubscribe();
+        clearTimeout(saveTimer);
 
-        if(unsubscribe) unsubscribe();
+        if (currentDocId && !isReceiving) await saveDataSync(currentDocId); 
 
-        // Limpa a tela visualmente para não misturar
-        resetScreenUI();
+        clearScreen();
+        localStorage.setItem('lastViewedMonth', newDate);
+        loadMonthData(newDate);
+    }
 
-        // NOVA COLEÇÃO LIMPA
-        unsubscribe = onSnapshot(doc(db, "financas_oficial_v38", currentDocId), (docSnap) => {
+    function clearScreen() {
+        document.getElementById('salary').value = 0;
+        document.getElementById('totalExpenses').innerText = "R$ 0,00";
+        document.querySelectorAll('tbody').forEach(b => b.innerHTML = "");
+        ['bbTotalBill', 'mpTotalBill', 'passaiTotalBill', 'nubankTotalBill'].forEach(id => document.getElementById(id).value = "");
+        if(summaryChart) { summaryChart.destroy(); summaryChart = null; }
+    }
+
+    function loadMonthData(dateString) {
+        currentDocId = dateString;
+        document.getElementById('syncStatus').innerText = "Carregando...";
+        
+        // NOVA COLEÇÃO LIMPA (v2026)
+        const docRef = doc(db, "financas_igor_final_v39", currentDocId);
+        
+        unsubscribe = onSnapshot(docRef, (docSnap) => {
             document.getElementById('loadingOverlay').style.display = 'none';
             
             if (docSnap.exists()) {
+                if (docSnap.metadata.hasPendingWrites) return; 
+                if (window.isEditing) return; 
+
+                isReceiving = true;
                 const data = docSnap.data();
-                window.paidDebtors = data.paidDebtors || [];
-                renderData(data);
-                document.getElementById('syncStatus').innerText = "Sincronizado";
-            } else {
-                // Se não existe, renderiza vazio e salva para criar
-                renderData(null);
-                saveData(true); 
-                document.getElementById('syncStatus').innerText = "Novo Mês";
+                window.paidDebtors = data.paidDebtors || []; 
+                updateScreen(data);
+                
+                setTimeout(() => isReceiving = false, 500);
+                document.getElementById('syncStatus').innerHTML = '<span style="color:var(--success)">Sincronizado</span>';
+            } else { 
+                window.paidDebtors = []; 
+                const defData = getDefaultData();
+                updateScreen(defData); 
+                saveDataSync(currentDocId); 
             }
-            isLocked = false; // Libera salvamento
-        });
-    };
-
-    function resetScreenUI() {
-        document.getElementById('salary').value = 0;
-        document.getElementById('emergency').value = 0;
-        document.querySelector('#incomeTable tbody').innerHTML = "";
-        document.querySelector('#mainTable tbody').innerHTML = "";
-        document.getElementById('cardsContainer').innerHTML = ""; 
-        renderCardsHTML(); // Recria a estrutura vazia dos cartões
-    }
-
-    function renderData(data) {
-        if(!data) data = { salary:0, emergency:0, income:[], fixed:[], cards:{bb:{bill:0,items:[]}, mp:{bill:0,items:[]}, passai:{bill:0,items:[]}, nubank:{bill:0,items:[]}} };
-
-        document.getElementById('salary').value = data.salary;
-        document.getElementById('emergency').value = data.emergency;
-
-        // Rendas
-        const incBody = document.querySelector('#incomeTable tbody');
-        incBody.innerHTML = "";
-        if(data.income) data.income.forEach(i => addIncomeRow(i.desc, i.val));
-
-        // Fixos
-        const fixBody = document.querySelector('#mainTable tbody');
-        fixBody.innerHTML = "";
-        if(data.fixed) data.fixed.forEach(i => addMainRow(i.icon, i.name, i.val, i.mine));
-
-        // Cartões
-        renderCardsData(data.cards);
-
-        calculate();
-    }
-
-    function renderCardsHTML() {
-        const container = document.getElementById('cardsContainer');
-        container.innerHTML = "";
-        const cards = [
-            {id:'bb', name:'Banco do Brasil', cls:'thumb-bb'},
-            {id:'mp', name:'Mercado Pago', cls:'thumb-mp'},
-            {id:'passai', name:'Passaí', cls:'thumb-passai'},
-            {id:'nubank', name:'Nubank', cls:'thumb-nubank'}
-        ];
-        cards.forEach(c => {
-            container.innerHTML += `
-            <div class="section" style="padding:0">
-                <div class="card-row">
-                    <div class="card-thumb ${c.cls}"></div>
-                    <div class="card-info"><h2>${c.name}</h2>Fatura: <input type="number" id="${c.id}Bill" class="input-val" oninput="scheduleSave()"> <div id="${c.id}Share" style="font-size:0.8rem; color:var(--primary); font-weight:bold; margin-top:5px;">Minha: R$ 0</div></div>
-                </div>
-                <div class="sec-body">
-                    <table id="${c.id}Table"><tbody></tbody></table>
-                    <button class="btn-action btn-copy" style="width:100%; justify-content:center; margin-top:10px;" onclick="addCardRow('${c.id}')">+ Item</button>
-                </div>
-            </div>`;
         });
     }
 
-    function renderCardsData(cardsData) {
-        if(!cardsData) return;
-        for(let id in cardsData) {
-            document.getElementById(`${id}Bill`).value = cardsData[id].bill || 0;
-            const tbody = document.querySelector(`#${id}Table tbody`);
-            tbody.innerHTML = "";
-            if(cardsData[id].items) {
-                cardsData[id].items.forEach(item => addCardRow(id, item.name, item.desc, item.val));
-            }
-        }
+    function updateScreen(data) {
+        if (!data) data = getDefaultData();
+        if (data.main && !data.main.some(i => i.id === 'nubank_auto')) data.main.unshift({ icon: '💳', name: 'Nubank', value: 0, isMine: true, locked: true, id: 'nubank_auto' });
+
+        document.getElementById('salary').value = data.salary || 0;
+        document.getElementById('emergencyFund').value = data.emergency || 0;
+        document.getElementById('bbTotalBill').value = data.bbTotalBill || 0;
+        document.getElementById('mpTotalBill').value = data.mpTotalBill || 0;
+        document.getElementById('passaiTotalBill').value = data.passaiTotalBill || 0;
+        document.getElementById('nubankTotalBill').value = data.nubankTotalBill || 0;
+
+        renderTable('incomeTable', data.extraIncome || [], 'income');
+        renderTable('mainTable', data.main || [], 'main');
+        renderTable('bbTable', data.bb || [], 'split');
+        renderTable('mpTable', data.mp || [], 'split');
+        renderTable('passaiTable', data.passai || [], 'split');
+        renderTable('nubankTable', data.nubank || [], 'split');
+        calculateAll(); 
     }
 
-    // --- CAPTURA E SALVAMENTO ---
-    function captureData() {
-        const data = {
-            salary: document.getElementById('salary').value,
-            emergency: document.getElementById('emergency').value,
-            paidDebtors: window.paidDebtors,
-            income: [],
-            fixed: [],
-            cards: {
-                bb: { bill: document.getElementById('bbBill').value, items: [] },
-                mp: { bill: document.getElementById('mpBill').value, items: [] },
-                passai: { bill: document.getElementById('passaiBill').value, items: [] },
-                nubank: { bill: document.getElementById('nubankBill').value, items: [] }
-            }
+    function getDefaultData() {
+        return { salary: 0, emergency: 0, bbTotalBill: 0, mpTotalBill: 0, passaiTotalBill: 0, nubankTotalBill: 0,
+            main: [
+                { icon: '💳', name: 'Cartão BB', value: 0, isMine: true, locked: true, id: 'bb_auto' },
+                { icon: '💳', name: 'Mercado Pago', value: 0, isMine: true, locked: true, id: 'mp_auto' },
+                { icon: '💳', name: 'Passaí', value: 0, isMine: true, locked: true, id: 'passai_auto' },
+                { icon: '💳', name: 'Nubank', value: 0, isMine: true, locked: true, id: 'nubank_auto' },
+                { icon: '🏋️', name: 'Academia', value: 0, isMine: true }, { icon: '💡', name: 'Luz', value: 0, isMine: true }
+            ], bb: [], mp: [], passai: [], nubank: [], extraIncome: [], paidDebtors: []
+        };
+    }
+
+    // --- CAPTURA ESTRUTURADA (CORRIGIDA) ---
+    function captureScreenData() {
+        const data = { 
+            salary: document.getElementById('salary').value, 
+            emergency: document.getElementById('emergencyFund').value, 
+            bbTotalBill: document.getElementById('bbTotalBill').value, 
+            mpTotalBill: document.getElementById('mpTotalBill').value, 
+            passaiTotalBill: document.getElementById('passaiTotalBill').value, 
+            nubankTotalBill: document.getElementById('nubankTotalBill').value, 
+            paidDebtors: window.paidDebtors, 
+            main: [], bb: [], mp: [], passai: [], nubank: [], extraIncome: [] 
         };
 
-        // Captura Rendas
+        // Rendas
         document.querySelectorAll('#incomeTable tbody tr').forEach(tr => {
-            data.income.push({
-                desc: tr.querySelector('.input-desc').value,
-                val: tr.querySelector('.input-val').value
-            });
+            const inputs = tr.querySelectorAll('input'); // 0: desc, 1: val
+            data.extraIncome.push({ desc: inputs[0].value, value: inputs[1].value });
         });
 
-        // Captura Fixos
-        document.querySelectorAll('#mainTable tbody tr').forEach(tr => {
-            data.fixed.push({
-                icon: tr.querySelector('select').value,
-                name: tr.querySelector('.input-nome').value,
-                val: tr.querySelector('.input-val').value,
-                mine: tr.querySelector('input[type="checkbox"]').checked
-            });
+        // Fixos
+        document.querySelectorAll('#mainTable tbody tr').forEach(tr => { 
+            const inputs = tr.querySelectorAll('input'); // 0: name, 1: val, 2: check
+            const name = inputs[0].value;
+            // Filtra os cartões para manter a estrutura limpa
+            const isCard = ['Cartão BB', 'Mercado Pago', 'Passaí', 'Nubank'].includes(name);
+            
+            data.main.push({ 
+                icon: tr.querySelector('.icon-select').value, 
+                name: name, value: inputs[1].value, 
+                isMine: inputs[2].checked, 
+                locked: inputs[1].hasAttribute('readonly'), 
+                id: inputs[1].id || null 
+            }); 
         });
 
-        // Captura Cartões
-        ['bb','mp','passai','nubank'].forEach(id => {
-            document.querySelectorAll(`#${id}Table tbody tr`).forEach(tr => {
-                data.cards[id].items.push({
-                    name: tr.querySelector('.input-nome').value,
-                    desc: tr.querySelector('.input-desc').value,
-                    val: tr.querySelector('.input-val').value
-                });
-            });
-        });
-
+        // Cartões
+        const scrape = (tid, arr) => { 
+            document.querySelectorAll(`#${tid} tbody tr`).forEach(tr => { 
+                const inputs = tr.querySelectorAll('input'); // 0: name, 1: desc, 2: inst, 3: val
+                arr.push({ name: inputs[0].value, desc: inputs[1].value, inst: inputs[2].value, value: inputs[3].value }); 
+            }); 
+        };
+        scrape('bbTable', data.bb); scrape('mpTable', data.mp); scrape('passaiTable', data.passai); scrape('nubankTable', data.nubank);
         return data;
     }
 
-    window.saveData = async (force = false) => {
-        if(isLocked && !force) return;
-        
-        const data = captureData();
-        try {
-            await setDoc(doc(db, "financas_oficial_v38", currentDocId), data);
-            document.getElementById('syncStatus').innerText = "Salvo";
-            document.getElementById('saveToast').style.display = "block";
-            setTimeout(() => document.getElementById('saveToast').style.display = "none", 2000);
-        } catch(e) {
-            console.error(e);
-            alert("Erro ao salvar!");
-        }
+    async function saveDataSync(targetId) {
+        const data = captureScreenData();
+        try { 
+            await setDoc(doc(db, "financas_igor_final_v39", targetId), data); 
+            showToast(); // MOSTRA TOAST VERDE
+        } 
+        catch(e) { console.error("Erro save sync", e); }
     }
 
-    window.scheduleSave = () => {
-        if(isLocked) return;
-        calculate();
-        document.getElementById('syncStatus').innerText = "Editando...";
+    window.calculateAndSchedule = () => {
+        calculateAll();
+        if (isReceiving) return;
         clearTimeout(saveTimer);
-        saveTimer = setTimeout(() => saveData(), 1000);
+        saveTimer = setTimeout(() => saveDataSync(currentDocId), 800); 
     }
 
-    // --- LÓGICA DE NEGÓCIO ---
-    window.calculate = () => {
-        let salary = parseFloat(document.getElementById('salary').value)||0;
-        let emergency = parseFloat(document.getElementById('emergency').value)||0;
-        let incomeTotal = 0;
-        let fixedTotal = 0;
-        let myFixed = 0;
-        
-        // Rendas
-        document.querySelectorAll('#incomeTable .input-val').forEach(i => incomeTotal += parseFloat(i.value)||0);
-        document.getElementById('extraTotal').innerText = fmt(incomeTotal);
+    window.resetMonthData = async () => {
+        if(!confirm("ATENÇÃO: Apagar TODOS os dados deste mês?")) return;
+        isReceiving = true;
+        const emptyData = getDefaultData();
+        updateScreen(emptyData); 
+        await saveDataSync(currentDocId); 
+        isReceiving = false;
+        alert("Mês limpo.");
+    }
 
-        // Fixos
+    window.calculateAll = () => {
+        const bb = processCard('bbTable', 'bbTotalBill', 'bbMyShareDisplay', 'bb_auto');
+        const mp = processCard('mpTable', 'mpTotalBill', 'mpMyShareDisplay', 'mp_auto');
+        const passai = processCard('passaiTable', 'passaiTotalBill', 'passaiMyShareDisplay', 'passai_auto');
+        const nubank = processCard('nubankTable', 'nubankTotalBill', 'nubankMyShareDisplay', 'nubank_auto');
+
+        const cardsShareTotal = bb.myShare + mp.myShare + passai.myShare + nubank.myShare;
+
+        updateAutoRow('Cartão BB', bb.myShare);
+        updateAutoRow('Mercado Pago', mp.myShare);
+        updateAutoRow('Passaí', passai.myShare);
+        updateAutoRow('Nubank', nubank.myShare);
+
+        let fixedSumMine = 0;
+        let fixedSumTotal = 0;
+        const emergency = parseFloat(document.getElementById('emergencyFund').value) || 0;
+
         document.querySelectorAll('#mainTable tbody tr').forEach(tr => {
-            let v = parseFloat(tr.querySelector('.input-val').value)||0;
-            fixedTotal += v;
-            if(tr.querySelector('input[type="checkbox"]').checked) myFixed += v;
+            const val = parseFloat(tr.querySelector('.val-input').value) || 0;
+            const isMine = tr.querySelector('input[type="checkbox"]').checked;
+            const isCardAuto = tr.querySelector('.val-input').hasAttribute('readonly');
+            if (!isCardAuto) {
+                fixedSumTotal += val;
+                if (isMine) fixedSumMine += val;
+            }
         });
 
-        // Cartões
-        let cardsMyShareTotal = 0;
-        let debtors = {};
+        let totalExpenses = fixedSumTotal + cardsShareTotal + emergency;
+        let myRealExpenses = fixedSumMine + cardsShareTotal; 
 
-        ['bb','mp','passai','nubank'].forEach(id => {
-            let bill = parseFloat(document.getElementById(`${id}Bill`).value)||0;
-            let others = 0;
-            document.querySelectorAll(`#${id}Table tbody tr`).forEach(tr => {
-                let v = parseFloat(tr.querySelector('.input-val').value)||0;
-                let n = tr.querySelector('.input-nome').value;
-                if(v > 0) {
-                    others += v;
-                    if(n) {
-                        let k = n.toLowerCase();
-                        if(!debtors[k]) debtors[k] = {name:n, total:0};
-                        debtors[k].total += v;
-                    }
+        let extraIncome = 0;
+        document.querySelectorAll('#incomeTable tbody tr').forEach(tr => extraIncome += parseFloat(tr.querySelector('.val-input').value)||0);
+        document.getElementById('extraIncomeTotal').innerText = fmt(extraIncome);
+
+        const salary = parseFloat(document.getElementById('salary').value) || 0;
+        const totalIncome = salary + extraIncome;
+
+        document.getElementById('totalExpenses').innerText = fmt(totalExpenses);
+        document.getElementById('remaining').innerText = fmt(totalIncome - totalExpenses);
+        document.getElementById('myRealExpenses').innerText = fmt(myRealExpenses);
+
+        const perc = totalIncome > 0 ? (totalExpenses/totalIncome)*100 : 0;
+        const bar = document.getElementById('salaryBar');
+        bar.style.width = Math.min(perc, 100)+'%';
+        bar.style.background = perc < 50 ? '#10b981' : perc < 85 ? '#f59e0b' : '#ef4444';
+
+        const allDebts = {};
+        const mergeDebts = (s) => { for(let k in s) { if(!allDebts[k]) allDebts[k]={...s[k]}; else { allDebts[k].total+=s[k].total; } } };
+        mergeDebts(bb.debtors); mergeDebts(mp.debtors); mergeDebts(passai.debtors); mergeDebts(nubank.debtors);
+        updateDebtors(allDebts);
+        
+        const ctx = document.getElementById('expenseChart').getContext('2d');
+        if(summaryChart) summaryChart.destroy();
+        summaryChart = new Chart(ctx, { 
+            type: 'doughnut', 
+            data: { 
+                labels: ['Fixos', 'Cartões', 'Reserva', 'Livre'], 
+                datasets: [{ 
+                    data: [fixedSumTotal, cardsShareTotal, emergency, Math.max(0, totalIncome - totalExpenses)], 
+                    backgroundColor: ['#ef4444', '#f59e0b', '#8b5cf6', '#10b981'], 
+                    borderWidth: 0 
+                }] 
+            }, 
+            options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'bottom'}} } 
+        });
+    };
+
+    function updateAutoRow(name, value) {
+        const inputs = document.querySelectorAll('#mainTable tbody input[type="text"]');
+        for (let input of inputs) {
+            if (input.value === name) {
+                const row = input.closest('tr');
+                const valInput = row.querySelector('.val-input');
+                if (valInput) valInput.value = value.toFixed(2);
+                break;
+            }
+        }
+    }
+
+    function processCard(tid, totId, displayId, autoName) {
+        const bill = parseFloat(document.getElementById(totId).value) || 0;
+        let others = 0, debtors = {};
+        document.querySelectorAll(`#${tid} tbody tr`).forEach(tr => {
+            const name = tr.querySelector('.split-name').value.trim();
+            const val = parseFloat(tr.querySelector('.val-input').value) || 0;
+            if(val>0) {
+                others += val;
+                if(name) {
+                    const k = name.toLowerCase();
+                    if(!debtors[k]) debtors[k] = {name, total:0};
+                    debtors[k].total += val;
                 }
-            });
-            let myShare = bill - others;
-            cardsMyShareTotal += myShare;
-            document.getElementById(`${id}Share`).innerText = "Minha: " + fmt(myShare);
+            }
         });
-
-        let totalOut = fixedTotal + cardsMyShareTotal + emergency; // Simplificado: Total Saída = Fixos Totais (assumindo que pago tudo primeiro) + Minha parte cartões + reserva? 
-        // Correção lógica comum: Total Saídas geralmente é o que sai da MINHA conta.
-        // Se eu pago o fixo inteiro (mesmo que rache), sai da minha conta.
-        // Se eu pago a fatura inteira, sai da minha conta.
-        // Vamos ajustar para: Total Saídas = Soma Fixos + Soma Faturas Totais + Emergencia.
-        
-        let realOut = fixedTotal; // Começa com fixos
-        ['bb','mp','passai','nubank'].forEach(id => realOut += parseFloat(document.getElementById(`${id}Bill`).value)||0);
-        realOut += emergency;
-
-        document.getElementById('totalExpenses').innerText = fmt(realOut);
-        document.getElementById('remaining').innerText = fmt((salary + incomeTotal) - realOut);
-        
-        // Meu Custo Real (Só o que é meu)
-        document.getElementById('myRealExpenses').innerText = fmt(myFixed + cardsMyShareTotal);
-
-        updateDebtors(debtors);
-        updateChart(realOut, (salary+incomeTotal)-realOut);
+        const myShare = bill - others;
+        const displayEl = document.getElementById(displayId);
+        if(displayEl) displayEl.innerText = "Minha Parte: " + fmt(myShare);
+        return { myShare, debtors };
     }
 
-    function updateDebtors(debtors) {
-        const div = document.getElementById('debtorsList');
-        div.innerHTML = "";
-        let toRec = 0; let rcv = 0;
-        for(let k in debtors) {
-            let d = debtors[k];
-            let isPaid = window.paidDebtors.includes(d.name);
-            if(isPaid) rcv += d.total; else toRec += d.total;
-            
-            div.innerHTML += `
-            <div class="debt-card ${isPaid?'paid':''}" style="background:#fff; padding:15px; border:1px solid #eee; border-radius:10px; box-shadow:0 2px 5px rgba(0,0,0,0.05);">
-                <div style="display:flex; justify-content:space-between; font-weight:bold;"><span>${d.name}</span><span>${fmt(d.total)}</span></div>
-                <button class="status-btn ${isPaid?'paid':'pending'}" style="width:100%; margin-top:10px;" onclick="togglePaid('${d.name}')">${isPaid?'✔ PAGO':'⏳ PENDENTE'}</button>
-            </div>`;
+    window.addMainRow = () => { addMainRowHTML(document.querySelector("#mainTable tbody"), {icon:'💸',name:'',value:'',isMine:true}); calculateAndSchedule(); }
+    window.addIncomeRow = () => { addIncomeRowHTML(document.querySelector("#incomeTable tbody"), {desc:'',value:''}); calculateAndSchedule(); }
+    window.addSplitRow = (id) => { addSplitRowHTML(document.querySelector(`#${id} tbody`), {name:'',desc:'',inst:'',value:''}); calculateAndSchedule(); }
+    
+    function addMainRowHTML(tbody, item) {
+        const tr = document.createElement("tr");
+        let opts = window.iconsList.map(i => `<option value="${i}" ${i === item.icon ? 'selected' : ''}>${i}</option>`).join('');
+        const locked = item.locked ? 'readonly style="background:rgba(0,0,0,0.05); color:#999"' : 'onfocus="window.isEditing=true" onblur="window.isEditing=false"';
+        const del = item.locked ? '' : `<button class="btn-del" onclick="removeRow(this)">×</button>`;
+        tr.innerHTML = `<td><select class="icon-select" onchange="calculateAndSchedule()">${opts}</select></td><td><input type="text" class="td-input" value="${item.name}" ${locked} oninput="calculateAndSchedule()"></td><td><input type="number" class="td-input val-input" value="${item.value}" step="0.01" id="${item.id||''}" ${locked} oninput="calculateAndSchedule()"></td><td style="text-align:center"><input type="checkbox" ${item.isMine?'checked':''} onchange="calculateAndSchedule()"></td><td>${del}</td>`;
+        tbody.appendChild(tr);
+    }
+    function addIncomeRowHTML(tbody, item) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td><input type="text" class="td-input" value="${item.desc}" placeholder="Descrição" oninput="calculateAndSchedule()" onfocus="window.isEditing=true" onblur="window.isEditing=false"></td><td><input type="number" class="td-input val-input" value="${item.value}" step="0.01" oninput="calculateAndSchedule()" onfocus="window.isEditing=true" onblur="window.isEditing=false"></td><td><button class="btn-del" onclick="removeRow(this)">×</button></td>`;
+        tbody.appendChild(tr);
+    }
+    function addSplitRowHTML(tbody, item) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td><input type="text" class="td-input split-name" value="${item.name}" placeholder="Nome" oninput="calculateAndSchedule()" onfocus="window.isEditing=true" onblur="window.isEditing=false"></td><td><input type="text" class="td-input" value="${item.desc}" placeholder="Item" oninput="calculateAndSchedule()" onfocus="window.isEditing=true" onblur="window.isEditing=false"></td><td><input type="text" class="td-input split-inst" value="${item.inst||''}" placeholder="1/10" oninput="updateBar(this);calculateAndSchedule()" onfocus="window.isEditing=true" onblur="window.isEditing=false"><div class="prog-bar"><div class="prog-fill"></div></div></td><td><input type="number" class="td-input val-input" value="${item.value}" step="0.01" oninput="calculateAndSchedule()" onfocus="window.isEditing=true" onblur="window.isEditing=false"></td><td><button class="btn-del" onclick="removeRow(this)">×</button></td>`;
+        tbody.appendChild(tr);
+        if(item.inst) updateBar(tr.querySelector('.split-inst'));
+    }
+
+    window.removeRow = (btn) => { btn.closest('tr').remove(); calculateAndSchedule(); }
+    window.updateBar = (input) => { const val = input.value; const bar = input.nextElementSibling.querySelector('.prog-fill'); if(val.includes('/')) { const [c,t] = val.split('/').map(Number); if(t>0) bar.style.width = Math.min((c/t)*100, 100)+'%'; } else bar.style.width = '0%'; }
+    window.togglePaid = (name) => { const idx = window.paidDebtors.indexOf(name); if(idx>-1) window.paidDebtors.splice(idx,1); else window.paidDebtors.push(name); calculateAndSchedule(); }
+
+    function updateDebtors(all) {
+        const list = document.getElementById('debtorsList'); list.innerHTML = "";
+        let tr=0, r=0;
+        if (Object.keys(all).length === 0) list.innerHTML = "<div style='color:var(--text-muted); width:100%; text-align:center'>Nenhum devedor.</div>";
+        else {
+            for(let k in all) {
+                const p = all[k]; 
+                const isPaid = window.paidDebtors.includes(p.name);
+                if(isPaid) r+=p.total; else tr+=p.total;
+                
+                const div = document.createElement('div'); 
+                div.className = `debt-card ${isPaid?'paid':''}`;
+                div.innerHTML = `
+                    <div class="debt-header"><span>${p.name}</span></div>
+                    <div class="debt-amount">${fmt(p.total)}</div>
+                    <div class="debt-footer"><button class="status-btn ${isPaid?'paid':'pending'}" onclick="togglePaid('${p.name}')">${isPaid ? '✔ PAGO' : '⏳ PENDENTE'}</button></div>
+                `;
+                list.appendChild(div);
+            }
         }
-        document.getElementById('totalReceivable').innerText = fmt(toRec);
-        document.getElementById('totalPaid').innerText = fmt(rcv);
+        document.getElementById('totalToReceive').innerText = fmt(tr);
+        document.getElementById('totalReceived').innerText = fmt(r);
     }
 
-    window.togglePaid = (name) => {
-        const i = window.paidDebtors.indexOf(name);
-        if(i > -1) window.paidDebtors.splice(i,1); else window.paidDebtors.push(name);
-        scheduleSave();
-    }
-
-    function updateChart(spent, free) {
-        const ctx = document.getElementById('chart').getContext('2d');
-        if(chartInstance) chartInstance.destroy();
-        chartInstance = new Chart(ctx, {
-            type: 'doughnut',
-            data: { labels: ['Gastos', 'Livre'], datasets: [{ data: [spent, Math.max(0,free)], backgroundColor: ['#ef4444', '#10b981'], borderWidth:0 }] },
-            options: { responsive:true, maintainAspectRatio:false }
-        });
-    }
-
-    // --- TABELAS UI ---
-    window.addIncomeRow = (desc='', val='') => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td><input class="input-desc" value="${desc}" oninput="scheduleSave()"></td><td><input type="number" class="input-val" value="${val}" oninput="scheduleSave()"></td><td><button class="btn-del" onclick="this.closest('tr').remove();scheduleSave()">×</button></td>`;
-        document.querySelector('#incomeTable tbody').appendChild(tr);
-    }
-    window.addMainRow = (icon='💸', name='', val='', mine=true) => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td><select onchange="scheduleSave()"><option ${icon=='💸'?'selected':''}>💸</option><option ${icon=='🏠'?'selected':''}>🏠</option></select></td><td><input class="input-nome" value="${name}" oninput="scheduleSave()"></td><td><input type="number" class="input-val" value="${val}" oninput="scheduleSave()"></td><td style="text-align:center"><input type="checkbox" ${mine?'checked':''} onchange="scheduleSave()"></td><td><button class="btn-del" onclick="this.closest('tr').remove();scheduleSave()">×</button></td>`;
-        document.querySelector('#mainTable tbody').appendChild(tr);
-    }
-    window.addCardRow = (id, name='', desc='', val='') => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td><input class="input-nome" placeholder="Nome" value="${name}" oninput="scheduleSave()"></td><td><input class="input-desc" placeholder="Desc" value="${desc}" oninput="scheduleSave()"></td><td></td><td><input type="number" class="input-val" value="${val}" oninput="scheduleSave()"></td><td><button class="btn-del" onclick="this.closest('tr').remove();scheduleSave()">×</button></td>`;
-        document.querySelector(`#${id}Table tbody`).appendChild(tr);
-    }
-
-    function fmt(n) { return n.toLocaleString('pt-BR', {style:'currency', currency:'BRL'}); }
-
-    // --- IMPORTAR (CORREÇÃO DE DADOS SOMEM) ---
-    window.copyPreviousMonth = async () => {
-        if(!confirm("Importar dados do mês anterior?")) return;
-        
-        // 1. Calcular Mês Anterior
-        const parts = currentDocId.split('-');
-        let y = parseInt(parts[0]); let m = parseInt(parts[1]);
-        m--; if(m===0){m=12; y--;}
-        const prevId = `${y}-${String(m).padStart(2,'0')}`;
-
-        // 2. Buscar Dados
-        const snap = await getDoc(doc(db, "financas_oficial_v38", prevId));
-        
-        if(snap.exists()) {
-            const data = snap.data();
-            // 3. Limpar status de pagamento
-            data.paidDebtors = [];
-            
-            // 4. GRAVAR DIRETO NO MÊS ATUAL (SEM PASSAR PELA TELA)
-            // Isso evita o erro de "renderizar e capturar vazio"
-            await setDoc(doc(db, "financas_oficial_v38", currentDocId), data);
-            
-            // 5. Recarregar a tela
-            alert("Dados importados com sucesso!");
-            loadMonthData(currentDocId);
-        } else {
-            alert("Mês anterior não encontrado.");
-        }
-    }
-
-    // --- OUTROS ---
-    window.resetMonth = async () => {
-        if(confirm("Zerar tudo?")) {
-            await setDoc(doc(db, "financas_oficial_v38", currentDocId), {});
-            location.reload();
-        }
-    }
-
-    window.openPDF = () => {
+    window.openPDFPreview = () => {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
-        doc.text(`Relatório ${currentDocId}`, 14, 20);
-        // Lógica simples de PDF para evitar erros
-        doc.autoTable({ html: '#incomeTable', startY: 30 });
-        doc.autoTable({ html: '#mainTable', startY: doc.lastAutoTable.finalY + 10 });
+        doc.setFillColor(37, 99, 235); doc.rect(0, 0, 210, 40, 'F');
+        doc.setFontSize(22); doc.setTextColor(255, 255, 255); doc.text("Relatório Financeiro", 14, 20);
+        doc.setFontSize(12); doc.text(`Referência: ${document.getElementById('monthPicker').value}`, 14, 30);
+        let finalY = 50; doc.setTextColor(0); doc.setFontSize(14); doc.text("Resumo Geral", 14, finalY);
+        const salary = parseFloat(document.getElementById('salary').value)||0;
+        const extra = parseFloat(document.getElementById('extraIncomeTotal').innerText.replace(/[^\d,]/g,'').replace(',','.'))||0;
+        const out = parseFloat(document.getElementById('totalExpenses').innerText.replace(/[^\d,]/g,'').replace(',','.'))||0;
+        const rest = parseFloat(document.getElementById('remaining').innerText.replace(/[^\d,-]/g,'').replace(',','.'))||0;
+        doc.autoTable({ startY: finalY+5, head:[['Descrição','Valor']], body:[['Salário Base',fmt(salary)],['Rendas Extras',fmt(extra)],['Total Saídas',fmt(out)],['Saldo Restante',fmt(rest)]], theme:'striped', headStyles:{fillColor:[37,99,235]} });
+        finalY = doc.lastAutoTable.finalY + 15;
+        
+        const extract = (sel, tit, col) => {
+            const rows=[]; document.querySelectorAll(`${sel} tbody tr`).forEach(tr=>{
+                const n = tr.querySelector('.td-input') ? tr.querySelector('.td-input').value : tr.querySelector('.split-name').value;
+                const v = tr.querySelector('.val-input').value;
+                if(parseFloat(v)>0) rows.push([n,`R$ ${v}`]);
+            });
+            if(rows.length>0){ if(finalY>250){doc.addPage();finalY=20;} doc.text(tit,14,finalY); doc.autoTable({startY:finalY+5,head:[['Item','Valor']],body:rows,theme:'striped',headStyles:{fillColor:col}}); finalY=doc.lastAutoTable.finalY+15; }
+        };
+        extract('#incomeTable','Rendas Extras',[16,185,129]); extract('#mainTable','Gastos Fixos',[245,158,11]);
+        ['bbTable','mpTable','passaiTable','nubankTable'].forEach(id=>extract(`#${id}`,`Cartão: ${id.replace('Table','').toUpperCase()}`,[100,100,100]));
+        
+        const debts=[]; document.querySelectorAll('.debt-card').forEach(c=>{ debts.push([c.querySelector('.debt-header span').innerText, c.querySelector('.debt-amount').innerText, c.classList.contains('paid')?'PAGO':'PENDENTE']); });
+        if(debts.length>0){ if(finalY>250){doc.addPage();finalY=20;} doc.text("Devedores",14,finalY); doc.autoTable({startY:finalY+5,head:[['Nome','Valor','Status']],body:debts,theme:'striped',headStyles:{fillColor:[239,68,68]}}); }
+        
         document.getElementById('pdfPreviewFrame').src = doc.output('bloburl');
         document.getElementById('pdfModal').style.display = 'flex';
-        document.getElementById('btnDownloadPDF').onclick = () => doc.save('Relatorio.pdf');
+        document.getElementById('btnDownloadPDF').onclick = () => doc.save(`Relatorio_${currentDocId}.pdf`);
     }
     window.closePDFModal = () => document.getElementById('pdfModal').style.display = 'none';
+
+    window.fetchHistoryData = async (range = 6, btnElement = null) => {
+        if(btnElement) { document.querySelectorAll('.chart-btn').forEach(b => b.classList.remove('active')); btnElement.classList.add('active'); }
+        const labels = [], dataIncome = [], dataExpense = [];
+        const year = parseInt(currentDocId.split('-')[0]), month = parseInt(currentDocId.split('-')[1]);
+        for(let i=range-1; i>=0; i--) {
+            let m = month - i, y = year; while(m <= 0) { m += 12; y--; }
+            const id = `${y}-${String(m).padStart(2,'0')}`;
+            const snap = await getDoc(doc(db, "financas_igor_final_v39", id));
+            labels.push(`${m}/${y}`);
+            if(snap.exists()) {
+                const d = snap.data();
+                let inc = (parseFloat(d.salary)||0); if(d.extraIncome) d.extraIncome.forEach(x=>inc+=(parseFloat(x.value)||0));
+                let exp = (parseFloat(d.emergency)||0); 
+                const sumC = (l) => { let s=0; if(l) l.forEach(k=>s+=parseFloat(k.value)||0); return s; };
+                const calcB = (b,l) => (parseFloat(b)||0) - sumC(l);
+                if(d.main) d.main.forEach(x=>{if(!x.locked) exp+=parseFloat(x.value)||0;});
+                exp += calcB(d.bbTotalBill,d.bb) + calcB(d.mpTotalBill,d.mp) + calcB(d.passaiTotalBill,d.passai) + calcB(d.nubankTotalBill,d.nubank);
+                dataIncome.push(inc); dataExpense.push(exp);
+            } else { dataIncome.push(0); dataExpense.push(0); }
+        }
+        const ctx = document.getElementById('historyChart').getContext('2d');
+        if(barChart) barChart.destroy();
+        barChart = new Chart(ctx, { type: 'bar', data: { labels: labels, datasets: [{ label: 'Entradas', data: dataIncome, backgroundColor: '#10b981', borderRadius: 4 }, { label: 'Saídas', data: dataExpense, backgroundColor: '#ef4444', borderRadius: 4 }] }, options: { responsive:true, maintainAspectRatio:false, scales: { y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } }, x: { grid: { display: false } } }, plugins: { legend: { position: 'top' } } } });
+    };
+
+    function fmt(n) { return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
+    window.copyPreviousMonth = async function() {
+        if(!confirm("Importar dados do mês anterior?")) return;
+        const parts = currentDocId.split('-'); let year = parseInt(parts[0]); let month = parseInt(parts[1]);
+        month--; if(month===0) { month=12; year--; }
+        const prevId = `${year}-${String(month).padStart(2,'0')}`;
+        const snap = await getDoc(doc(db, "financas_igor_final_v39", prevId));
+        if(snap.exists()) {
+            const data = snap.data(); data.paidDebtors = [];
+            if(data.main) data.main.forEach(i => i.paid = false); 
+            const inc = (arr) => arr.forEach(i => { if(i.inst && i.inst.includes('/')){ let [c,t]=i.inst.split('/'); if(c<t) i.inst=`${parseInt(c)+1}/${t}`; } });
+            if(data.bb) inc(data.bb); if(data.mp) inc(data.mp); if(data.passai) inc(data.passai); if(data.nubank) inc(data.nubank);
+            updateScreen(data);
+            setTimeout(() => saveDataSync(currentDocId), 500);
+        } else alert("Mês anterior vazio.");
+    };
 </script>
 </body>
 </html>
