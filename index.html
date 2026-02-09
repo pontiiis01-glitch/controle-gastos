@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Financeiro 20.0</title>
+    <title>Financeiro 22.0</title>
 
     <link rel="apple-touch-icon" href="icone2.0.png">
     <link rel="icon" type="image/png" href="icone2.0.png">
@@ -20,7 +20,7 @@
         :root {
             --primary: #2563eb; --bg-body: #f8fafc; --bg-card: #ffffff; --bg-sidebar: #ffffff;
             --text-main: #0f172a; --text-muted: #64748b; --border: #e2e8f0;
-            --success: #10b981; --success-bg: #dcfce7; --success-text: #166534;
+            --success: #10b981; --success-dark: #059669; --success-bg: #dcfce7; --success-text: #166534;
             --danger: #ef4444; --warning: #f59e0b; --purple: #8b5cf6;
             --passai: #ea580c; --nubank: #820ad1;
             --shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
@@ -36,14 +36,8 @@
         body { font-family: 'Inter', sans-serif; background-color: var(--bg-body); color: var(--text-main); margin: 0; display: flex; height: 100vh; overflow: hidden; transition: background 0.3s; }
         
         /* SIDEBAR */
-        #sidebar {
-            width: 260px; background: var(--bg-sidebar); border-right: 1px solid var(--border);
-            display: flex; flex-direction: column; padding: 20px; transition: transform 0.3s;
-            z-index: 100; height: 100%;
-        }
-        
+        #sidebar { width: 260px; background: var(--bg-sidebar); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 20px; transition: transform 0.3s; z-index: 100; height: 100%; }
         #main-content { flex: 1; overflow-y: auto; padding: 20px; position: relative; }
-        
         .mobile-toggle { display: none; position: absolute; top: 15px; left: 15px; z-index: 200; background: var(--bg-card); border: 1px solid var(--border); padding: 8px; border-radius: 8px; cursor: pointer; color: var(--text-main); }
         
         @media (max-width: 768px) {
@@ -53,25 +47,17 @@
             #main-content { padding-top: 60px; }
         }
 
+        /* UI ELEMENTS */
         .brand { font-size: 1.4rem; font-weight: 800; color: var(--primary); margin-bottom: 30px; display: flex; align-items: center; gap: 10px; }
-        .nav-btn {
-            background: transparent; border: none; color: var(--text-muted); padding: 12px 15px;
-            text-align: left; font-size: 0.95rem; font-weight: 600; cursor: pointer; border-radius: 10px;
-            margin-bottom: 5px; display: flex; align-items: center; gap: 10px; transition: 0.2s; width: 100%;
-        }
+        .nav-btn { background: transparent; border: none; color: var(--text-muted); padding: 12px 15px; text-align: left; font-size: 0.95rem; font-weight: 600; cursor: pointer; border-radius: 10px; margin-bottom: 5px; display: flex; align-items: center; gap: 10px; transition: 0.2s; width: 100%; }
         .nav-btn:hover { background: rgba(100,116,139,0.1); color: var(--text-main); }
         .nav-btn.active { background: var(--primary); color: white; }
-        .nav-btn i { font-size: 1.2rem; }
-        
-        /* SEPARADOR NO MENU */
         .menu-divider { height: 1px; background: var(--border); margin: 15px 0; }
-
-        /* VIEWS */
+        
         .view-section { display: none; animation: fadeIn 0.3s; }
         .view-section.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* HEADER & CONTROLS */
         .controls-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; align-items: center; }
         .date-control { background: var(--bg-card); border: 1px solid var(--border); padding: 8px 15px; border-radius: 50px; display: flex; align-items: center; gap: 10px; color: var(--text-main); }
         input[type="month"] { background: transparent; border: none; color: inherit; font-weight: 600; font-family: inherit; cursor: pointer; min-width: 140px; }
@@ -80,6 +66,7 @@
         .btn-copy { background: #3b82f6; }
         .btn-pdf { background: #10b981; }
         .btn-reset { background: #ef4444; }
+        .btn-theme { background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border); width: 100%; justify-content: center; margin-top: 10px; }
 
         /* DASHBOARD */
         .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; margin-bottom: 30px; }
@@ -89,7 +76,6 @@
         .stat-input { width: 100%; font-size: 1.4rem; font-weight: 800; background: transparent; border: none; border-bottom: 2px dashed var(--border); color: inherit; padding: 0; }
         .stat-input:focus { outline: none; border-color: var(--primary); }
         
-        /* CORES */
         .c-salary input { color: var(--success); } .c-total .val { color: var(--danger); }
         .c-rest .val { color: var(--primary); } .c-income .val { color: #059669; }
         .c-mine .val { color: var(--warning); } .c-emerg input { color: var(--purple); }
@@ -97,7 +83,7 @@
         .salary-bar-bg { width: 100%; height: 6px; background: var(--border); border-radius: 3px; margin-top: 10px; overflow: hidden; }
         .salary-bar-fill { height: 100%; width: 0%; transition: width 0.5s, background-color 0.5s; background: var(--success); }
 
-        /* TABLES */
+        /* TABLES & CARDS */
         .section { background: var(--bg-card); border-radius: 16px; border: 1px solid var(--border); margin-bottom: 20px; overflow: hidden; box-shadow: var(--shadow); }
         .sec-header { padding: 15px; border-bottom: 1px solid var(--border); background: rgba(0,0,0,0.02); display: flex; justify-content: space-between; align-items: center; }
         .sec-header h2 { margin: 0; font-size: 1rem; font-weight: 700; }
@@ -107,71 +93,67 @@
         td { padding: 10px; border-bottom: 1px solid var(--border); }
         input.td-input { background: var(--bg-body); border: 1px solid var(--border); color: var(--text-main); padding: 8px; border-radius: 6px; width: 100%; box-sizing: border-box; }
         
-        /* --- CARTÕES (Horizontal Fix) --- */
-        .card-row { display: flex; align-items: center; padding: 15px; border-bottom: 1px solid var(--border); gap: 15px; }
-        .card-thumb { 
-            width: 120px; 
-            height: 75px; 
-            border-radius: 10px; 
-            background-size: cover; /* Garante que cubra tudo */
-            background-repeat: no-repeat;
-            background-position: center; 
-            flex-shrink: 0; 
-            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-            background-color: var(--bg-body);
-            transition: transform 0.3s ease;
-        }
+        .card-row { display: flex; align-items: center; padding: 20px; border-bottom: 1px solid var(--border); gap: 20px; }
+        .card-thumb { width: 120px; height: 75px; border-radius: 10px; background-size: cover; background-repeat: no-repeat; background-position: center; flex-shrink: 0; box-shadow: 0 4px 10px rgba(0,0,0,0.15); background-color: var(--bg-body); transition: transform 0.3s; }
         .card-thumb:hover { transform: scale(1.05); }
         .card-info { flex: 1; }
-        .card-info h2 { margin: 0 0 8px 0; font-size: 1.1rem; }
-        .card-info .bill-wrapper { display: flex; align-items: center; gap: 5px; font-size: 0.9rem; color: var(--text-muted); }
-        .card-info input { width: 100px; font-weight: bold; padding: 5px; border-radius: 5px; border: 1px solid var(--border); background: var(--bg-body); color: var(--text-main); }
+        .card-info h2 { margin: 0 0 8px 0; font-size: 1.2rem; font-weight: 800; }
+        .card-info .bill-wrapper { display: flex; align-items: center; gap: 10px; font-size: 1rem; color: var(--text-muted); }
+        .card-info input { width: 120px; font-size: 1.1rem; font-weight: 800; padding: 8px; border-radius: 8px; border: 2px solid var(--border); background: var(--bg-body); color: var(--text-main); }
 
-        /* IMAGENS - Use nome do arquivo exato */
         .thumb-bb { background-image: url('bb.jpeg'); }
         .thumb-mp { background-image: url('mp.jpeg'); }
         .thumb-passai { background-image: url('passai.jpeg'); }
         .thumb-nubank { background-image: url('nubank.jpeg'); }
 
-        /* --- DEVEDORES (Novo Design) --- */
         .debt-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; }
-        .debt-card { 
-            background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 15px; 
-            display: flex; flex-direction: column; justify-content: space-between; gap: 10px;
-            transition: 0.2s;
-        }
+        .debt-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 15px; display: flex; flex-direction: column; justify-content: space-between; gap: 10px; }
         .debt-card.paid { opacity: 0.7; border-color: var(--success); background: rgba(16, 185, 129, 0.05); }
-        
-        .debt-header { display: flex; justify-content: space-between; align-items: center; font-weight: 700; color: var(--text-main); }
-        .debt-amount { font-size: 1.4rem; font-weight: 800; color: var(--text-main); }
-        .debt-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 5px; }
-        
-        .status-btn {
-            padding: 6px 12px; border-radius: 20px; border: none; font-size: 0.75rem; font-weight: 800; cursor: pointer; transition: 0.2s;
-        }
+        .debt-header { display: flex; justify-content: space-between; font-weight: 700; }
+        .debt-amount { font-size: 1.4rem; font-weight: 800; }
+        .status-btn { padding: 6px 12px; border-radius: 20px; border: none; font-size: 0.75rem; font-weight: 800; cursor: pointer; }
         .status-btn.pending { background: #fef3c7; color: #b45309; }
-        .status-btn.pending:hover { background: #fde68a; }
         .status-btn.paid { background: var(--success-bg); color: var(--success-text); }
 
         .btn-add { width: 100%; padding: 12px; margin-top: 15px; background: var(--bg-body); border: 2px dashed var(--border); color: var(--text-muted); cursor: pointer; border-radius: 8px; font-weight: 600; }
         .btn-del { background: none; border: none; color: var(--danger); cursor: pointer; font-size: 1.2rem; }
-        
-        /* Gráficos & Lock */
         .chart-controls { display: flex; gap: 5px; background: var(--bg-body); padding: 4px; border-radius: 8px; border: 1px solid var(--border); }
         .chart-btn { border: none; background: transparent; color: var(--text-muted); padding: 5px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; cursor: pointer; }
         .chart-btn.active { background: var(--bg-card); color: var(--primary); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
         .chart-container { background: #fff; padding: 20px; border-radius: 20px; margin-bottom: 30px; border: 1px solid var(--border); height: 300px; display: flex; justify-content: center; }
+
         #lockScreen { position: fixed; inset: 0; background: var(--bg-body); z-index: 999; display: flex; align-items: center; justify-content: center; }
         .lock-box { background: var(--bg-card); padding: 40px; border-radius: 20px; text-align: center; border: 1px solid var(--border); }
+        .lock-input { padding: 10px; font-size: 1.5rem; text-align: center; margin: 20px 0; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-body); color: var(--text-main); }
+
+        /* --- PDF PREVIEW MODAL --- */
+        #pdfModal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1000; display: none; align-items: center; justify-content: center; }
+        .pdf-box { width: 90%; height: 90%; background: #fff; border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; }
+        .pdf-header { padding: 15px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center; background: #f1f5f9; }
+        .pdf-actions { display: flex; gap: 10px; }
+        iframe { flex: 1; border: none; }
     </style>
 </head>
 <body>
+
+<div id="pdfModal">
+    <div class="pdf-box">
+        <div class="pdf-header">
+            <h3 style="margin:0; color:#333;">Pré-visualização do Relatório</h3>
+            <div class="pdf-actions">
+                <button class="btn-action btn-pdf" id="btnDownloadPDF">Baixar PDF</button>
+                <button class="btn-action btn-reset" onclick="closePDFModal()">Fechar</button>
+            </div>
+        </div>
+        <iframe id="pdfPreviewFrame"></iframe>
+    </div>
+</div>
 
 <div id="lockScreen">
     <div class="lock-box">
         <h1 style="margin:0;">🔒</h1>
         <p>Senha de Acesso</p>
-        <input type="password" id="passInput" class="lock-input" style="padding:10px; font-size:1.5rem; text-align:center; margin:20px 0; border-radius:8px; border:1px solid var(--border);" placeholder="PIN" inputmode="numeric">
+        <input type="password" id="passInput" class="lock-input" placeholder="PIN" inputmode="numeric">
         <div id="passError" style="color:var(--danger); height:20px;"></div>
         <button class="btn-action btn-copy" style="width:100%; justify-content:center;" onclick="checkPassword()">Desbloquear</button>
     </div>
@@ -181,17 +163,14 @@
 
 <nav id="sidebar">
     <div class="brand"><span class="material-icons-round">account_balance_wallet</span> Financeiro</div>
-    
+    <button class="nav-btn btn-theme" style="justify-content: flex-start; margin-bottom: 10px;" onclick="toggleTheme()"><span class="material-icons-round">dark_mode</span> Tema</button>
+    <button class="nav-btn" style="color:var(--danger); justify-content: flex-start; margin-bottom: 20px;" onclick="lockApp()"><span class="material-icons-round">lock</span> Bloquear</button>
+    <div class="menu-divider"></div>
     <button class="nav-btn active" onclick="switchView('dashboard')"><span class="material-icons-round">dashboard</span> Resumo</button>
     <button class="nav-btn" onclick="switchView('income')"><span class="material-icons-round">attach_money</span> Rendas & Fixos</button>
     <button class="nav-btn" onclick="switchView('cards')"><span class="material-icons-round">credit_card</span> Cartões</button>
     <button class="nav-btn" onclick="switchView('debts')"><span class="material-icons-round">people</span> Devedores</button>
     <button class="nav-btn" onclick="switchView('history')"><span class="material-icons-round">bar_chart</span> Histórico</button>
-    
-    <div class="menu-divider"></div>
-
-    <button class="nav-btn" onclick="toggleTheme()"><span class="material-icons-round">dark_mode</span> Tema</button>
-    <button class="nav-btn" style="color:var(--danger)" onclick="lockApp()"><span class="material-icons-round">lock</span> Bloquear</button>
 </nav>
 
 <main id="main-content">
@@ -202,9 +181,9 @@
             <input type="month" id="monthPicker" onchange="changeMonth()">
         </div>
         <div style="display:flex; gap:10px;">
-            <button class="btn-action btn-reset" title="Apagar dados deste mês" onclick="resetMonthData()"><span class="material-icons-round">delete</span></button>
-            <button class="btn-action btn-copy" onclick="copyPreviousMonth()">Importar Mês</button>
-            <button class="btn-action btn-pdf" onclick="generatePDF()">PDF</button>
+            <button class="btn-action btn-reset" title="Apagar mês" onclick="resetMonthData()"><span class="material-icons-round">delete</span></button>
+            <button class="btn-action btn-copy" onclick="copyPreviousMonth()">Importar</button>
+            <button class="btn-action btn-pdf" onclick="openPDFPreview()">Relatório PDF</button>
         </div>
         <div id="syncStatus" style="font-size:0.75rem; font-weight:bold; color:var(--text-muted);">...</div>
     </div>
@@ -220,16 +199,11 @@
             <div class="card-stat c-total"><h3>Total Saídas</h3><div class="val" id="totalExpenses">R$ 0,00</div></div>
             <div class="card-stat c-rest"><h3>Resta (Total)</h3><div class="val" id="remaining">R$ 0,00</div></div>
             <div class="card-stat c-mine"><h3>Meu Custo Real</h3><div class="val" id="myRealExpenses">R$ 0,00</div></div>
-            <div class="card-stat c-emerg">
-                <h3>Reserva</h3>
-                <input type="number" id="emergencyFund" class="stat-input" oninput="calculateAndSchedule()">
-            </div>
+            <div class="card-stat c-emerg"><h3>Reserva</h3><input type="number" id="emergencyFund" class="stat-input" oninput="calculateAndSchedule()"></div>
         </div>
         <div class="section">
             <div class="sec-header"><h2>Distribuição de Gastos</h2></div>
-            <div class="sec-body" style="height:300px; display:flex; justify-content:center;">
-                <canvas id="expenseChart"></canvas>
-            </div>
+            <div class="sec-body" style="height:300px; display:flex; justify-content:center;"><canvas id="expenseChart"></canvas></div>
         </div>
     </div>
 
@@ -317,8 +291,7 @@
                     <div><small>A Receber</small><div style="color:var(--danger); font-weight:800; font-size:1.2rem;" id="totalToReceive">R$ 0,00</div></div>
                     <div><small>Já Pago</small><div style="color:var(--success); font-weight:800; font-size:1.2rem;" id="totalReceived">R$ 0,00</div></div>
                 </div>
-                <div id="debtorsList" class="debt-list">
-                    </div>
+                <div id="debtorsList" class="debt-list"></div>
             </div>
         </div>
     </div>
@@ -335,9 +308,7 @@
                     <button class="chart-btn" onclick="fetchHistoryData(120, this)">MAX</button>
                 </div>
             </div>
-            <div class="sec-body" style="height:300px;">
-                <canvas id="historyChart"></canvas>
-            </div>
+            <div class="sec-body" style="height:300px;"><canvas id="historyChart"></canvas></div>
         </div>
     </div>
 
@@ -362,13 +333,12 @@
     const SENHA = "1234"; 
 
     let currentDocId = "";
-    let isReceiving = true; 
-    let isLoaded = false;
-    let isPopulating = false; // NOVA TRAVA DE SEGURANÇA
+    let isPopulating = false; // TRAVA DE POPULAÇÃO
     let saveTimer;
     let unsubscribe = null;
     let pieChart = null;
     let barChart = null;
+    let pdfDocInstance = null; // Guardar PDF para download
     
     window.paidDebtors = [];
     window.iconsList = ["💸", "🏠", "💡", "💧", "📶", "🏋️", "🚗", "⛽", "🍔", "💇", "💊", "💳", "🎓", "✈️"];
@@ -410,31 +380,29 @@
 
     window.changeMonth = () => {
         const picker = document.getElementById('monthPicker');
-        if (currentDocId && isLoaded && !isReceiving) saveData(true, currentDocId);
         if (picker.value) { localStorage.setItem('lastViewedMonth', picker.value); loadMonthData(picker.value); }
     };
 
     function loadMonthData(dateString) {
         currentDocId = dateString;
-        isLoaded = false; isReceiving = true;
         document.getElementById('syncStatus').innerText = "Carregando...";
         if (unsubscribe) unsubscribe();
         unsubscribe = onSnapshot(doc(db, "meus_gastos", currentDocId), (docSnap) => {
             if (docSnap.exists()) {
-                if (docSnap.metadata.hasPendingWrites) return;
-                isReceiving = true; const data = docSnap.data();
+                if (docSnap.metadata.hasPendingWrites) return; 
+                const data = docSnap.data();
                 window.paidDebtors = data.paidDebtors || []; 
                 updateScreen(data);
-                setTimeout(() => { isReceiving = false; isLoaded = true; document.getElementById('syncStatus').innerText = "Sincronizado"; }, 500);
+                document.getElementById('syncStatus').innerText = "Sincronizado";
             } else { 
                 window.paidDebtors = []; updateScreen(null); 
-                isLoaded = true; isReceiving = false; saveData(true); 
+                saveData(true); 
             }
         });
     }
 
     function updateScreen(data) {
-        isPopulating = true; // TRAVA LÓGICA
+        isPopulating = true; // ATIVA TRAVA
         if (!data) data = getDefaultData();
         if (data.main && !data.main.some(i => i.id === 'nubank_auto')) data.main.unshift({ icon: '💳', name: 'Nubank', value: 0, isMine: true, locked: true, id: 'nubank_auto' });
 
@@ -452,6 +420,7 @@
         renderTable('passaiTable', data.passai || [], 'split');
         renderTable('nubankTable', data.nubank || [], 'split');
         calculateAll(); 
+        
         isPopulating = false; // DESTRAVA
     }
 
@@ -467,15 +436,12 @@
         };
     }
 
-    // --- ZERAR DADOS ---
     window.resetMonthData = async () => {
-        if(!confirm("ATENÇÃO: Isso apagará TODOS os dados deste mês. Deseja continuar?")) return;
-        isReceiving = true;
+        if(!confirm("ATENÇÃO: Apagar TODOS os dados deste mês?")) return;
         const emptyData = getDefaultData();
-        updateScreen(emptyData);
-        await saveData(true);
-        isReceiving = false;
-        alert("Dados do mês zerados.");
+        updateScreen(emptyData); 
+        await saveData(true); 
+        alert("Mês limpo.");
     }
 
     window.calculateAll = () => {
@@ -616,16 +582,121 @@
         document.getElementById('totalReceived').innerText = fmt(r);
     }
 
-    window.generatePDF = () => {
+    // --- PDF GENERATOR (FUNÇÃO NOVA) ---
+    function createPDFInstance() {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
-        doc.text("Relatório Mensal - " + currentDocId, 14, 20);
-        const rows = [];
-        rows.push(['ENTRADA', 'Salário', document.getElementById('salary').value]);
-        document.querySelectorAll('#incomeTable tbody tr').forEach(tr => rows.push(['ENTRADA', tr.querySelectorAll('input')[0].value, tr.querySelectorAll('input')[1].value]));
-        document.querySelectorAll('#mainTable tbody tr').forEach(tr => rows.push(['FIXO', tr.querySelectorAll('input')[0].value, tr.querySelectorAll('input')[1].value]));
-        doc.autoTable({ head: [['Tipo', 'Item', 'Valor']], body: rows, startY: 30 });
-        doc.save(`Relatorio_${currentDocId}.pdf`);
+        
+        // Cabeçalho
+        doc.setFillColor(37, 99, 235);
+        doc.rect(0, 0, 210, 40, 'F');
+        doc.setFontSize(22);
+        doc.setTextColor(255, 255, 255);
+        doc.text("Relatório Financeiro", 14, 20);
+        doc.setFontSize(12);
+        doc.text(`Referência: ${document.getElementById('monthPicker').value}`, 14, 30);
+
+        let finalY = 50;
+
+        // Resumo
+        doc.setTextColor(0);
+        doc.setFontSize(14);
+        doc.text("Resumo Geral", 14, finalY);
+        
+        const salary = parseFloat(document.getElementById('salary').value) || 0;
+        const extraIncome = parseFloat(document.getElementById('extraIncomeTotal').innerText.replace('R$','').replace('.','').replace(',','.')) || 0;
+        const totalExpenses = parseFloat(document.getElementById('totalExpenses').innerText.replace('R$','').replace('.','').replace(',','.')) || 0;
+        const remaining = parseFloat(document.getElementById('remaining').innerText.replace('R$','').replace('.','').replace(',','.')) || 0;
+
+        doc.autoTable({
+            startY: finalY + 5,
+            head: [['Descrição', 'Valor']],
+            body: [
+                ['Salário Base', fmt(salary)],
+                ['Rendas Extras', fmt(extraIncome)],
+                ['Total Entradas', fmt(salary + extraIncome)],
+                ['Total Saídas', fmt(totalExpenses)],
+                ['Saldo Restante', fmt(remaining)]
+            ],
+            theme: 'striped',
+            headStyles: { fillColor: [37, 99, 235] }
+        });
+        finalY = doc.lastAutoTable.finalY + 15;
+
+        // Tabelas de Dados
+        const extractTable = (selector, title, color) => {
+            const rows = [];
+            document.querySelectorAll(`${selector} tbody tr`).forEach(tr => {
+                const inputs = tr.querySelectorAll('input');
+                // Lógica adaptável para diferentes tabelas
+                let name, val;
+                if(inputs.length === 2) { name = inputs[0].value; val = inputs[1].value; } // Renda
+                else if(inputs.length === 3) { name = inputs[0].value; val = inputs[1].value; } // Fixo (com checkbox)
+                else if(inputs.length === 4) { name = `${inputs[0].value} - ${inputs[1].value}`; val = inputs[3].value; } // Cartão
+                
+                if (parseFloat(val) > 0) rows.push([name, `R$ ${val}`]);
+            });
+
+            if (rows.length > 0) {
+                if (finalY > 250) { doc.addPage(); finalY = 20; }
+                doc.text(title, 14, finalY);
+                doc.autoTable({
+                    startY: finalY + 5,
+                    head: [['Item', 'Valor']],
+                    body: rows,
+                    theme: 'striped',
+                    headStyles: { fillColor: color }
+                });
+                finalY = doc.lastAutoTable.finalY + 15;
+            }
+        };
+
+        extractTable('#incomeTable', 'Detalhamento de Rendas Extras', [16, 185, 129]);
+        extractTable('#mainTable', 'Gastos Fixos', [245, 158, 11]);
+        
+        // Cartões
+        ['bbTable', 'mpTable', 'passaiTable', 'nubankTable'].forEach(id => {
+            extractTable(`#${id}`, `Cartão: ${id.replace('Table','').toUpperCase()}`, [100, 100, 100]);
+        });
+
+        // Devedores
+        const debtRows = [];
+        document.querySelectorAll('.debt-card').forEach(card => {
+            const name = card.querySelector('.debt-header span').innerText;
+            const val = card.querySelector('.debt-amount').innerText;
+            const status = card.classList.contains('paid') ? 'PAGO' : 'PENDENTE';
+            debtRows.push([name, val, status]);
+        });
+
+        if(debtRows.length > 0) {
+            if (finalY > 250) { doc.addPage(); finalY = 20; }
+            doc.text("Controle de Devedores", 14, finalY);
+            doc.autoTable({
+                startY: finalY + 5,
+                head: [['Nome', 'Valor', 'Status']],
+                body: debtRows,
+                theme: 'striped',
+                headStyles: { fillColor: [239, 68, 68] }
+            });
+        }
+
+        return doc;
+    }
+
+    window.openPDFPreview = () => {
+        pdfDocInstance = createPDFInstance();
+        const pdfData = pdfDocInstance.output('bloburl');
+        document.getElementById('pdfPreviewFrame').src = pdfData;
+        document.getElementById('pdfModal').style.display = 'flex';
+        
+        // Configura botão de baixar no modal
+        document.getElementById('btnDownloadPDF').onclick = () => {
+            pdfDocInstance.save(`Relatorio_${currentDocId}.pdf`);
+        };
+    };
+
+    window.closePDFModal = () => {
+        document.getElementById('pdfModal').style.display = 'none';
     };
 
     window.fetchHistoryData = async (range = 6, btnElement = null) => {
@@ -662,9 +733,8 @@
     function fmt(n) { return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
     
     window.calculateAndSchedule = () => { 
-        if(isPopulating) return; // Se for o sistema preenchendo, não salva
+        if(isPopulating) return; 
         calculateAll(); 
-        if(!isLoaded || isReceiving) return; 
         document.getElementById('syncStatus').innerText = "Salvando..."; 
         clearTimeout(saveTimer); 
         saveTimer = setTimeout(() => saveData(), 1000); 
@@ -685,8 +755,8 @@
     };
 
     async function saveData(force = false, targetId = null) {
-        if (!isLoaded && !force) return;
-        if (isReceiving && !force) return;
+        if (isPopulating && !force) return;
+        
         const idToSave = targetId || currentDocId;
         if (!idToSave) return;
 
