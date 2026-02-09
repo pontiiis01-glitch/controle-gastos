@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Financeiro 19.0 (PDF Pro)</title>
+    <title>Financeiro 20.0</title>
 
     <link rel="apple-touch-icon" href="icone2.0.png">
     <link rel="icon" type="image/png" href="icone2.0.png">
@@ -20,7 +20,8 @@
         :root {
             --primary: #2563eb; --bg-body: #f8fafc; --bg-card: #ffffff; --bg-sidebar: #ffffff;
             --text-main: #0f172a; --text-muted: #64748b; --border: #e2e8f0;
-            --success: #10b981; --success-dark: #059669; --danger: #ef4444; --warning: #f59e0b; --purple: #8b5cf6;
+            --success: #10b981; --success-bg: #dcfce7; --success-text: #166534;
+            --danger: #ef4444; --warning: #f59e0b; --purple: #8b5cf6;
             --passai: #ea580c; --nubank: #820ad1;
             --shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
         }
@@ -28,6 +29,7 @@
         [data-theme="dark"] {
             --primary: #60a5fa; --bg-body: #0f172a; --bg-card: #1e293b; --bg-sidebar: #1e293b;
             --text-main: #f1f5f9; --text-muted: #94a3b8; --border: #334155;
+            --success-bg: #064e3b; --success-text: #4ade80;
             --shadow: 0 4px 6px -1px rgba(0,0,0,0.3);
         }
 
@@ -60,21 +62,26 @@
         .nav-btn:hover { background: rgba(100,116,139,0.1); color: var(--text-main); }
         .nav-btn.active { background: var(--primary); color: white; }
         .nav-btn i { font-size: 1.2rem; }
-        .sidebar-footer { margin-top: auto; border-top: 1px solid var(--border); padding-top: 15px; }
+        
+        /* SEPARADOR NO MENU */
+        .menu-divider { height: 1px; background: var(--border); margin: 15px 0; }
 
+        /* VIEWS */
         .view-section { display: none; animation: fadeIn 0.3s; }
         .view-section.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
+        /* HEADER & CONTROLS */
         .controls-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; align-items: center; }
         .date-control { background: var(--bg-card); border: 1px solid var(--border); padding: 8px 15px; border-radius: 50px; display: flex; align-items: center; gap: 10px; color: var(--text-main); }
-        input[type="month"] { background: transparent; border: none; color: inherit; font-weight: 600; font-family: inherit; cursor: pointer; min-width: 150px; }
+        input[type="month"] { background: transparent; border: none; color: inherit; font-weight: 600; font-family: inherit; cursor: pointer; min-width: 140px; }
         
         .btn-action { border: none; padding: 8px 16px; border-radius: 50px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 5px; color: white; font-size: 0.85rem; }
         .btn-copy { background: #3b82f6; }
-        .btn-pdf { background: #ef4444; }
-        .btn-theme { background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border); width: 100%; justify-content: center; margin-top: 10px; }
+        .btn-pdf { background: #10b981; }
+        .btn-reset { background: #ef4444; }
 
+        /* DASHBOARD */
         .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; margin-bottom: 30px; }
         .card-stat { background: var(--bg-card); padding: 15px; border-radius: 16px; border: 1px solid var(--border); box-shadow: var(--shadow); position: relative; }
         .card-stat h3 { margin: 0 0 5px 0; font-size: 0.7rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; }
@@ -82,6 +89,7 @@
         .stat-input { width: 100%; font-size: 1.4rem; font-weight: 800; background: transparent; border: none; border-bottom: 2px dashed var(--border); color: inherit; padding: 0; }
         .stat-input:focus { outline: none; border-color: var(--primary); }
         
+        /* CORES */
         .c-salary input { color: var(--success); } .c-total .val { color: var(--danger); }
         .c-rest .val { color: var(--primary); } .c-income .val { color: #059669; }
         .c-mine .val { color: var(--warning); } .c-emerg input { color: var(--purple); }
@@ -89,6 +97,7 @@
         .salary-bar-bg { width: 100%; height: 6px; background: var(--border); border-radius: 3px; margin-top: 10px; overflow: hidden; }
         .salary-bar-fill { height: 100%; width: 0%; transition: width 0.5s, background-color 0.5s; background: var(--success); }
 
+        /* TABLES */
         .section { background: var(--bg-card); border-radius: 16px; border: 1px solid var(--border); margin-bottom: 20px; overflow: hidden; box-shadow: var(--shadow); }
         .sec-header { padding: 15px; border-bottom: 1px solid var(--border); background: rgba(0,0,0,0.02); display: flex; justify-content: space-between; align-items: center; }
         .sec-header h2 { margin: 0; font-size: 1rem; font-weight: 700; }
@@ -98,41 +107,62 @@
         td { padding: 10px; border-bottom: 1px solid var(--border); }
         input.td-input { background: var(--bg-body); border: 1px solid var(--border); color: var(--text-main); padding: 8px; border-radius: 6px; width: 100%; box-sizing: border-box; }
         
-        /* CARD MINIATURES */
-        .card-row { display: flex; align-items: center; padding: 20px; border-bottom: 1px solid var(--border); gap: 20px; }
+        /* --- CARTÕES (Horizontal Fix) --- */
+        .card-row { display: flex; align-items: center; padding: 15px; border-bottom: 1px solid var(--border); gap: 15px; }
         .card-thumb { 
-            width: 120px; height: 75px; border-radius: 10px; 
-            background-size: contain; background-repeat: no-repeat; background-position: center; 
-            flex-shrink: 0; box-shadow: 0 4px 10px rgba(0,0,0,0.15); 
+            width: 120px; 
+            height: 75px; 
+            border-radius: 10px; 
+            background-size: cover; /* Garante que cubra tudo */
+            background-repeat: no-repeat;
+            background-position: center; 
+            flex-shrink: 0; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
             background-color: var(--bg-body);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            transition: transform 0.3s ease;
         }
-        .card-thumb:hover { transform: translateY(-5px) scale(1.05); box-shadow: 0 15px 25px rgba(0,0,0,0.2); }
+        .card-thumb:hover { transform: scale(1.05); }
         .card-info { flex: 1; }
-        .card-info h2 { margin: 0 0 8px 0; font-size: 1.2rem; font-weight: 800; }
-        .card-info .bill-wrapper { display: flex; align-items: center; gap: 10px; font-size: 1rem; color: var(--text-muted); font-weight: 500; }
-        .card-info input { width: 120px; font-size: 1.1rem; font-weight: 800; padding: 8px; border-radius: 8px; border: 2px solid var(--border); background: var(--bg-body); color: var(--text-main); transition: 0.2s; }
-        .card-info input:focus { border-color: var(--primary); outline: none; }
+        .card-info h2 { margin: 0 0 8px 0; font-size: 1.1rem; }
+        .card-info .bill-wrapper { display: flex; align-items: center; gap: 5px; font-size: 0.9rem; color: var(--text-muted); }
+        .card-info input { width: 100px; font-weight: bold; padding: 5px; border-radius: 5px; border: 1px solid var(--border); background: var(--bg-body); color: var(--text-main); }
 
+        /* IMAGENS - Use nome do arquivo exato */
         .thumb-bb { background-image: url('bb.jpeg'); }
         .thumb-mp { background-image: url('mp.jpeg'); }
         .thumb-passai { background-image: url('passai.jpeg'); }
         .thumb-nubank { background-image: url('nubank.jpeg'); }
 
-        #lockScreen { position: fixed; inset: 0; background: var(--bg-body); z-index: 999; display: flex; align-items: center; justify-content: center; }
-        .lock-box { background: var(--bg-card); padding: 40px; border-radius: 20px; text-align: center; border: 1px solid var(--border); }
-        .lock-input { padding: 10px; font-size: 1.5rem; text-align: center; margin: 20px 0; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-body); color: var(--text-main); }
+        /* --- DEVEDORES (Novo Design) --- */
+        .debt-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; }
+        .debt-card { 
+            background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 15px; 
+            display: flex; flex-direction: column; justify-content: space-between; gap: 10px;
+            transition: 0.2s;
+        }
+        .debt-card.paid { opacity: 0.7; border-color: var(--success); background: rgba(16, 185, 129, 0.05); }
+        
+        .debt-header { display: flex; justify-content: space-between; align-items: center; font-weight: 700; color: var(--text-main); }
+        .debt-amount { font-size: 1.4rem; font-weight: 800; color: var(--text-main); }
+        .debt-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 5px; }
+        
+        .status-btn {
+            padding: 6px 12px; border-radius: 20px; border: none; font-size: 0.75rem; font-weight: 800; cursor: pointer; transition: 0.2s;
+        }
+        .status-btn.pending { background: #fef3c7; color: #b45309; }
+        .status-btn.pending:hover { background: #fde68a; }
+        .status-btn.paid { background: var(--success-bg); color: var(--success-text); }
 
-        .btn-add { width: 100%; padding: 12px; margin-top: 15px; background: var(--bg-body); border: 2px dashed var(--border); color: var(--text-muted); cursor: pointer; border-radius: 12px; font-weight: 600; transition: 0.2s; }
-        .btn-add:hover { border-color: var(--primary); color: var(--primary); background: rgba(37,99,235,0.05); }
+        .btn-add { width: 100%; padding: 12px; margin-top: 15px; background: var(--bg-body); border: 2px dashed var(--border); color: var(--text-muted); cursor: pointer; border-radius: 8px; font-weight: 600; }
         .btn-del { background: none; border: none; color: var(--danger); cursor: pointer; font-size: 1.2rem; }
         
+        /* Gráficos & Lock */
         .chart-controls { display: flex; gap: 5px; background: var(--bg-body); padding: 4px; border-radius: 8px; border: 1px solid var(--border); }
-        .chart-btn { border: none; background: transparent; color: var(--text-muted); padding: 5px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; cursor: pointer; transition: 0.2s; }
-        .chart-btn:hover { color: var(--text-main); }
+        .chart-btn { border: none; background: transparent; color: var(--text-muted); padding: 5px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; cursor: pointer; }
         .chart-btn.active { background: var(--bg-card); color: var(--primary); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        
         .chart-container { background: #fff; padding: 20px; border-radius: 20px; margin-bottom: 30px; border: 1px solid var(--border); height: 300px; display: flex; justify-content: center; }
+        #lockScreen { position: fixed; inset: 0; background: var(--bg-body); z-index: 999; display: flex; align-items: center; justify-content: center; }
+        .lock-box { background: var(--bg-card); padding: 40px; border-radius: 20px; text-align: center; border: 1px solid var(--border); }
     </style>
 </head>
 <body>
@@ -141,7 +171,7 @@
     <div class="lock-box">
         <h1 style="margin:0;">🔒</h1>
         <p>Senha de Acesso</p>
-        <input type="password" id="passInput" class="lock-input" placeholder="PIN" inputmode="numeric">
+        <input type="password" id="passInput" class="lock-input" style="padding:10px; font-size:1.5rem; text-align:center; margin:20px 0; border-radius:8px; border:1px solid var(--border);" placeholder="PIN" inputmode="numeric">
         <div id="passError" style="color:var(--danger); height:20px;"></div>
         <button class="btn-action btn-copy" style="width:100%; justify-content:center;" onclick="checkPassword()">Desbloquear</button>
     </div>
@@ -151,15 +181,17 @@
 
 <nav id="sidebar">
     <div class="brand"><span class="material-icons-round">account_balance_wallet</span> Financeiro</div>
+    
     <button class="nav-btn active" onclick="switchView('dashboard')"><span class="material-icons-round">dashboard</span> Resumo</button>
     <button class="nav-btn" onclick="switchView('income')"><span class="material-icons-round">attach_money</span> Rendas & Fixos</button>
     <button class="nav-btn" onclick="switchView('cards')"><span class="material-icons-round">credit_card</span> Cartões</button>
     <button class="nav-btn" onclick="switchView('debts')"><span class="material-icons-round">people</span> Devedores</button>
     <button class="nav-btn" onclick="switchView('history')"><span class="material-icons-round">bar_chart</span> Histórico</button>
-    <div class="sidebar-footer">
-        <button class="nav-btn btn-theme" onclick="toggleTheme()"><span class="material-icons-round">dark_mode</span> Tema</button>
-        <button class="nav-btn" style="color:var(--danger)" onclick="lockApp()"><span class="material-icons-round">lock</span> Bloquear</button>
-    </div>
+    
+    <div class="menu-divider"></div>
+
+    <button class="nav-btn" onclick="toggleTheme()"><span class="material-icons-round">dark_mode</span> Tema</button>
+    <button class="nav-btn" style="color:var(--danger)" onclick="lockApp()"><span class="material-icons-round">lock</span> Bloquear</button>
 </nav>
 
 <main id="main-content">
@@ -170,8 +202,9 @@
             <input type="month" id="monthPicker" onchange="changeMonth()">
         </div>
         <div style="display:flex; gap:10px;">
+            <button class="btn-action btn-reset" title="Apagar dados deste mês" onclick="resetMonthData()"><span class="material-icons-round">delete</span></button>
             <button class="btn-action btn-copy" onclick="copyPreviousMonth()">Importar Mês</button>
-            <button class="btn-action btn-pdf" onclick="generatePDF()">PDF Completo</button>
+            <button class="btn-action btn-pdf" onclick="generatePDF()">PDF</button>
         </div>
         <div id="syncStatus" style="font-size:0.75rem; font-weight:bold; color:var(--text-muted);">...</div>
     </div>
@@ -202,7 +235,7 @@
 
     <div id="view-income" class="view-section">
         <div class="section" style="border-left: 4px solid var(--success);">
-            <div class="sec-header"><h2>💰 Entradas Extras (Férias, 13º...)</h2></div>
+            <div class="sec-header"><h2>💰 Entradas Extras</h2></div>
             <div class="sec-body">
                 <div class="table-wrap"><table id="incomeTable"><thead><tr><th>Descrição</th><th style="width:120px">Valor</th><th style="width:30px"></th></tr></thead><tbody></tbody></table></div>
                 <button class="btn-add" onclick="addIncomeRow()">+ Adicionar</button>
@@ -284,7 +317,8 @@
                     <div><small>A Receber</small><div style="color:var(--danger); font-weight:800; font-size:1.2rem;" id="totalToReceive">R$ 0,00</div></div>
                     <div><small>Já Pago</small><div style="color:var(--success); font-weight:800; font-size:1.2rem;" id="totalReceived">R$ 0,00</div></div>
                 </div>
-                <div id="debtorsList" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap:10px;"></div>
+                <div id="debtorsList" class="debt-list">
+                    </div>
             </div>
         </div>
     </div>
@@ -292,7 +326,7 @@
     <div id="view-history" class="view-section">
         <div class="section">
             <div class="sec-header">
-                <h2>Performance Financeira</h2>
+                <h2>Performance</h2>
                 <div class="chart-controls">
                     <button class="chart-btn" onclick="fetchHistoryData(3, this)">3M</button>
                     <button class="chart-btn active" onclick="fetchHistoryData(6, this)">6M</button>
@@ -325,11 +359,12 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
-    const SENHA = "299792"; 
+    const SENHA = "1234"; 
 
     let currentDocId = "";
     let isReceiving = true; 
     let isLoaded = false;
+    let isPopulating = false; // NOVA TRAVA DE SEGURANÇA
     let saveTimer;
     let unsubscribe = null;
     let pieChart = null;
@@ -399,6 +434,7 @@
     }
 
     function updateScreen(data) {
+        isPopulating = true; // TRAVA LÓGICA
         if (!data) data = getDefaultData();
         if (data.main && !data.main.some(i => i.id === 'nubank_auto')) data.main.unshift({ icon: '💳', name: 'Nubank', value: 0, isMine: true, locked: true, id: 'nubank_auto' });
 
@@ -416,6 +452,7 @@
         renderTable('passaiTable', data.passai || [], 'split');
         renderTable('nubankTable', data.nubank || [], 'split');
         calculateAll(); 
+        isPopulating = false; // DESTRAVA
     }
 
     function getDefaultData() {
@@ -428,6 +465,17 @@
                 { icon: '🏋️', name: 'Academia', value: 0, isMine: true }, { icon: '💡', name: 'Luz', value: 0, isMine: true }
             ], bb: [], mp: [], passai: [], nubank: [], extraIncome: [], paidDebtors: []
         };
+    }
+
+    // --- ZERAR DADOS ---
+    window.resetMonthData = async () => {
+        if(!confirm("ATENÇÃO: Isso apagará TODOS os dados deste mês. Deseja continuar?")) return;
+        isReceiving = true;
+        const emptyData = getDefaultData();
+        updateScreen(emptyData);
+        await saveData(true);
+        isReceiving = false;
+        alert("Dados do mês zerados.");
     }
 
     window.calculateAll = () => {
@@ -446,7 +494,6 @@
             const val = parseFloat(tr.querySelector('.val-input').value) || 0;
             const isMine = tr.querySelector('input[type="checkbox"]').checked;
             const isCardAuto = tr.querySelector('.val-input').hasAttribute('readonly');
-            
             if (!isCardAuto) {
                 fixedSumTotal += val;
                 if (isMine) fixedSumMine += val;
@@ -502,7 +549,6 @@
         return { debtors, myShare };
     }
 
-    // --- TABLE HELPERS ---
     window.addMainRow = () => { addMainRowHTML(document.querySelector("#mainTable tbody"), {icon:'💸',name:'',value:'',isMine:true}); calculateAndSchedule(); }
     window.addIncomeRow = () => { addIncomeRowHTML(document.querySelector("#incomeTable tbody"), {desc:'',value:''}); calculateAndSchedule(); }
     window.addSplitRow = (id) => { addSplitRowHTML(document.querySelector(`#${id} tbody`), {name:'',desc:'',inst:'',value:''}); calculateAndSchedule(); }
@@ -529,196 +575,66 @@
 
     window.removeRow = (btn) => { btn.closest('tr').remove(); calculateAndSchedule(); }
     window.updateBar = (input) => { const val = input.value; const bar = input.nextElementSibling.querySelector('.prog-fill'); if(val.includes('/')) { const [c,t] = val.split('/').map(Number); if(t>0) bar.style.width = Math.min((c/t)*100, 100)+'%'; } else bar.style.width = '0%'; }
-    window.togglePaid = (name) => { const idx = window.paidDebtors.indexOf(name); if(idx>-1) window.paidDebtors.splice(idx,1); else window.paidDebtors.push(name); calculateAndSchedule(); }
+    window.togglePaid = (name) => { 
+        const idx = window.paidDebtors.indexOf(name); 
+        if(idx>-1) window.paidDebtors.splice(idx,1); 
+        else window.paidDebtors.push(name); 
+        calculateAndSchedule(); 
+    }
 
     function updateDebtors(d1, d2, d3, d4) {
         const list = document.getElementById('debtorsList'); list.innerHTML = "";
         const all = {}; const merge = (s) => { for(let k in s) { if(!all[k]) all[k]={...s[k]}; else { all[k].total+=s[k].total; all[k].future+=s[k].future; } } };
         merge(d1); merge(d2); merge(d3); merge(d4);
         let tr=0, r=0;
-        for(let k in all) {
-            const p = all[k]; const isPaid = window.paidDebtors.includes(p.name);
-            if(isPaid) r+=p.total; else tr+=p.total;
-            const div = document.createElement('div'); div.className = `debt-item ${isPaid?'is-paid':''}`;
-            div.innerHTML = `<div class="d-head"><div class="d-name">${p.name}</div><div class="pay-check ${isPaid?'checked':''}" onclick="togglePaid('${p.name}')">✔</div></div><div class="d-status">${isPaid?'PAGO':'PENDENTE'}</div><div class="d-val">${fmt(p.total)}</div><div style="font-size:0.7rem; color:#999">+ ${fmt(p.future)} fut.</div>`;
-            list.appendChild(div);
+        
+        if (Object.keys(all).length === 0) list.innerHTML = "<div style='color:var(--text-muted); width:100%; text-align:center'>Nenhum devedor.</div>";
+        else {
+            for(let k in all) {
+                const p = all[k]; 
+                const isPaid = window.paidDebtors.includes(p.name);
+                if(isPaid) r+=p.total; else tr+=p.total;
+                
+                const div = document.createElement('div'); 
+                div.className = `debt-card ${isPaid?'paid':''}`;
+                div.innerHTML = `
+                    <div class="debt-header">
+                        <span>${p.name}</span>
+                        ${p.future > 0 ? `<small style="font-weight:400; color:var(--text-muted)">+ ${fmt(p.future)} fut.</small>` : ''}
+                    </div>
+                    <div class="debt-amount">${fmt(p.total)}</div>
+                    <div class="debt-footer">
+                        <button class="status-btn ${isPaid?'paid':'pending'}" onclick="togglePaid('${p.name}')">
+                            ${isPaid ? '✔ PAGO' : '⏳ PENDENTE'}
+                        </button>
+                    </div>
+                `;
+                list.appendChild(div);
+            }
         }
         document.getElementById('totalToReceive').innerText = fmt(tr);
         document.getElementById('totalReceived').innerText = fmt(r);
     }
 
-    // --- PDF COMPLETO (VERSÃO 19.0) ---
     window.generatePDF = () => {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
-        
-        // --- 1. TÍTULO E CABEÇALHO ---
-        doc.setFontSize(22);
-        doc.setTextColor(37, 99, 235); // Azul Primary
-        doc.text("Relatório Financeiro", 14, 20);
-        
-        doc.setFontSize(12);
-        doc.setTextColor(100);
-        doc.text(`Referência: ${document.getElementById('monthPicker').value}`, 14, 28);
-        doc.line(14, 32, 196, 32); // Linha separadora
-
-        let finalY = 40; // Posição vertical inicial
-
-        // --- 2. RESUMO EXECUTIVO ---
-        doc.setFontSize(14);
-        doc.setTextColor(0);
-        doc.text("Resumo Executivo", 14, finalY);
-        
-        const salary = parseFloat(document.getElementById('salary').value) || 0;
-        const extraIncome = parseFloat(document.getElementById('extraIncomeTotal').innerText.replace('R$','').replace('.','').replace(',','.')) || 0;
-        const totalExpenses = parseFloat(document.getElementById('totalExpenses').innerText.replace('R$','').replace('.','').replace(',','.')) || 0;
-        const remaining = parseFloat(document.getElementById('remaining').innerText.replace('R$','').replace('.','').replace(',','.')) || 0;
-
-        doc.autoTable({
-            startY: finalY + 5,
-            head: [['Conceito', 'Valor']],
-            body: [
-                ['Entradas (Salário + Extras)', fmt(salary + extraIncome)],
-                ['Saídas Totais', fmt(totalExpenses)],
-                ['Saldo Restante', fmt(remaining)]
-            ],
-            theme: 'striped',
-            headStyles: { fillColor: [37, 99, 235] }, // Azul
-            styles: { fontSize: 11, fontStyle: 'bold' }
-        });
-        finalY = doc.lastAutoTable.finalY + 15;
-
-        // --- 3. RENDAS EXTRAS ---
-        const incomeRows = [];
-        document.querySelectorAll('#incomeTable tbody tr').forEach(tr => {
-            const desc = tr.querySelectorAll('input')[0].value;
-            const val = tr.querySelectorAll('input')[1].value;
-            if(desc || val) incomeRows.push([desc, `R$ ${val}`]);
-        });
-
-        if (incomeRows.length > 0) {
-            doc.text("Detalhamento de Rendas Extras", 14, finalY);
-            doc.autoTable({
-                startY: finalY + 5,
-                head: [['Descrição', 'Valor']],
-                body: incomeRows,
-                theme: 'grid',
-                headStyles: { fillColor: [16, 185, 129] } // Verde
-            });
-            finalY = doc.lastAutoTable.finalY + 15;
-        }
-
-        // --- 4. GASTOS FIXOS ---
-        const fixedRows = [];
-        document.querySelectorAll('#mainTable tbody tr').forEach(tr => {
-            const item = tr.querySelectorAll('input')[0].value;
-            const val = tr.querySelectorAll('input')[1].value;
-            if(item || val) fixedRows.push([item, `R$ ${val}`]);
-        });
-
-        if (fixedRows.length > 0) {
-            doc.text("Gastos Fixos", 14, finalY);
-            doc.autoTable({
-                startY: finalY + 5,
-                head: [['Item', 'Valor']],
-                body: fixedRows,
-                theme: 'grid',
-                headStyles: { fillColor: [245, 158, 11] } // Laranja/Amarelo
-            });
-            finalY = doc.lastAutoTable.finalY + 15;
-        }
-
-        // --- 5. CARTÕES DE CRÉDITO ---
-        const cards = [
-            { id: 'bbTable', name: 'Banco do Brasil', color: [245, 158, 11] },
-            { id: 'mpTable', name: 'Mercado Pago', color: [37, 99, 235] },
-            { id: 'passaiTable', name: 'Passaí', color: [234, 88, 12] },
-            { id: 'nubankTable', name: 'Nubank', color: [130, 10, 209] }
-        ];
-
-        for (const card of cards) {
-            const cardRows = [];
-            let cardTotal = 0;
-            
-            document.querySelectorAll(`#${card.id} tbody tr`).forEach(tr => {
-                const who = tr.querySelectorAll('input')[0].value;
-                const desc = tr.querySelectorAll('input')[1].value;
-                const valStr = tr.querySelectorAll('input')[3].value;
-                const val = parseFloat(valStr) || 0;
-                
-                if (val > 0) {
-                    cardRows.push([who, desc, `R$ ${valStr}`]);
-                    cardTotal += val;
-                }
-            });
-
-            if (cardRows.length > 0) {
-                // Check page break
-                if (finalY > 250) { doc.addPage(); finalY = 20; }
-                
-                doc.text(`${card.name} (Total Rateado: ${fmt(cardTotal)})`, 14, finalY);
-                doc.autoTable({
-                    startY: finalY + 5,
-                    head: [['Quem', 'Descrição', 'Valor']],
-                    body: cardRows,
-                    theme: 'grid',
-                    headStyles: { fillColor: card.color }
-                });
-                finalY = doc.lastAutoTable.finalY + 15;
-            }
-        }
-
-        // --- 6. DEVEDORES ---
-        // Coleta dados dos devedores calculados
-        // Como o cálculo é complexo e visual, vamos simplificar pegando o resumo se possível, 
-        // ou recalculando rápido aqui. Vamos recalcular para ser preciso no PDF.
-        const debtorsMap = {};
-        const processDebts = (tid) => {
-            document.querySelectorAll(`#${tid} tbody tr`).forEach(tr => {
-                const name = tr.querySelector('.split-name').value.trim();
-                const val = parseFloat(tr.querySelector('.split-val').value) || 0;
-                if(name && val > 0) {
-                    const k = name.toLowerCase();
-                    if(!debtorsMap[k]) debtorsMap[k] = { name: name, total: 0 };
-                    debtorsMap[k].total += val;
-                }
-            });
-        };
-        cards.forEach(c => processDebts(c.id));
-
-        const debtRows = [];
-        for (let k in debtorsMap) {
-            const d = debtorsMap[k];
-            const status = window.paidDebtors.includes(d.name) ? "PAGO" : "PENDENTE";
-            debtRows.push([d.name, fmt(d.total), status]);
-        }
-
-        if (debtRows.length > 0) {
-            if (finalY > 250) { doc.addPage(); finalY = 20; }
-            doc.text("Controle de Devedores", 14, finalY);
-            doc.autoTable({
-                startY: finalY + 5,
-                head: [['Nome', 'Valor Total', 'Status']],
-                body: debtRows,
-                theme: 'grid',
-                headStyles: { fillColor: [239, 68, 68] } // Vermelho
-            });
-        }
-
-        // Save
-        doc.save(`Relatorio_Completo_${currentDocId}.pdf`);
+        doc.text("Relatório Mensal - " + currentDocId, 14, 20);
+        const rows = [];
+        rows.push(['ENTRADA', 'Salário', document.getElementById('salary').value]);
+        document.querySelectorAll('#incomeTable tbody tr').forEach(tr => rows.push(['ENTRADA', tr.querySelectorAll('input')[0].value, tr.querySelectorAll('input')[1].value]));
+        document.querySelectorAll('#mainTable tbody tr').forEach(tr => rows.push(['FIXO', tr.querySelectorAll('input')[0].value, tr.querySelectorAll('input')[1].value]));
+        doc.autoTable({ head: [['Tipo', 'Item', 'Valor']], body: rows, startY: 30 });
+        doc.save(`Relatorio_${currentDocId}.pdf`);
     };
 
-    // --- HISTÓRICO ---
     window.fetchHistoryData = async (range = 6, btnElement = null) => {
         if(btnElement) {
             document.querySelectorAll('.chart-btn').forEach(b => b.classList.remove('active'));
             btnElement.classList.add('active');
         }
-
         const labels = [], dataIncome = [], dataExpense = [];
         const year = parseInt(currentDocId.split('-')[0]), month = parseInt(currentDocId.split('-')[1]);
-        
         for(let i=range-1; i>=0; i--) {
             let m = month - i, y = year;
             while(m <= 0) { m += 12; y--; }
@@ -745,7 +661,14 @@
 
     function fmt(n) { return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
     
-    window.calculateAndSchedule = () => { calculateAll(); if(!isLoaded || isReceiving) return; document.getElementById('syncStatus').innerText = "Salvando..."; clearTimeout(saveTimer); saveTimer = setTimeout(() => saveData(), 1000); };
+    window.calculateAndSchedule = () => { 
+        if(isPopulating) return; // Se for o sistema preenchendo, não salva
+        calculateAll(); 
+        if(!isLoaded || isReceiving) return; 
+        document.getElementById('syncStatus').innerText = "Salvando..."; 
+        clearTimeout(saveTimer); 
+        saveTimer = setTimeout(() => saveData(), 1000); 
+    };
     
     window.copyPreviousMonth = async function() {
         if(!confirm("Importar dados do mês anterior?")) return;
