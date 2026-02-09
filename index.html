@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Financeiro 27.0 (Stable)</title>
+    <title>Financeiro 28.0 (Final Fix)</title>
 
     <link rel="apple-touch-icon" href="icone2.0.png">
     <link rel="icon" type="image/png" href="icone2.0.png">
@@ -60,6 +60,7 @@
         .nav-btn:hover { background: rgba(37, 99, 235, 0.1); color: var(--text-main); }
         .nav-btn.active { background: var(--primary); color: white; }
         .menu-divider { height: 1px; background: var(--border); margin: 15px 0; }
+        .btn-theme { background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border); width: 100%; justify-content: center; margin-bottom: 5px; }
 
         .view-section { display: none; animation: fadeIn 0.3s; }
         .view-section.active { display: block; }
@@ -73,7 +74,6 @@
         .btn-copy { background: #3b82f6; }
         .btn-pdf { background: #10b981; }
         .btn-reset { background: #ef4444; }
-        .btn-theme { background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border); width: 100%; justify-content: center; margin-bottom: 5px; }
 
         .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; margin-bottom: 30px; }
         .card-stat { background: var(--bg-card); padding: 15px; border-radius: 16px; border: 1px solid var(--border); box-shadow: var(--shadow); position: relative; }
@@ -414,32 +414,27 @@
         loadMonthData(d);
     }
 
-    // --- MUDANÇA DE MÊS SEGURA (FIX CRÍTICO) ---
+    // --- MUDANÇA DE MÊS SEGURA (FIX CRÍTICO MEMÓRIA) ---
     window.changeMonthSafe = async () => {
         const picker = document.getElementById('monthPicker');
         const newDate = picker.value;
-        const oldDate = currentDocId; // Guarda o ID do mês que estava aberto
+        const oldDate = currentDocId; 
 
         if (!newDate || newDate === oldDate) return;
 
-        // 1. BLOQUEIA A TELA
         document.getElementById('loadingOverlay').style.display = 'flex';
         
-        // 2. PARA DE OUVIR (UNSUBSCRIBE)
         if (unsubscribe) unsubscribe();
         clearTimeout(saveTimer);
 
-        // 3. SALVA O MÊS ANTERIOR ANTES DE SAIR (SE EXISTIR DADO)
-        // Isso garante que o que estava na tela vá para o banco correto
         if (oldDate && !isReceiving) {
-            console.log("Salvando fechamento do mês:", oldDate);
             await saveDataSync(oldDate);
         }
 
-        // 4. LIMPA A TELA VISUALMENTE
+        // LIMPEZA PROFUNDA DE MEMÓRIA
         clearScreen();
-
-        // 5. CARREGA O NOVO
+        window.paidDebtors = []; // Zera a memória de devedores!
+        
         currentDocId = newDate;
         localStorage.setItem('lastViewedMonth', newDate);
         loadMonthData(newDate);
@@ -463,10 +458,7 @@
             if (docSnap.exists()) {
                 if (docSnap.metadata.hasPendingWrites) return; 
                 
-                if (window.isEditing) {
-                    console.log("Ignorando update externo pois o usuário está editando.");
-                    return; 
-                }
+                if (window.isEditing) return; 
 
                 isReceiving = true;
                 const data = docSnap.data();
@@ -476,10 +468,10 @@
                 setTimeout(() => isReceiving = false, 500);
                 document.getElementById('syncStatus').innerHTML = '<span style="color:var(--success)">Sincronizado</span>';
             } else { 
-                window.paidDebtors = []; 
+                window.paidDebtors = []; // Zera novamente para garantir
                 const defData = getDefaultData();
                 updateScreen(defData); 
-                saveDataSync(currentDocId); // Cria novo documento síncrono no ID novo
+                saveDataSync(currentDocId); 
                 document.getElementById('syncStatus').innerText = "Novo Mês";
             }
         });
@@ -517,7 +509,7 @@
         };
     }
 
-    // --- CAPTURA DE DADOS ---
+    // --- CAPTURA ---
     function captureScreenData() {
         const data = { 
             salary: document.getElementById('salary').value, 
@@ -538,7 +530,6 @@
         document.querySelectorAll('#mainTable tbody tr').forEach(tr => { 
             const inputs = tr.querySelectorAll('input');
             const name = inputs[0].value;
-            // Filtra os cartões para manter a estrutura limpa
             const isCard = ['Cartão BB', 'Mercado Pago', 'Passaí', 'Nubank'].includes(name);
             
             data.main.push({ 
@@ -557,7 +548,6 @@
         return data;
     }
 
-    // --- SALVAR SÍNCRONO ---
     async function saveDataSync(targetId) {
         const data = captureScreenData();
         try { await setDoc(doc(db, "meus_gastos", targetId), data); } catch(e) { console.error("Erro save sync", e); }
@@ -669,7 +659,6 @@
         return { debtors, myShare };
     }
 
-    // --- TABLE HELPERS (COM isEditing) ---
     window.addMainRow = () => { addMainRowHTML(document.querySelector("#mainTable tbody"), {icon:'💸',name:'',value:'',isMine:true}); calculateAndSchedule(); }
     window.addIncomeRow = () => { addIncomeRowHTML(document.querySelector("#incomeTable tbody"), {desc:'',value:''}); calculateAndSchedule(); }
     window.addSplitRow = (id) => { addSplitRowHTML(document.querySelector(`#${id} tbody`), {name:'',desc:'',inst:'',value:''}); calculateAndSchedule(); }
