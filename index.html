@@ -45,8 +45,9 @@
 
         #loadingOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); z-index: 9999; display: none; align-items: center; justify-content: center; flex-direction: column; backdrop-filter: blur(5px); }
         .spinner { width: 50px; height: 50px; border: 5px solid #e2e8f0; border-top: 5px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* SIDEBAR (DESIGN PREMIUM) */
+        /* SIDEBAR */
         #sidebar { 
             width: 260px; background: var(--bg-sidebar); border-right: 1px solid var(--border); 
             display: flex; flex-direction: column; padding: 25px; z-index: 100; height: 100%; box-sizing: border-box;
@@ -63,7 +64,9 @@
         .nav-btn.active { background: var(--primary); color: white; box-shadow: 0 4px 6px rgba(37,99,235,0.2); }
         
         .menu-divider { height: 1px; background: var(--border); margin: 15px 0; }
-        .config-group { display: flex; flex-direction: column; gap: 5px; margin-bottom: 20px; }
+        
+        /* CORREÇÃO: Força o grupo de config para o final */
+        .config-group { display: flex; flex-direction: column; gap: 5px; margin-bottom: 20px; margin-top: auto; }
         .btn-config { color: var(--text-main); } 
         .btn-lock { color: var(--danger); }
 
@@ -127,7 +130,7 @@
         th { text-align: left; padding: 12px; font-size: 0.75rem; color: var(--text-muted); border-bottom: 2px solid var(--border); text-transform: uppercase; }
         td { padding: 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
         
-        /* INPUTS - DESIGN + CLASSE DE SISTEMA */
+        /* INPUTS */
         input.sys-input { 
             width: 100%; padding: 10px; border: 1px solid var(--border); 
             border-radius: 8px; background: var(--bg-body); color: var(--text-main); 
@@ -142,7 +145,7 @@
         .btn-del { background: none; border: none; color: var(--danger); cursor: pointer; font-size: 1.2rem; opacity: 0.5; }
         .btn-del:hover { opacity: 1; }
 
-        /* CARTÕES (DESIGN HORIZONTAL BONITO) */
+        /* CARD ROW */
         .card-row { display: flex; align-items: center; padding: 20px 25px; border-bottom: 1px solid var(--border); gap: 20px; }
         .card-thumb { 
             width: 120px; height: 75px; border-radius: 12px; 
@@ -189,6 +192,7 @@
 
         .view-section { display: none; }
         .view-section.active { display: block; animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
@@ -467,7 +471,7 @@
         setTimeout(() => toast.classList.remove('show'), 2000);
     }
 
-    window.changeMonthSafe = async () => {
+    window.changeMonthSafe = () => {
         const newDate = document.getElementById('monthPicker').value;
         if (!newDate || newDate === currentDocId) return;
 
@@ -477,7 +481,8 @@
         if (unsubscribe) unsubscribe();
         clearTimeout(saveTimer);
 
-        if (currentDocId && !isReceiving) await saveDataSync(currentDocId); 
+        // CORREÇÃO: Não usamos 'await' aqui. Capturamos e salvamos em background para não travar a troca.
+        if (currentDocId && !isReceiving) saveDataSync(currentDocId); 
 
         clearScreen();
         localStorage.setItem('lastViewedMonth', newDate);
@@ -499,8 +504,7 @@
         
         unsubscribe = onSnapshot(docRef, (docSnap) => {
             if (docSnap.exists()) {
-                if (docSnap.metadata.hasPendingWrites) return; 
-                if (window.isEditing) return; 
+                if (window.isEditing) return; // Não atualiza se usuário estiver digitando
 
                 isReceiving = true;
                 const data = docSnap.data();
@@ -553,7 +557,16 @@
         };
     }
 
-    // --- CAPTURA SEGURA (COM CLASSES ESPECÍFICAS) ---
+    function renderTable(id, data, type) {
+        const tbody = document.querySelector(`#${id} tbody`);
+        tbody.innerHTML = "";
+        data.forEach(item => {
+            if(type === 'main') addMainRowHTML(tbody, item);
+            else if(type === 'income') addIncomeRowHTML(tbody, item);
+            else if(type === 'split') addSplitRowHTML(tbody, item);
+        });
+    }
+
     function captureScreenData() {
         const data = { 
             salary: document.getElementById('salary').value, 
@@ -567,13 +580,14 @@
         };
 
         document.querySelectorAll('#incomeTable tbody tr').forEach(tr => {
-            const desc = tr.querySelector('.sys-input').value; // First input
-            const val = tr.querySelector('.val-input').value; // Value input
+            const desc = tr.querySelector('.sys-input').value; 
+            const val = tr.querySelector('.val-input').value; 
             data.extraIncome.push({ desc: desc, value: val });
         });
 
         document.querySelectorAll('#mainTable tbody tr').forEach(tr => { 
-            const name = tr.querySelector('.sys-input').value; // First input
+            // CORREÇÃO: O primeiro input em Gastos Fixos é o sys-input (nome), o select é anterior.
+            const name = tr.querySelector('.sys-input').value; 
             const val = tr.querySelector('.val-input').value; 
             const isMine = tr.querySelector('input[type="checkbox"]').checked;
             const locked = tr.querySelector('.val-input').hasAttribute('readonly');
@@ -585,9 +599,11 @@
 
         const scrape = (tid, arr) => { 
             document.querySelectorAll(`#${tid} tbody tr`).forEach(tr => { 
-                const inputs = tr.querySelectorAll('.sys-input'); // Name, Desc, Inst
+                const inputs = tr.querySelectorAll('.sys-input'); 
                 const val = tr.querySelector('.val-input').value;
-                arr.push({ name: inputs[0].value, desc: inputs[1].value, inst: inputs[2].value, value: val }); 
+                if(inputs.length >= 3) {
+                     arr.push({ name: inputs[0].value, desc: inputs[1].value, inst: inputs[2].value, value: val }); 
+                }
             }); 
         };
         scrape('bbTable', data.bb); scrape('mpTable', data.mp); scrape('passaiTable', data.passai); scrape('nubankTable', data.nubank);
@@ -595,9 +611,12 @@
     }
 
     async function saveDataSync(targetId) {
-        if(isLoading) return;
+        // Se estiver carregando, evita salvar para não sobrescrever com zeros
+        if(isLoading) return; 
+        
         const data = captureScreenData();
         try { 
+            // setDoc retorna uma Promise, mas deixamos rodar em background se não for await
             await setDoc(doc(db, "carteira_igor_v42", targetId), data); 
             showToast(); 
         } 
@@ -649,6 +668,7 @@
             }
         });
 
+        // CORREÇÃO: Emergência não entra em 'Meu Custo' (myRealExpenses)
         let totalExpenses = fixedSumTotal + cardsShareTotal + emergency;
         let myRealExpenses = fixedSumMine + cardsShareTotal; 
 
@@ -705,7 +725,7 @@
         const bill = parseFloat(document.getElementById(totId).value) || 0;
         let others = 0, debtors = {};
         document.querySelectorAll(`#${tid} tbody tr`).forEach(tr => {
-            const name = tr.querySelector('.sys-input').value.trim();
+            const name = tr.querySelector('.sys-input.split-name').value.trim();
             const val = parseFloat(tr.querySelector('.val-input').value) || 0;
             if(val>0) {
                 others += val;
@@ -805,15 +825,25 @@
     }
     window.closePDFModal = () => document.getElementById('pdfModal').style.display = 'none';
 
+    // CORREÇÃO: Busca paralela (Promise.all) para acelerar gráfico
     window.fetchHistoryData = async (range = 6, btnElement = null) => {
         if(btnElement) { document.querySelectorAll('.chart-btn').forEach(b => b.classList.remove('active')); btnElement.classList.add('active'); }
-        const labels = [], dataIncome = [], dataExpense = [];
+        
         const year = parseInt(currentDocId.split('-')[0]), month = parseInt(currentDocId.split('-')[1]);
+        const reqs = [];
+        const labels = [];
+
         for(let i=range-1; i>=0; i--) {
             let m = month - i, y = year; while(m <= 0) { m += 12; y--; }
             const id = `${y}-${String(m).padStart(2,'0')}`;
-            const snap = await getDoc(doc(db, "carteira_igor_v42", id));
             labels.push(`${m}/${y}`);
+            reqs.push(getDoc(doc(db, "carteira_igor_v42", id)));
+        }
+
+        const snaps = await Promise.all(reqs);
+        const dataIncome = [], dataExpense = [];
+
+        snaps.forEach(snap => {
             if(snap.exists()) {
                 const d = snap.data();
                 let inc = (parseFloat(d.salary)||0); if(d.extraIncome) d.extraIncome.forEach(x=>inc+=(parseFloat(x.value)||0));
@@ -824,13 +854,15 @@
                 exp += calcB(d.bbTotalBill,d.bb) + calcB(d.mpTotalBill,d.mp) + calcB(d.passaiTotalBill,d.passai) + calcB(d.nubankTotalBill,d.nubank);
                 dataIncome.push(inc); dataExpense.push(exp);
             } else { dataIncome.push(0); dataExpense.push(0); }
-        }
+        });
+
         const ctx = document.getElementById('historyChart').getContext('2d');
         if(barChart) barChart.destroy();
         barChart = new Chart(ctx, { type: 'bar', data: { labels: labels, datasets: [{ label: 'Entradas', data: dataIncome, backgroundColor: '#10b981', borderRadius: 4 }, { label: 'Saídas', data: dataExpense, backgroundColor: '#ef4444', borderRadius: 4 }] }, options: { responsive:true, maintainAspectRatio:false, scales: { y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } }, x: { grid: { display: false } } }, plugins: { legend: { position: 'top' } } } });
     };
 
     function fmt(n) { return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
+    
     window.copyPreviousMonth = async function() {
         if(!confirm("Importar dados do mês anterior?")) return;
         const parts = currentDocId.split('-'); let year = parseInt(parts[0]); let month = parseInt(parts[1]);
