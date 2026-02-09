@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Financeiro Igor 26.0</title>
+    <title>Financeiro 27.0 (Stable)</title>
 
     <link rel="apple-touch-icon" href="icone2.0.png">
     <link rel="icon" type="image/png" href="icone2.0.png">
@@ -18,26 +18,11 @@
     
     <style>
         :root {
-            /* TEMA AZUL (IGOR) */
-            --primary: #2563eb; 
-            --bg-body: #f8fafc; 
-            --bg-card: #ffffff; 
-            --bg-sidebar: #ffffff;
-            --text-main: #0f172a; 
-            --text-muted: #64748b; 
-            --border: #e2e8f0;
-            --success: #10b981; 
-            --success-dark: #059669; 
-            --success-bg: #dcfce7; 
-            --success-text: #166534;
-            --danger: #ef4444; 
-            --warning: #f59e0b; 
-            --purple: #8b5cf6;
-            
-            /* CORES CARTÕES */
-            --passai: #ea580c; 
-            --nubank: #820ad1;
-            
+            --primary: #2563eb; --bg-body: #f8fafc; --bg-card: #ffffff; --bg-sidebar: #ffffff;
+            --text-main: #0f172a; --text-muted: #64748b; --border: #e2e8f0;
+            --success: #10b981; --success-dark: #059669; --success-bg: #dcfce7; --success-text: #166534;
+            --danger: #ef4444; --warning: #f59e0b; --purple: #8b5cf6;
+            --passai: #ea580c; --nubank: #820ad1;
             --shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
         }
 
@@ -50,7 +35,7 @@
 
         body { font-family: 'Inter', sans-serif; background-color: var(--bg-body); color: var(--text-main); margin: 0; display: flex; height: 100vh; overflow: hidden; transition: background 0.3s; }
         
-        /* LOADING OVERLAY (IGUAL DA DANI) */
+        /* LOADING OVERLAY */
         #loadingOverlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95);
             z-index: 9999; display: none; align-items: center; justify-content: center; flex-direction: column;
@@ -70,12 +55,11 @@
             #main-content { padding-top: 60px; }
         }
 
-        .brand { font-size: 1.4rem; font-weight: 800; color: var(--primary); margin-bottom: 30px; display: flex; align-items: center; gap: 10px; }
+        .brand { font-size: 1.4rem; font-weight: 800; color: var(--primary); margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
         .nav-btn { background: transparent; border: none; color: var(--text-muted); padding: 12px 15px; text-align: left; font-size: 0.95rem; font-weight: 600; cursor: pointer; border-radius: 10px; margin-bottom: 5px; display: flex; align-items: center; gap: 10px; transition: 0.2s; width: 100%; }
         .nav-btn:hover { background: rgba(37, 99, 235, 0.1); color: var(--text-main); }
         .nav-btn.active { background: var(--primary); color: white; }
         .menu-divider { height: 1px; background: var(--border); margin: 15px 0; }
-        .sidebar-footer { margin-top: auto; border-top: 1px solid var(--border); padding-top: 15px; }
 
         .view-section { display: none; animation: fadeIn 0.3s; }
         .view-section.active { display: block; }
@@ -89,7 +73,7 @@
         .btn-copy { background: #3b82f6; }
         .btn-pdf { background: #10b981; }
         .btn-reset { background: #ef4444; }
-        .btn-theme { background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border); width: 100%; justify-content: center; margin-top: 10px; }
+        .btn-theme { background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border); width: 100%; justify-content: center; margin-bottom: 5px; }
 
         .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; margin-bottom: 30px; }
         .card-stat { background: var(--bg-card); padding: 15px; border-radius: 16px; border: 1px solid var(--border); box-shadow: var(--shadow); position: relative; }
@@ -196,18 +180,22 @@
 <nav id="sidebar">
     <div class="brand"><span class="material-icons-round">account_balance_wallet</span> Financeiro</div>
     
+    <div style="margin-bottom: 20px;">
+        <button class="nav-btn btn-theme" onclick="toggleTheme()">
+            <span class="material-icons-round">dark_mode</span> Tema
+        </button>
+        <button class="nav-btn" style="color:var(--danger);" onclick="lockApp()">
+            <span class="material-icons-round">lock</span> Bloquear
+        </button>
+    </div>
+
+    <div class="menu-divider"></div>
+
     <button class="nav-btn active" onclick="switchView('dashboard')"><span class="material-icons-round">dashboard</span> Resumo</button>
     <button class="nav-btn" onclick="switchView('income')"><span class="material-icons-round">attach_money</span> Rendas & Fixos</button>
     <button class="nav-btn" onclick="switchView('cards')"><span class="material-icons-round">credit_card</span> Cartões</button>
     <button class="nav-btn" onclick="switchView('debts')"><span class="material-icons-round">people</span> Devedores</button>
     <button class="nav-btn" onclick="switchView('history')"><span class="material-icons-round">bar_chart</span> Histórico</button>
-    
-    <div class="menu-divider"></div>
-
-    <div class="sidebar-footer">
-        <button class="nav-btn btn-theme" onclick="toggleTheme()"><span class="material-icons-round">dark_mode</span> Tema</button>
-        <button class="nav-btn" style="color:var(--danger); justify-content: flex-start;" onclick="lockApp()"><span class="material-icons-round">lock</span> Bloquear</button>
-    </div>
 </nav>
 
 <main id="main-content">
@@ -372,7 +360,7 @@
     const db = getFirestore(app);
     const SENHA = "1234"; 
 
-    window.isEditing = false; // TRAVA DE USUÁRIO (O SEGREDO DA DANI)
+    window.isEditing = false; 
 
     let currentDocId = "";
     let isReceiving = false; 
@@ -415,7 +403,6 @@
         if(document.getElementById('passInput').value === SENHA) {
             document.getElementById('lockScreen').style.display = 'none';
             document.getElementById('appContent').style.display = 'block';
-            // CHAMA A FUNÇÃO SEGURA DE CARREGAR
             initApp();
         } else document.getElementById('passError').innerText = "Senha incorreta";
     };
@@ -427,28 +414,38 @@
         loadMonthData(d);
     }
 
-    // --- MUDANÇA DE MÊS SEGURA (IGUAL DANI) ---
+    // --- MUDANÇA DE MÊS SEGURA (FIX CRÍTICO) ---
     window.changeMonthSafe = async () => {
-        const newDate = document.getElementById('monthPicker').value;
-        if (!newDate || newDate === currentDocId) return;
+        const picker = document.getElementById('monthPicker');
+        const newDate = picker.value;
+        const oldDate = currentDocId; // Guarda o ID do mês que estava aberto
 
-        // TELA DE CARREGAMENTO
+        if (!newDate || newDate === oldDate) return;
+
+        // 1. BLOQUEIA A TELA
         document.getElementById('loadingOverlay').style.display = 'flex';
         
+        // 2. PARA DE OUVIR (UNSUBSCRIBE)
         if (unsubscribe) unsubscribe();
         clearTimeout(saveTimer);
 
-        // SALVA O ANTERIOR ANTES DE SAIR (SE PRECISAR)
-        if (currentDocId && !isReceiving) await saveDataSync(currentDocId); 
+        // 3. SALVA O MÊS ANTERIOR ANTES DE SAIR (SE EXISTIR DADO)
+        // Isso garante que o que estava na tela vá para o banco correto
+        if (oldDate && !isReceiving) {
+            console.log("Salvando fechamento do mês:", oldDate);
+            await saveDataSync(oldDate);
+        }
 
-        // LIMPA TELA
+        // 4. LIMPA A TELA VISUALMENTE
         clearScreen();
+
+        // 5. CARREGA O NOVO
+        currentDocId = newDate;
         localStorage.setItem('lastViewedMonth', newDate);
         loadMonthData(newDate);
     }
 
     function clearScreen() {
-        // Limpa visualmente para evitar fantasmas
         document.getElementById('salary').value = 0;
         document.getElementById('totalExpenses').innerText = "R$ 0,00";
         document.querySelectorAll('tbody').forEach(b => b.innerHTML = "");
@@ -458,7 +455,7 @@
         currentDocId = dateString;
         document.getElementById('syncStatus').innerText = "Carregando...";
         
-        const docRef = doc(db, "meus_gastos", currentDocId); // COLEÇÃO CORRETA
+        const docRef = doc(db, "meus_gastos", currentDocId);
         
         unsubscribe = onSnapshot(docRef, (docSnap) => {
             document.getElementById('loadingOverlay').style.display = 'none';
@@ -466,7 +463,6 @@
             if (docSnap.exists()) {
                 if (docSnap.metadata.hasPendingWrites) return; 
                 
-                // SE O USUARIO ESTIVER DIGITANDO, NAO ATUALIZA A TELA (EVITA PULAR)
                 if (window.isEditing) {
                     console.log("Ignorando update externo pois o usuário está editando.");
                     return; 
@@ -483,7 +479,7 @@
                 window.paidDebtors = []; 
                 const defData = getDefaultData();
                 updateScreen(defData); 
-                saveDataSync(currentDocId); // Cria novo documento síncrono
+                saveDataSync(currentDocId); // Cria novo documento síncrono no ID novo
                 document.getElementById('syncStatus').innerText = "Novo Mês";
             }
         });
@@ -521,7 +517,7 @@
         };
     }
 
-    // --- CAPTURAR DADOS DA TELA (IGUAL DANI) ---
+    // --- CAPTURA DE DADOS ---
     function captureScreenData() {
         const data = { 
             salary: document.getElementById('salary').value, 
@@ -534,17 +530,15 @@
             main: [], bb: [], mp: [], passai: [], nubank: [], extraIncome: [] 
         };
 
-        // Captura Extra Income
         document.querySelectorAll('#incomeTable tbody tr').forEach(tr => {
             const inputs = tr.querySelectorAll('input');
             data.extraIncome.push({ desc: inputs[0].value, value: inputs[1].value });
         });
 
-        // Captura Main (com filtro para não duplicar cartões)
         document.querySelectorAll('#mainTable tbody tr').forEach(tr => { 
             const inputs = tr.querySelectorAll('input');
             const name = inputs[0].value;
-            // Filtra os cartões automáticos para garantir que pegamos os dados atualizados ou mantemos a estrutura
+            // Filtra os cartões para manter a estrutura limpa
             const isCard = ['Cartão BB', 'Mercado Pago', 'Passaí', 'Nubank'].includes(name);
             
             data.main.push({ 
@@ -557,20 +551,18 @@
             }); 
         });
 
-        // Captura Cartões Específicos
         const scrape = (tid, arr) => { document.querySelectorAll(`#${tid} tbody tr`).forEach(tr => { const i = tr.querySelectorAll('input'); arr.push({ name: i[0].value, desc: i[1].value, inst: i[2].value, value: i[3].value }); }); };
         scrape('bbTable', data.bb); scrape('mpTable', data.mp); scrape('passaiTable', data.passai); scrape('nubankTable', data.nubank);
         
         return data;
     }
 
-    // --- SALVAR SÍNCRONO (IGUAL DANI) ---
+    // --- SALVAR SÍNCRONO ---
     async function saveDataSync(targetId) {
         const data = captureScreenData();
         try { await setDoc(doc(db, "meus_gastos", targetId), data); } catch(e) { console.error("Erro save sync", e); }
     }
 
-    // --- CALCULATE & SCHEDULE ---
     window.calculateAndSchedule = () => {
         calculateAll();
         if (isReceiving) return;
@@ -579,7 +571,6 @@
         saveTimer = setTimeout(() => saveDataSync(currentDocId), 1000); 
     }
 
-    // --- ZERAR ---
     window.resetMonthData = async () => {
         if(!confirm("ATENÇÃO: Apagar TODOS os dados deste mês?")) return;
         isReceiving = true;
@@ -598,7 +589,6 @@
 
         const cardsShareTotal = bb.myShare + mp.myShare + passai.myShare + nubank.myShare;
 
-        // ATUALIZA VALORES NA TABELA PRINCIPAL (Visual)
         updateAutoRow('Cartão BB', bb.myShare);
         updateAutoRow('Mercado Pago', mp.myShare);
         updateAutoRow('Passaí', passai.myShare);
@@ -619,7 +609,7 @@
         });
 
         let totalExpenses = fixedSumTotal + cardsShareTotal + emergency;
-        let myRealExpenses = fixedSumMine + cardsShareTotal; // SEM EMERGENCIA
+        let myRealExpenses = fixedSumMine + cardsShareTotal; 
 
         let extraIncome = 0;
         document.querySelectorAll('#incomeTable tbody tr').forEach(tr => extraIncome += parseFloat(tr.querySelector('.val-input').value)||0);
@@ -676,7 +666,6 @@
         });
         const myShare = bill - others;
         document.getElementById(dispId).innerText = fmt(myShare);
-        // Não usamos mais autoId hidden, usamos updateAutoRow
         return { debtors, myShare };
     }
 
@@ -738,7 +727,6 @@
         document.getElementById('totalReceived').innerText = fmt(r);
     }
 
-    // PDF e HISTORICO (Mantidos IGUAIS)
     window.generatePDF = () => {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
@@ -809,11 +797,9 @@
         const snap = await getDoc(doc(db, "meus_gastos", prevId));
         if(snap.exists()) {
             const data = snap.data(); data.paidDebtors = [];
-            if(data.main) data.main.forEach(i => i.paid = false); // Reset paid status
-            // Increment installments
+            if(data.main) data.main.forEach(i => i.paid = false); 
             const inc = (arr) => arr.forEach(i => { if(i.inst && i.inst.includes('/')){ let [c,t]=i.inst.split('/'); if(c<t) i.inst=`${parseInt(c)+1}/${t}`; } });
             if(data.bb) inc(data.bb); if(data.mp) inc(data.mp); if(data.passai) inc(data.passai); if(data.nubank) inc(data.nubank);
-            
             updateScreen(data);
             setTimeout(() => saveDataSync(currentDocId), 500);
         } else alert("Mês anterior vazio.");
