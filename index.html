@@ -23,6 +23,7 @@
             --text-main: #0f172a; --text-muted: #64748b; --border: #e2e8f0;
             --success: #10b981; --success-bg: #dcfce7; --success-text: #166534;
             --danger: #ef4444; --warning: #f59e0b; --purple: #8b5cf6;
+            --passai: #ea580c; --nubank: #820ad1;
             --shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
         }
 
@@ -36,7 +37,6 @@
 
         body { font-family: 'Inter', sans-serif; background-color: var(--bg-body); color: var(--text-main); margin: 0; display: flex; height: 100vh; overflow: hidden; transition: background 0.3s; }
         
-        /* TOAST DE SALVAMENTO */
         #saveToast {
             position: fixed; top: 20px; right: 20px; background: var(--success); color: white;
             padding: 12px 24px; border-radius: 50px; font-weight: 600; box-shadow: 0 10px 15px rgba(0,0,0,0.2);
@@ -48,9 +48,9 @@
         #sidebar { 
             width: 260px; background: var(--bg-sidebar); border-right: 1px solid var(--border); 
             display: flex; flex-direction: column; padding: 25px; z-index: 100; height: 100%; box-sizing: border-box;
-            transition: transform 0.3s;
+            transition: transform 0.3s; overflow-y: auto;
         }
-        .brand { font-size: 1.5rem; font-weight: 800; color: var(--primary); margin-bottom: 30px; display: flex; align-items: center; gap: 10px; }
+        .brand { font-size: 1.5rem; font-weight: 800; color: var(--primary); margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
         
         .nav-btn { 
             background: transparent; border: none; color: var(--text-muted); padding: 12px 15px; 
@@ -60,8 +60,11 @@
         .nav-btn:hover { background: var(--primary-light); color: var(--primary); }
         .nav-btn.active { background: var(--primary); color: white; box-shadow: 0 4px 6px rgba(37,99,235,0.2); }
         
-        /* LINHA DIVISÓRIA PARA CONFIG */
-        .menu-divider { height: 1px; background: var(--border); margin: 20px 0; }
+        .menu-divider { height: 1px; background: var(--border); margin: 15px 0 15px 0; }
+
+        /* CONFIG BUTTONS */
+        .btn-config { color: var(--text-main); margin-bottom: 5px; }
+        .btn-lock { color: var(--danger); }
 
         #main-content { flex: 1; overflow-y: auto; padding: 25px; position: relative; }
         .mobile-toggle { display: none; position: absolute; top: 15px; left: 15px; z-index: 200; background: var(--bg-card); padding: 8px; border-radius: 8px; border: 1px solid var(--border); color: var(--text-main); }
@@ -238,7 +241,7 @@
             <button class="btn-action btn-copy" onclick="copyPreviousMonth()"><span class="material-icons-round">content_copy</span> Importar</button>
             <button class="btn-action btn-pdf" onclick="openPDFPreview()"><span class="material-icons-round">picture_as_pdf</span> Relatório</button>
         </div>
-        <div id="syncStatus" style="font-size:0.8rem; font-weight:bold; color:var(--text-muted); opacity:0;">...</div>
+        <div id="syncStatus" style="font-size:0.8rem; font-weight:bold; color:var(--text-muted); display:flex; align-items:center; gap:5px;">...</div>
     </div>
 
     <div id="view-dashboard" class="view-section active">
@@ -438,7 +441,7 @@
         loadMonthData(d);
     }
 
-    // --- FUNÇÕES DE TOAST (NOTIFICAÇÃO) ---
+    // --- TOAST ---
     function showToast() {
         const toast = document.getElementById('saveToast');
         toast.classList.add('show');
@@ -466,15 +469,13 @@
         document.getElementById('totalExpenses').innerText = "R$ 0,00";
         document.querySelectorAll('tbody').forEach(b => b.innerHTML = "");
         ['bbTotalBill', 'mpTotalBill', 'passaiTotalBill', 'nubankTotalBill'].forEach(id => document.getElementById(id).value = "");
-        if(summaryChart) { summaryChart.destroy(); summaryChart = null; }
     }
 
     function loadMonthData(dateString) {
         currentDocId = dateString;
         document.getElementById('syncStatus').innerText = "Carregando...";
         
-        // NOVA COLEÇÃO LIMPA (v2026)
-        const docRef = doc(db, "financas_igor_2026", currentDocId);
+        const docRef = doc(db, "igor_financas_v37", currentDocId);
         
         unsubscribe = onSnapshot(docRef, (docSnap) => {
             document.getElementById('loadingOverlay').style.display = 'none';
@@ -489,6 +490,7 @@
                 updateScreen(data);
                 
                 setTimeout(() => isReceiving = false, 500);
+                document.getElementById('syncStatus').innerHTML = '<span style="color:var(--success)">Sincronizado</span>';
             } else { 
                 window.paidDebtors = []; 
                 const defData = getDefaultData();
@@ -530,6 +532,7 @@
         };
     }
 
+    // --- CAPTURA CORRIGIDA (CLASS-BASED) ---
     function captureScreenData() {
         const data = { 
             salary: document.getElementById('salary').value, 
@@ -542,37 +545,44 @@
             main: [], bb: [], mp: [], passai: [], nubank: [], extraIncome: [] 
         };
 
+        // Rendas
         document.querySelectorAll('#incomeTable tbody tr').forEach(tr => {
-            const inputs = tr.querySelectorAll('input');
-            data.extraIncome.push({ desc: inputs[0].value, value: inputs[1].value });
+            const desc = tr.querySelector('.td-input').value; // First input
+            const val = tr.querySelector('.val-input').value; // Value input
+            data.extraIncome.push({ desc: desc, value: val });
         });
 
+        // Fixos (Main)
         document.querySelectorAll('#mainTable tbody tr').forEach(tr => { 
-            const inputs = tr.querySelectorAll('input');
-            const name = inputs[0].value;
-            // Filtra os cartões para manter a estrutura limpa
-            const isCard = ['Cartão BB', 'Mercado Pago', 'Passaí', 'Nubank'].includes(name);
-            
-            data.main.push({ 
-                icon: tr.querySelector('.icon-select').value, 
-                name: name, value: inputs[1].value, 
-                isMine: tr.querySelector('input[type="checkbox"]').checked, 
-                locked: inputs[1].hasAttribute('readonly'), 
-                id: inputs[1].id || null 
-            }); 
+            const name = tr.querySelector('.td-input').value; // Name input
+            const val = tr.querySelector('.val-input').value; // Value input
+            const isMine = tr.querySelector('input[type="checkbox"]').checked;
+            const locked = tr.querySelector('.val-input').hasAttribute('readonly');
+            const icon = tr.querySelector('.icon-select').value;
+            const id = tr.querySelector('.val-input').id || null;
+
+            data.main.push({ icon, name, value: val, isMine, locked, id }); 
         });
 
-        const scrape = (tid, arr) => { document.querySelectorAll(`#${tid} tbody tr`).forEach(tr => { const i = tr.querySelectorAll('input'); arr.push({ name: i[0].value, desc: i[1].value, inst: i[2].value, value: i[3].value }); }); };
+        // Cartões (Split)
+        const scrape = (tid, arr) => { 
+            document.querySelectorAll(`#${tid} tbody tr`).forEach(tr => { 
+                const name = tr.querySelector('.split-name').value;
+                const desc = tr.querySelector('.td-input:not(.split-name):not(.split-inst)').value; // 2nd input
+                const inst = tr.querySelector('.split-inst').value;
+                const val = tr.querySelector('.val-input').value;
+                arr.push({ name, desc, inst, value: val }); 
+            }); 
+        };
         scrape('bbTable', data.bb); scrape('mpTable', data.mp); scrape('passaiTable', data.passai); scrape('nubankTable', data.nubank);
         return data;
     }
 
     async function saveDataSync(targetId) {
         const data = captureScreenData();
-        // COLEÇÃO NOVA: financas_igor_2026
         try { 
-            await setDoc(doc(db, "financas_igor_2026", targetId), data); 
-            showToast(); // MOSTRA TOAST VERDE
+            await setDoc(doc(db, "igor_financas_v37", targetId), data); 
+            showToast(); 
         } 
         catch(e) { console.error("Erro save sync", e); }
     }
@@ -645,7 +655,6 @@
         mergeDebts(bb.debtors); mergeDebts(mp.debtors); mergeDebts(passai.debtors); mergeDebts(nubank.debtors);
         updateDebtors(allDebts);
         
-        // GRÁFICO REFEITO E CORRIGIDO
         const ctx = document.getElementById('expenseChart').getContext('2d');
         if(summaryChart) summaryChart.destroy();
         summaryChart = new Chart(ctx, { 
@@ -690,10 +699,8 @@
             }
         });
         const myShare = bill - others;
-        // ATUALIZA "MINHA PARTE"
         const displayEl = document.getElementById(displayId);
         if(displayEl) displayEl.innerText = "Minha Parte: " + fmt(myShare);
-        
         return { myShare, debtors };
     }
 
@@ -723,12 +730,7 @@
 
     window.removeRow = (btn) => { btn.closest('tr').remove(); calculateAndSchedule(); }
     window.updateBar = (input) => { const val = input.value; const bar = input.nextElementSibling.querySelector('.prog-fill'); if(val.includes('/')) { const [c,t] = val.split('/').map(Number); if(t>0) bar.style.width = Math.min((c/t)*100, 100)+'%'; } else bar.style.width = '0%'; }
-    window.togglePaid = (name) => { 
-        const idx = window.paidDebtors.indexOf(name); 
-        if(idx>-1) window.paidDebtors.splice(idx,1); 
-        else window.paidDebtors.push(name); 
-        calculateAndSchedule(); 
-    }
+    window.togglePaid = (name) => { const idx = window.paidDebtors.indexOf(name); if(idx>-1) window.paidDebtors.splice(idx,1); else window.paidDebtors.push(name); calculateAndSchedule(); }
 
     function updateDebtors(all) {
         const list = document.getElementById('debtorsList'); list.innerHTML = "";
@@ -770,10 +772,8 @@
         
         const extract = (sel, tit, col) => {
             const rows=[]; document.querySelectorAll(`${sel} tbody tr`).forEach(tr=>{
-                const i=tr.querySelectorAll('input'); let n,v;
-                if(i.length===2){n=i[0].value;v=i[1].value;} 
-                else if(i.length===3){n=i[0].value;v=i[1].value;}
-                else if(i.length===4){n=`${i[0].value} - ${i[1].value}`;v=i[3].value;}
+                const n = tr.querySelector('.td-input').value || tr.querySelector('.split-name').value;
+                const v = tr.querySelector('.val-input').value;
                 if(parseFloat(v)>0) rows.push([n,`R$ ${v}`]);
             });
             if(rows.length>0){ if(finalY>250){doc.addPage();finalY=20;} doc.text(tit,14,finalY); doc.autoTable({startY:finalY+5,head:[['Item','Valor']],body:rows,theme:'striped',headStyles:{fillColor:col}}); finalY=doc.lastAutoTable.finalY+15; }
@@ -797,7 +797,7 @@
         for(let i=range-1; i>=0; i--) {
             let m = month - i, y = year; while(m <= 0) { m += 12; y--; }
             const id = `${y}-${String(m).padStart(2,'0')}`;
-            const snap = await getDoc(doc(db, "financas_igor_2026", id));
+            const snap = await getDoc(doc(db, "igor_financas_v37", id));
             labels.push(`${m}/${y}`);
             if(snap.exists()) {
                 const d = snap.data();
@@ -821,7 +821,7 @@
         const parts = currentDocId.split('-'); let year = parseInt(parts[0]); let month = parseInt(parts[1]);
         month--; if(month===0) { month=12; year--; }
         const prevId = `${year}-${String(month).padStart(2,'0')}`;
-        const snap = await getDoc(doc(db, "financas_igor_2026", prevId));
+        const snap = await getDoc(doc(db, "igor_financas_v37", prevId));
         if(snap.exists()) {
             const data = snap.data(); data.paidDebtors = [];
             if(data.main) data.main.forEach(i => i.paid = false); 
