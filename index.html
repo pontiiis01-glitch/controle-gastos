@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Financeiro 36.0</title>
+    <title>Financeiro 37.0</title>
 
     <link rel="apple-touch-icon" href="icone2.0.png">
     <link rel="icon" type="image/png" href="icone2.0.png">
@@ -23,7 +23,6 @@
             --text-main: #0f172a; --text-muted: #64748b; --border: #e2e8f0;
             --success: #10b981; --success-bg: #dcfce7; --success-text: #166534;
             --danger: #ef4444; --warning: #f59e0b; --purple: #8b5cf6;
-            --passai: #ea580c; --nubank: #820ad1;
             --shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
         }
 
@@ -37,10 +36,19 @@
 
         body { font-family: 'Inter', sans-serif; background-color: var(--bg-body); color: var(--text-main); margin: 0; display: flex; height: 100vh; overflow: hidden; transition: background 0.3s; }
         
+        /* TOAST DE SALVAMENTO */
+        #saveToast {
+            position: fixed; top: 20px; right: 20px; background: var(--success); color: white;
+            padding: 12px 24px; border-radius: 50px; font-weight: 600; box-shadow: 0 10px 15px rgba(0,0,0,0.2);
+            z-index: 9999; transform: translateY(-100px); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex; align-items: center; gap: 8px;
+        }
+        #saveToast.show { transform: translateY(0); }
+
         #sidebar { 
             width: 260px; background: var(--bg-sidebar); border-right: 1px solid var(--border); 
             display: flex; flex-direction: column; padding: 25px; z-index: 100; height: 100%; box-sizing: border-box;
-            transition: transform 0.3s; overflow-y: auto;
+            transition: transform 0.3s;
         }
         .brand { font-size: 1.5rem; font-weight: 800; color: var(--primary); margin-bottom: 30px; display: flex; align-items: center; gap: 10px; }
         
@@ -52,11 +60,8 @@
         .nav-btn:hover { background: var(--primary-light); color: var(--primary); }
         .nav-btn.active { background: var(--primary); color: white; box-shadow: 0 4px 6px rgba(37,99,235,0.2); }
         
-        .menu-divider { height: 1px; background: var(--border); margin: 15px 0; }
-
-        /* CONFIG BUTTONS STYLE */
-        .btn-config { color: var(--text-main); }
-        .btn-lock { color: var(--danger); }
+        /* LINHA DIVISÓRIA PARA CONFIG */
+        .menu-divider { height: 1px; background: var(--border); margin: 20px 0; }
 
         #main-content { flex: 1; overflow-y: auto; padding: 25px; position: relative; }
         .mobile-toggle { display: none; position: absolute; top: 15px; left: 15px; z-index: 200; background: var(--bg-card); padding: 8px; border-radius: 8px; border: 1px solid var(--border); color: var(--text-main); }
@@ -168,6 +173,8 @@
 </head>
 <body>
 
+<div id="saveToast"><span class="material-icons-round">check_circle</span> Salvo com sucesso!</div>
+
 <div id="pdfModal">
     <div class="pdf-box">
         <div class="pdf-header">
@@ -231,7 +238,7 @@
             <button class="btn-action btn-copy" onclick="copyPreviousMonth()"><span class="material-icons-round">content_copy</span> Importar</button>
             <button class="btn-action btn-pdf" onclick="openPDFPreview()"><span class="material-icons-round">picture_as_pdf</span> Relatório</button>
         </div>
-        <div id="syncStatus" style="font-size:0.8rem; font-weight:bold; color:var(--text-muted); display:flex; align-items:center; gap:5px;">...</div>
+        <div id="syncStatus" style="font-size:0.8rem; font-weight:bold; color:var(--text-muted); opacity:0;">...</div>
     </div>
 
     <div id="view-dashboard" class="view-section active">
@@ -431,6 +438,13 @@
         loadMonthData(d);
     }
 
+    // --- FUNÇÕES DE TOAST (NOTIFICAÇÃO) ---
+    function showToast() {
+        const toast = document.getElementById('saveToast');
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 2000);
+    }
+
     window.changeMonthSafe = async () => {
         const newDate = document.getElementById('monthPicker').value;
         if (!newDate || newDate === currentDocId) return;
@@ -452,13 +466,15 @@
         document.getElementById('totalExpenses').innerText = "R$ 0,00";
         document.querySelectorAll('tbody').forEach(b => b.innerHTML = "");
         ['bbTotalBill', 'mpTotalBill', 'passaiTotalBill', 'nubankTotalBill'].forEach(id => document.getElementById(id).value = "");
+        if(summaryChart) { summaryChart.destroy(); summaryChart = null; }
     }
 
     function loadMonthData(dateString) {
         currentDocId = dateString;
         document.getElementById('syncStatus').innerText = "Carregando...";
         
-        const docRef = doc(db, "carteira_igor_final", currentDocId);
+        // NOVA COLEÇÃO LIMPA (v2026)
+        const docRef = doc(db, "financas_igor_2026", currentDocId);
         
         unsubscribe = onSnapshot(docRef, (docSnap) => {
             document.getElementById('loadingOverlay').style.display = 'none';
@@ -473,13 +489,11 @@
                 updateScreen(data);
                 
                 setTimeout(() => isReceiving = false, 500);
-                document.getElementById('syncStatus').innerHTML = '<span style="color:var(--success)">Sincronizado</span>';
             } else { 
                 window.paidDebtors = []; 
                 const defData = getDefaultData();
                 updateScreen(defData); 
                 saveDataSync(currentDocId); 
-                document.getElementById('syncStatus').innerText = "Novo Mês";
             }
         });
     }
@@ -536,7 +550,9 @@
         document.querySelectorAll('#mainTable tbody tr').forEach(tr => { 
             const inputs = tr.querySelectorAll('input');
             const name = inputs[0].value;
+            // Filtra os cartões para manter a estrutura limpa
             const isCard = ['Cartão BB', 'Mercado Pago', 'Passaí', 'Nubank'].includes(name);
+            
             data.main.push({ 
                 icon: tr.querySelector('.icon-select').value, 
                 name: name, value: inputs[1].value, 
@@ -553,19 +569,19 @@
 
     async function saveDataSync(targetId) {
         const data = captureScreenData();
-        try { await setDoc(doc(db, "carteira_igor_final", targetId), data); } 
+        // COLEÇÃO NOVA: financas_igor_2026
+        try { 
+            await setDoc(doc(db, "financas_igor_2026", targetId), data); 
+            showToast(); // MOSTRA TOAST VERDE
+        } 
         catch(e) { console.error("Erro save sync", e); }
     }
 
     window.calculateAndSchedule = () => {
         calculateAll();
         if (isReceiving) return;
-        document.getElementById('syncStatus').innerText = "Editando...";
         clearTimeout(saveTimer);
-        saveTimer = setTimeout(() => {
-            saveDataSync(currentDocId);
-            document.getElementById('syncStatus').innerHTML = '<span style="color:var(--success)">Salvo</span>';
-        }, 1000); 
+        saveTimer = setTimeout(() => saveDataSync(currentDocId), 800); 
     }
 
     window.resetMonthData = async () => {
@@ -629,7 +645,7 @@
         mergeDebts(bb.debtors); mergeDebts(mp.debtors); mergeDebts(passai.debtors); mergeDebts(nubank.debtors);
         updateDebtors(allDebts);
         
-        // GRÁFICO DETALHADO (SOLICITADO)
+        // GRÁFICO REFEITO E CORRIGIDO
         const ctx = document.getElementById('expenseChart').getContext('2d');
         if(summaryChart) summaryChart.destroy();
         summaryChart = new Chart(ctx, { 
@@ -674,7 +690,7 @@
             }
         });
         const myShare = bill - others;
-        // ATUALIZA O TEXTO "MINHA PARTE"
+        // ATUALIZA "MINHA PARTE"
         const displayEl = document.getElementById(displayId);
         if(displayEl) displayEl.innerText = "Minha Parte: " + fmt(myShare);
         
@@ -781,7 +797,7 @@
         for(let i=range-1; i>=0; i--) {
             let m = month - i, y = year; while(m <= 0) { m += 12; y--; }
             const id = `${y}-${String(m).padStart(2,'0')}`;
-            const snap = await getDoc(doc(db, "carteira_igor_final", id));
+            const snap = await getDoc(doc(db, "financas_igor_2026", id));
             labels.push(`${m}/${y}`);
             if(snap.exists()) {
                 const d = snap.data();
@@ -805,7 +821,7 @@
         const parts = currentDocId.split('-'); let year = parseInt(parts[0]); let month = parseInt(parts[1]);
         month--; if(month===0) { month=12; year--; }
         const prevId = `${year}-${String(month).padStart(2,'0')}`;
-        const snap = await getDoc(doc(db, "carteira_igor_final", prevId));
+        const snap = await getDoc(doc(db, "financas_igor_2026", prevId));
         if(snap.exists()) {
             const data = snap.data(); data.paidDebtors = [];
             if(data.main) data.main.forEach(i => i.paid = false); 
