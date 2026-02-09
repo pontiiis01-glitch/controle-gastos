@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Financeiro 31.0 (Clean)</title>
+    <title>Financeiro 30.0 (Diagnóstico)</title>
 
     <link rel="apple-touch-icon" href="icone2.0.png">
     <link rel="icon" type="image/png" href="icone2.0.png">
@@ -53,16 +53,12 @@
             #main-content { padding-top: 60px; }
         }
 
-        .brand { font-size: 1.4rem; font-weight: 800; color: var(--primary); margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
-        
-        /* BOTÕES DE CONFIG (TOPO) */
-        .config-area { margin-bottom: 20px; display: flex; flex-direction: column; gap: 5px; }
-        
+        .brand { font-size: 1.4rem; font-weight: 800; color: var(--primary); margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
         .nav-btn { background: transparent; border: none; color: var(--text-muted); padding: 12px 15px; text-align: left; font-size: 0.95rem; font-weight: 600; cursor: pointer; border-radius: 10px; margin-bottom: 5px; display: flex; align-items: center; gap: 10px; transition: 0.2s; width: 100%; }
         .nav-btn:hover { background: rgba(37, 99, 235, 0.1); color: var(--text-main); }
         .nav-btn.active { background: var(--primary); color: white; }
         .menu-divider { height: 1px; background: var(--border); margin: 15px 0; }
-        .btn-theme { background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border); justify-content: flex-start; }
+        .btn-theme { background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border); width: 100%; justify-content: center; margin-bottom: 5px; }
 
         .view-section { display: none; animation: fadeIn 0.3s; }
         .view-section.active { display: block; }
@@ -76,7 +72,7 @@
         .btn-copy { background: #3b82f6; }
         .btn-pdf { background: #10b981; }
         .btn-reset { background: #ef4444; }
-        .btn-force { background: #f59e0b; }
+        .btn-save-force { background: #f59e0b; }
 
         .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; margin-bottom: 30px; }
         .card-stat { background: var(--bg-card); padding: 15px; border-radius: 16px; border: 1px solid var(--border); box-shadow: var(--shadow); position: relative; }
@@ -102,7 +98,6 @@
         input.td-input { background: var(--bg-body); border: 1px solid var(--border); color: var(--text-main); padding: 8px; border-radius: 6px; width: 100%; box-sizing: border-box; }
         select.icon-select { border: none; background: transparent; font-size: 1.2rem; cursor: pointer; }
         
-        /* CARTÕES */
         .card-row { display: flex; align-items: center; padding: 20px; border-bottom: 1px solid var(--border); gap: 20px; }
         .card-thumb { 
             width: 120px; height: 75px; border-radius: 10px; 
@@ -183,7 +178,7 @@
 <nav id="sidebar">
     <div class="brand"><span class="material-icons-round">account_balance_wallet</span> Financeiro</div>
     
-    <div class="config-area">
+    <div style="margin-bottom: 20px;">
         <button class="nav-btn btn-theme" onclick="toggleTheme()">
             <span class="material-icons-round">dark_mode</span> Tema
         </button>
@@ -209,9 +204,8 @@
             <input type="month" id="monthPicker" onchange="changeMonthSafe()">
         </div>
         <div style="display:flex; gap:10px;">
-            <button class="btn-action btn-force" title="Forçar Salvar" onclick="saveData(true)"><span class="material-icons-round">save</span></button>
+            <button class="btn-action btn-save-force" title="Forçar Salvamento" onclick="saveData(true)"><span class="material-icons-round">save</span></button>
             <button class="btn-action btn-reset" title="Apagar mês" onclick="resetMonthData()"><span class="material-icons-round">delete</span></button>
-            <button class="btn-action btn-copy" onclick="copyPreviousMonth()">Importar</button>
             <button class="btn-action btn-pdf" onclick="openPDFPreview()">Relatório</button>
         </div>
         <div id="syncStatus" style="font-size:0.75rem; font-weight:bold; color:var(--text-muted);">...</div>
@@ -221,7 +215,7 @@
         <div class="dashboard-grid">
             <div class="card-stat c-salary">
                 <h3>Salário Base</h3>
-                <input type="number" id="salary" class="stat-input" value="0" oninput="calculateAndSchedule()" onfocus="window.isEditing=true" onblur="window.isEditing=false">
+                <input type="number" id="salary" class="stat-input" value="0" oninput="calculateAndSchedule()">
                 <div class="salary-bar-bg"><div class="salary-bar-fill" id="salaryBar"></div></div>
             </div>
             <div class="card-stat c-income"><h3>Renda Extra</h3><div class="val" id="extraIncomeTotal">R$ 0,00</div></div>
@@ -230,7 +224,7 @@
             <div class="card-stat c-mine"><h3>Meu Custo Real</h3><div class="val" id="myRealExpenses">R$ 0,00</div></div>
             <div class="card-stat c-emerg">
                 <h3>Reserva</h3>
-                <input type="number" id="emergencyFund" class="stat-input" oninput="calculateAndSchedule()" onfocus="window.isEditing=true" onblur="window.isEditing=false">
+                <input type="number" id="emergencyFund" class="stat-input" oninput="calculateAndSchedule()">
             </div>
         </div>
         <div class="section">
@@ -262,7 +256,7 @@
                 <div class="card-thumb thumb-bb"></div>
                 <div class="card-info">
                     <h2 style="color:#b45309">Banco do Brasil</h2>
-                    <div class="bill-wrapper">Fatura: R$ <input type="number" id="bbTotalBill" oninput="calculateAndSchedule()" onfocus="window.isEditing=true" onblur="window.isEditing=false"></div>
+                    <div class="bill-wrapper">Fatura: R$ <input type="number" id="bbTotalBill" oninput="calculateAndSchedule()"></div>
                 </div>
             </div>
             <div class="sec-body">
@@ -276,7 +270,7 @@
                 <div class="card-thumb thumb-mp"></div>
                 <div class="card-info">
                     <h2 style="color:#1d4ed8">Mercado Pago</h2>
-                    <div class="bill-wrapper">Fatura: R$ <input type="number" id="mpTotalBill" oninput="calculateAndSchedule()" onfocus="window.isEditing=true" onblur="window.isEditing=false"></div>
+                    <div class="bill-wrapper">Fatura: R$ <input type="number" id="mpTotalBill" oninput="calculateAndSchedule()"></div>
                 </div>
             </div>
             <div class="sec-body">
@@ -290,7 +284,7 @@
                 <div class="card-thumb thumb-passai"></div>
                 <div class="card-info">
                     <h2 style="color:#c2410c">Passaí (Itaú)</h2>
-                    <div class="bill-wrapper">Fatura: R$ <input type="number" id="passaiTotalBill" oninput="calculateAndSchedule()" onfocus="window.isEditing=true" onblur="window.isEditing=false"></div>
+                    <div class="bill-wrapper">Fatura: R$ <input type="number" id="passaiTotalBill" oninput="calculateAndSchedule()"></div>
                 </div>
             </div>
             <div class="sec-body">
@@ -304,7 +298,7 @@
                 <div class="card-thumb thumb-nubank"></div>
                 <div class="card-info">
                     <h2 style="color:#820ad1">Nubank</h2>
-                    <div class="bill-wrapper">Fatura: R$ <input type="number" id="nubankTotalBill" oninput="calculateAndSchedule()" onfocus="window.isEditing=true" onblur="window.isEditing=false"></div>
+                    <div class="bill-wrapper">Fatura: R$ <input type="number" id="nubankTotalBill" oninput="calculateAndSchedule()"></div>
                 </div>
             </div>
             <div class="sec-body">
@@ -364,11 +358,7 @@
     const db = getFirestore(app);
     const SENHA = "1234"; 
 
-    window.isEditing = false; 
-    window.isSwitching = false; 
-
     let currentDocId = "";
-    let isReceiving = false; 
     let saveTimer;
     let unsubscribe = null;
     let pieChart = null;
@@ -419,27 +409,26 @@
         loadMonthData(d);
     }
 
-    // --- TROCA DE MÊS SEGURA ---
+    // --- TROCA DE MÊS COM LIMPEZA AGRESSIVA ---
     window.changeMonthSafe = async () => {
-        const picker = document.getElementById('monthPicker');
-        const newDate = picker.value;
-        const oldDate = currentDocId; 
+        const newDate = document.getElementById('monthPicker').value;
+        if (!newDate || newDate === currentDocId) return;
 
-        if (!newDate || newDate === oldDate) return;
-
-        window.isSwitching = true;
+        // 1. PARA TUDO
         document.getElementById('loadingOverlay').style.display = 'flex';
-        
         if (unsubscribe) unsubscribe();
         clearTimeout(saveTimer);
 
-        if (oldDate && !isReceiving) {
-            await saveDataSync(oldDate); // Salva o velho antes de sair
+        // 2. SALVA O VELHO (Se existir)
+        if (currentDocId) {
+            try { await saveDataSync(currentDocId); } catch(e) { console.error("Erro ao salvar mês anterior", e); }
         }
 
-        clearScreen(); // Limpa visual
-        window.paidDebtors = []; // Limpa memória
+        // 3. LIMPA A TELA E VARIÁVEIS
+        clearScreen();
+        window.paidDebtors = [];
         
+        // 4. ATUALIZA ID E CARREGA
         currentDocId = newDate;
         localStorage.setItem('lastViewedMonth', newDate);
         loadMonthData(newDate);
@@ -447,44 +436,34 @@
 
     function clearScreen() {
         document.getElementById('salary').value = 0;
+        document.getElementById('emergencyFund').value = 0;
         document.getElementById('totalExpenses').innerText = "R$ 0,00";
         document.querySelectorAll('tbody').forEach(b => b.innerHTML = "");
-        document.querySelectorAll('input').forEach(i => { if(!i.type.match(/month|button/)) i.value = "" });
+        ['bbTotalBill', 'mpTotalBill', 'passaiTotalBill', 'nubankTotalBill'].forEach(id => document.getElementById(id).value = "");
     }
 
     function loadMonthData(dateString) {
         currentDocId = dateString;
         document.getElementById('syncStatus').innerText = "Carregando...";
         
-        // NOVA COLEÇÃO LIMPA (Garante que não pega lixo)
-        const docRef = doc(db, "carteira_igor_v1", currentDocId);
+        const docRef = doc(db, "meus_gastos", currentDocId);
         
         unsubscribe = onSnapshot(docRef, (docSnap) => {
             document.getElementById('loadingOverlay').style.display = 'none';
-            window.isSwitching = false; 
             
             if (docSnap.exists()) {
-                if (docSnap.metadata.hasPendingWrites) return; 
-                
-                if (window.isEditing) return; 
-
-                isReceiving = true;
+                if (docSnap.metadata.hasPendingWrites) return; // Ignora escrita local
                 const data = docSnap.data();
                 window.paidDebtors = data.paidDebtors || []; 
                 updateScreen(data);
-                
-                setTimeout(() => isReceiving = false, 500);
                 document.getElementById('syncStatus').innerHTML = '<span style="color:var(--success)">Sincronizado</span>';
             } else { 
+                // DOC NÃO EXISTE: Cria zerado
                 window.paidDebtors = []; 
-                const defData = getDefaultData();
-                updateScreen(defData); 
+                updateScreen(getDefaultData()); 
                 saveDataSync(currentDocId); 
                 document.getElementById('syncStatus').innerText = "Novo Mês";
             }
-        }, (error) => {
-            alert("ERRO FIREBASE: " + error.message);
-            document.getElementById('syncStatus').innerText = "Erro!";
         });
     }
 
@@ -520,7 +499,7 @@
         };
     }
 
-    // --- CAPTURA ---
+    // --- CAPTURA DE DADOS ---
     function captureScreenData() {
         const data = { 
             salary: document.getElementById('salary').value, 
@@ -541,8 +520,7 @@
         document.querySelectorAll('#mainTable tbody tr').forEach(tr => { 
             const inputs = tr.querySelectorAll('input');
             const name = inputs[0].value;
-            const isCard = ['Cartão BB', 'Mercado Pago', 'Passaí', 'Nubank'].includes(name);
-            
+            // Apenas salva se não for placeholder vazio
             data.main.push({ 
                 icon: tr.querySelector('.icon-select').value, 
                 name: name, 
@@ -560,40 +538,37 @@
     }
 
     async function saveDataSync(targetId) {
-        if (!targetId || window.isSwitching) return;
+        if (!targetId) return;
         const data = captureScreenData();
-        // COLEÇÃO NOVA: carteira_igor_v1
-        try { await setDoc(doc(db, "carteira_igor_v1", targetId), data); } 
+        try { await setDoc(doc(db, "meus_gastos", targetId), data); } 
         catch(e) { 
-            console.error(e); 
-            alert("ERRO AO SALVAR: " + e.code); 
+            console.error("Erro save sync", e); 
+            alert("Erro ao salvar! Verifique a internet ou permissões.");
         }
     }
 
     window.calculateAndSchedule = () => {
         calculateAll();
-        if (isReceiving || window.isSwitching) return;
         document.getElementById('syncStatus').innerText = "Editando...";
         clearTimeout(saveTimer);
         saveTimer = setTimeout(() => {
             saveDataSync(currentDocId);
             document.getElementById('syncStatus').innerText = "Salvo";
-        }, 1000); 
-    }
-
-    window.saveData = async () => {
-        await saveDataSync(currentDocId);
-        alert("Salvo Manualmente!");
+        }, 1500); // 1.5s de delay para não sobrecarregar
     }
 
     window.resetMonthData = async () => {
         if(!confirm("ATENÇÃO: Apagar TODOS os dados deste mês?")) return;
-        isReceiving = true;
         const emptyData = getDefaultData();
         updateScreen(emptyData); 
         await saveDataSync(currentDocId); 
-        isReceiving = false;
         alert("Mês limpo.");
+    }
+
+    // MANUAL SAVE BUTTON
+    window.saveData = async () => {
+        await saveDataSync(currentDocId);
+        alert("Dados salvos manualmente!");
     }
 
     window.calculateAll = () => {
@@ -691,19 +666,19 @@
     function addMainRowHTML(tbody, item) {
         const tr = document.createElement("tr");
         let opts = window.iconsList.map(i => `<option value="${i}" ${i === item.icon ? 'selected' : ''}>${i}</option>`).join('');
-        const locked = item.locked ? 'readonly style="background:rgba(0,0,0,0.05); color:#999"' : 'onfocus="window.isEditing=true" onblur="window.isEditing=false"';
+        const locked = item.locked ? 'readonly style="background:rgba(0,0,0,0.05); color:#999"' : '';
         const del = item.locked ? '' : `<button class="btn-del" onclick="removeRow(this)">×</button>`;
         tr.innerHTML = `<td><select class="icon-select" onchange="calculateAndSchedule()">${opts}</select></td><td><input type="text" class="td-input" value="${item.name}" ${locked} oninput="calculateAndSchedule()"></td><td><input type="number" class="td-input val-input" value="${item.value}" step="0.01" id="${item.id||''}" ${locked} oninput="calculateAndSchedule()"></td><td style="text-align:center"><input type="checkbox" ${item.isMine?'checked':''} onchange="calculateAndSchedule()"></td><td>${del}</td>`;
         tbody.appendChild(tr);
     }
     function addIncomeRowHTML(tbody, item) {
         const tr = document.createElement("tr");
-        tr.innerHTML = `<td><input type="text" class="td-input" value="${item.desc}" placeholder="Descrição" oninput="calculateAndSchedule()" onfocus="window.isEditing=true" onblur="window.isEditing=false"></td><td><input type="number" class="td-input val-input" value="${item.value}" step="0.01" oninput="calculateAndSchedule()" onfocus="window.isEditing=true" onblur="window.isEditing=false"></td><td><button class="btn-del" onclick="removeRow(this)">×</button></td>`;
+        tr.innerHTML = `<td><input type="text" class="td-input" value="${item.desc}" placeholder="Descrição" oninput="calculateAndSchedule()"></td><td><input type="number" class="td-input val-input" value="${item.value}" step="0.01" oninput="calculateAndSchedule()"></td><td><button class="btn-del" onclick="removeRow(this)">×</button></td>`;
         tbody.appendChild(tr);
     }
     function addSplitRowHTML(tbody, item) {
         const tr = document.createElement("tr");
-        tr.innerHTML = `<td><input type="text" class="td-input split-name" value="${item.name}" placeholder="Nome" oninput="calculateAndSchedule()" onfocus="window.isEditing=true" onblur="window.isEditing=false"></td><td><input type="text" class="td-input" value="${item.desc}" placeholder="Item" oninput="calculateAndSchedule()" onfocus="window.isEditing=true" onblur="window.isEditing=false"></td><td><input type="text" class="td-input split-inst" value="${item.inst||''}" placeholder="1/10" oninput="updateBar(this);calculateAndSchedule()" onfocus="window.isEditing=true" onblur="window.isEditing=false"><div class="prog-bar"><div class="prog-fill"></div></div></td><td><input type="number" class="td-input val-input split-val" value="${item.value}" step="0.01" oninput="calculateAndSchedule()" onfocus="window.isEditing=true" onblur="window.isEditing=false"></td><td><button class="btn-del" onclick="removeRow(this)">×</button></td>`;
+        tr.innerHTML = `<td><input type="text" class="td-input split-name" value="${item.name}" placeholder="Nome" oninput="calculateAndSchedule()"></td><td><input type="text" class="td-input" value="${item.desc}" placeholder="Item" oninput="calculateAndSchedule()"></td><td><input type="text" class="td-input split-inst" value="${item.inst||''}" placeholder="1/10" oninput="updateBar(this);calculateAndSchedule()"><div class="prog-bar"><div class="prog-fill"></div></div></td><td><input type="number" class="td-input val-input split-val" value="${item.value}" step="0.01" oninput="calculateAndSchedule()"></td><td><button class="btn-del" onclick="removeRow(this)">×</button></td>`;
         tbody.appendChild(tr);
         if(item.inst) updateBar(tr.querySelector('.split-inst'));
     }
