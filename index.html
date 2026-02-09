@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Financeiro 23.0</title>
+    <title>Financeiro 24.0 (Repair)</title>
 
     <link rel="apple-touch-icon" href="icone2.0.png">
     <link rel="icon" type="image/png" href="icone2.0.png">
@@ -36,14 +36,8 @@
         body { font-family: 'Inter', sans-serif; background-color: var(--bg-body); color: var(--text-main); margin: 0; display: flex; height: 100vh; overflow: hidden; transition: background 0.3s; }
         
         /* SIDEBAR */
-        #sidebar {
-            width: 260px; background: var(--bg-sidebar); border-right: 1px solid var(--border);
-            display: flex; flex-direction: column; padding: 20px; transition: transform 0.3s;
-            z-index: 100; height: 100%;
-        }
-        
+        #sidebar { width: 260px; background: var(--bg-sidebar); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 20px; transition: transform 0.3s; z-index: 100; height: 100%; }
         #main-content { flex: 1; overflow-y: auto; padding: 20px; position: relative; }
-        
         .mobile-toggle { display: none; position: absolute; top: 15px; left: 15px; z-index: 200; background: var(--bg-card); border: 1px solid var(--border); padding: 8px; border-radius: 8px; cursor: pointer; color: var(--text-main); }
         
         @media (max-width: 768px) {
@@ -54,14 +48,11 @@
         }
 
         .brand { font-size: 1.4rem; font-weight: 800; color: var(--primary); margin-bottom: 30px; display: flex; align-items: center; gap: 10px; }
-        .nav-btn {
-            background: transparent; border: none; color: var(--text-muted); padding: 12px 15px;
-            text-align: left; font-size: 0.95rem; font-weight: 600; cursor: pointer; border-radius: 10px;
-            margin-bottom: 5px; display: flex; align-items: center; gap: 10px; transition: 0.2s; width: 100%;
-        }
+        .nav-btn { background: transparent; border: none; color: var(--text-muted); padding: 12px 15px; text-align: left; font-size: 0.95rem; font-weight: 600; cursor: pointer; border-radius: 10px; margin-bottom: 5px; display: flex; align-items: center; gap: 10px; transition: 0.2s; width: 100%; }
         .nav-btn:hover { background: rgba(100,116,139,0.1); color: var(--text-main); }
         .nav-btn.active { background: var(--primary); color: white; }
         .nav-btn i { font-size: 1.2rem; }
+        .menu-divider { height: 1px; background: var(--border); margin: 15px 0; }
         .sidebar-footer { margin-top: auto; border-top: 1px solid var(--border); padding-top: 15px; }
 
         .view-section { display: none; animation: fadeIn 0.3s; }
@@ -140,7 +131,6 @@
         .lock-box { background: var(--bg-card); padding: 40px; border-radius: 20px; text-align: center; border: 1px solid var(--border); }
         .lock-input { padding: 10px; font-size: 1.5rem; text-align: center; margin: 20px 0; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-body); color: var(--text-main); }
 
-        /* PDF PREVIEW */
         #pdfModal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1000; display: none; align-items: center; justify-content: center; }
         .pdf-box { width: 90%; height: 90%; background: #fff; border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; }
         .pdf-header { padding: 15px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center; background: #f1f5f9; }
@@ -184,6 +174,8 @@
     <button class="nav-btn" onclick="switchView('debts')"><span class="material-icons-round">people</span> Devedores</button>
     <button class="nav-btn" onclick="switchView('history')"><span class="material-icons-round">bar_chart</span> Histórico</button>
     
+    <div class="menu-divider"></div>
+
     <div class="sidebar-footer">
         <button class="nav-btn btn-theme" onclick="toggleTheme()"><span class="material-icons-round">dark_mode</span> Tema</button>
         <button class="nav-btn" style="color:var(--danger); justify-content: flex-start;" onclick="lockApp()"><span class="material-icons-round">lock</span> Bloquear</button>
@@ -413,6 +405,7 @@
                 document.getElementById('syncStatus').innerText = "Sincronizado";
             } else { 
                 window.paidDebtors = []; updateScreen(null); 
+                // Força criação imediata se não existir
                 saveData(true); 
             }
         });
@@ -483,7 +476,7 @@
         });
 
         let totalExpenses = fixedSumTotal + cardsShareTotal + emergency;
-        let myRealExpenses = fixedSumMine + cardsShareTotal; // REMOVIDO EMERGENCY DO REAL COST
+        let myRealExpenses = fixedSumMine + cardsShareTotal; // SEM EMERGENCIA
 
         let extraIncome = 0;
         document.querySelectorAll('#incomeTable tbody tr').forEach(tr => extraIncome += parseFloat(tr.querySelector('.val-input').value)||0);
@@ -718,7 +711,7 @@
         calculateAll(); 
         document.getElementById('syncStatus').innerText = "Salvando..."; 
         clearTimeout(saveTimer); 
-        saveTimer = setTimeout(() => saveData(), 800); 
+        saveTimer = setTimeout(() => saveData(), 1000); 
     };
     
     window.copyPreviousMonth = async function() {
@@ -737,6 +730,7 @@
 
     async function saveData(force = false, targetId = null) {
         if (isPopulating && !force) return;
+        
         const idToSave = targetId || currentDocId;
         if (!idToSave) return;
 
@@ -760,7 +754,10 @@
         const sc = (id, arr) => { document.querySelectorAll(`#${id} tbody tr`).forEach(tr => { const i = tr.querySelectorAll('input'); arr.push({ name: i[0].value, desc: i[1].value, inst: i[2].value, value: i[3].value }); }); };
         sc('bbTable', data.bb); sc('mpTable', data.mp); sc('passaiTable', data.passai); sc('nubankTable', data.nubank);
         
-        try { await setDoc(doc(db, "meus_gastos", idToSave), data); document.getElementById('syncStatus').innerText = "Salvo"; } catch (e) { console.error(e); }
+        try { await setDoc(doc(db, "meus_gastos", idToSave), data); document.getElementById('syncStatus').innerText = "Salvo"; } catch (e) { 
+            console.error(e);
+            alert("Erro ao salvar: " + e.message); // ALERTA DE ERRO
+        }
     }
 </script>
 </body>
