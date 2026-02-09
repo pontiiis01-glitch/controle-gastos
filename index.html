@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title> Minhas Finanças </title>
+    <title>Financeiro 42.0 (Ultimate)</title>
 
     <link rel="icon" type="image/png" href="icone2.0.png">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -23,7 +23,7 @@
             --text-main: #0f172a; --text-muted: #64748b; --border: #e2e8f0;
             --success: #10b981; --success-bg: #dcfce7; --success-text: #166534;
             --danger: #ef4444; --warning: #f59e0b; --purple: #8b5cf6;
-            --shadow: 0 10px 30px -10px rgba(0,0,0,0.08); /* Sombra mais difusa e moderna */
+            --shadow: 0 10px 30px -10px rgba(0,0,0,0.08);
         }
 
         [data-theme="dark"] {
@@ -42,7 +42,6 @@
             to { opacity: 1; transform: translateY(0); }
         }
         
-        /* Aplica a animação nas linhas das tabelas */
         tbody tr { animation: slideUpFade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
         tbody tr:nth-child(1) { animation-delay: 0.05s; }
         tbody tr:nth-child(2) { animation-delay: 0.1s; }
@@ -59,7 +58,6 @@
         }
         .section { background: var(--bg-card); border-radius: 24px; margin-bottom: 30px; overflow: hidden; }
         
-        /* Efeito de hover/clique */
         .card-stat:active, .btn-action:active { transform: scale(0.96); }
         @media(min-width: 769px) {
             .card-stat:hover { transform: translateY(-5px); box-shadow: 0 20px 40px -5px rgba(0,0,0,0.12) !important; }
@@ -436,6 +434,7 @@
                     <button class="chart-btn" onclick="fetchHistoryData(3, this)">3M</button>
                     <button class="chart-btn active" onclick="fetchHistoryData(6, this)">6M</button>
                     <button class="chart-btn" onclick="fetchHistoryData(12, this)">1A</button>
+                    <button class="chart-btn" onclick="fetchHistoryData('max', this)">MAX</button>
                 </div>
             </div>
             <div class="sec-body" style="height:350px;"><canvas id="historyChart"></canvas></div>
@@ -832,43 +831,104 @@
         document.getElementById('totalToReceive').innerText = fmt(tr); document.getElementById('totalReceived').innerText = fmt(r);
     }
 
+    // --- PDF COM DESIGN PREMIUM ---
     window.openPDFPreview = () => {
-        const { jsPDF } = window.jspdf; const doc = new jsPDF();
-        doc.setFillColor(37, 99, 235); doc.rect(0, 0, 210, 30, 'F');
-        doc.setFontSize(18); doc.setTextColor(255, 255, 255); doc.text("Relatório Financeiro Detalhado", 14, 18);
-        doc.setFontSize(10); doc.text(`Referência: ${document.getElementById('monthPicker').value}`, 14, 26);
-        let y = 40; doc.setTextColor(0);
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        
+        const colPrimary = [37, 99, 235]; const colSuccess = [16, 185, 129]; const colDanger = [239, 68, 68]; const colWarning = [245, 158, 11]; const colDark = [15, 23, 42]; const colGray = [100, 116, 139];
 
-        doc.setFontSize(14); doc.text("1. Resumo Geral", 14, y);
+        // Cabeçalho Moderno
+        doc.setFillColor(...colPrimary); doc.rect(0, 0, 8, 297, 'F'); 
+        doc.setFont("helvetica", "bold"); doc.setFontSize(22); doc.setTextColor(...colDark); doc.text("Relatório Mensal", 20, 20);
+        doc.setFont("helvetica", "normal"); doc.setFontSize(10); doc.setTextColor(...colGray);
+        doc.text(`Referência: ${document.getElementById('monthPicker').value}  |  Gerado em: ${new Date().toLocaleDateString('pt-BR')}`, 20, 26);
+        doc.setDrawColor(226, 232, 240); doc.line(20, 32, 190, 32);
+
+        // Dashboard (Cards)
+        let y = 45;
         const salary = parseFloat(document.getElementById('salary').value)||0;
         const extra = parseFloat(document.getElementById('extraIncomeTotal').innerText.replace(/[^\d,]/g,'').replace(',','.'))||0;
-        const out = parseFloat(document.getElementById('totalExpenses').innerText.replace(/[^\d,]/g,'').replace(',','.'))||0;
-        const rest = parseFloat(document.getElementById('remaining').innerText.replace(/[^\d,-]/g,'').replace(',','.'))||0;
-        doc.autoTable({ startY: y+5, head:[['Conceito','Valor']], body:[['Salário Base',fmt(salary)],['Rendas Extras',fmt(extra)],['Total Saídas',fmt(out)],['Saldo Restante',fmt(rest)]], theme:'grid', headStyles:{fillColor:[37,99,235]} });
+        let fixedSum = 0; document.querySelectorAll('#mainTable tbody tr').forEach(tr => { if(!tr.querySelector('.val-input').hasAttribute('readonly')) fixedSum += parseFloat(tr.querySelector('.val-input').value)||0; });
+        fixedSum += parseFloat(document.getElementById('emergencyFund').value)||0;
+        const bb = parseFloat(document.getElementById('bbTotalBill').value)||0; const mp = parseFloat(document.getElementById('mpTotalBill').value)||0; const passai = parseFloat(document.getElementById('passaiTotalBill').value)||0; const nubank = parseFloat(document.getElementById('nubankTotalBill').value)||0;
+        const totalCards = bb + mp + passai + nubank;
+        const saldoFinal = parseFloat(document.getElementById('remaining').innerText.replace(/[^\d,-]/g,'').replace(',','.'))||0;
+
+        const drawCard = (x, title, value, color) => {
+            doc.setFillColor(255, 255, 255); doc.setDrawColor(...color); doc.setLineWidth(0.5); doc.roundedRect(x, y, 40, 25, 3, 3, 'FD');
+            doc.setFillColor(...color); doc.rect(x, y, 40, 2, 'F');
+            doc.setFontSize(8); doc.setTextColor(...colGray); doc.text(title, x+2, y+8);
+            doc.setFontSize(11); doc.setFont("helvetica", "bold"); doc.setTextColor(...colDark); doc.text(fmt(value), x+2, y+18);
+        };
+
+        drawCard(20, "RECEITA TOTAL", salary+extra, colSuccess);
+        drawCard(65, "GASTOS FIXOS", fixedSum, colWarning);
+        drawCard(110, "FATURA CARTÕES", totalCards, [139, 92, 246]);
+        drawCard(155, "SALDO FINAL", saldoFinal, saldoFinal >= 0 ? colPrimary : colDanger);
+
+        y += 35; 
+        const tableStyles = { theme: 'grid', headStyles: { fontStyle: 'bold', fontSize: 9, halign: 'left' }, bodyStyles: { fontSize: 9, textColor: 50 }, alternateRowStyles: { fillColor: [248, 250, 252] }, columnStyles: { 0: { cellWidth: 'auto' }, 1: { cellWidth: 40, halign: 'right', fontStyle: 'bold' } }, margin: { left: 20, right: 20 } };
+
+        const incomeRows = [['Salário Base', fmt(salary)]];
+        document.querySelectorAll('#incomeTable tbody tr').forEach(tr => { const d = tr.querySelector('.sys-input').value; const v = parseFloat(tr.querySelector('.val-input').value)||0; if(v>0) incomeRows.push([d, fmt(v)]); });
+        
+        doc.setFontSize(12); doc.setTextColor(...colSuccess); doc.setFont("helvetica", "bold"); doc.text("Entradas & Rendas", 20, y);
+        doc.autoTable({ startY: y+3, head: [['Fonte', 'Valor']], body: incomeRows, ...tableStyles, headStyles: { ...tableStyles.headStyles, fillColor: colSuccess } });
         y = doc.lastAutoTable.finalY + 15;
 
-        // ... (Mesma lógica PDF detalhado anterior) ...
-        const fixedRows = []; document.querySelectorAll('#mainTable tbody tr').forEach(tr => { if(parseFloat(tr.querySelector('.val-input').value)>0) fixedRows.push([tr.querySelector('.sys-input').value, fmt(parseFloat(tr.querySelector('.val-input').value))]); });
-        if(fixedRows.length>0) { doc.text("2. Gastos Fixos", 14, y); doc.autoTable({startY:y+5, head:[['Item','Valor']], body:fixedRows, theme:'striped', headStyles:{fillColor:[245,158,11]}}); y=doc.lastAutoTable.finalY+15; }
-        
-        ['bbTable','mpTable','passaiTable','nubankTable'].forEach(id => {
-            const rows=[]; document.querySelectorAll(`#${id} tbody tr`).forEach(tr=>{ if(parseFloat(tr.querySelector('.val-input').value)>0) rows.push([tr.querySelector('.sys-input').value, tr.querySelector('.val-input').value]); });
-            if(rows.length>0 && y<250) { doc.text(`Cartão: ${id}`, 14, y); doc.autoTable({startY:y+5, body:rows}); y=doc.lastAutoTable.finalY+10; }
+        const fixedRows = []; document.querySelectorAll('#mainTable tbody tr').forEach(tr => { const n = tr.querySelector('.sys-input').value; const v = parseFloat(tr.querySelector('.val-input').value)||0; const isMine = tr.querySelector('input[type="checkbox"]').checked; if(v>0 && !tr.querySelector('.val-input').hasAttribute('readonly')) fixedRows.push([n + (isMine ? "" : " (Terceiros)"), fmt(v)]); });
+        const emerg = parseFloat(document.getElementById('emergencyFund').value)||0; if(emerg>0) fixedRows.push(['Reserva / Investimento', fmt(emerg)]);
+
+        if(fixedRows.length > 0) {
+            doc.setTextColor(...colWarning); doc.text("Despesas Fixas", 20, y);
+            doc.autoTable({ startY: y+3, head: [['Despesa', 'Valor']], body: fixedRows, ...tableStyles, headStyles: { ...tableStyles.headStyles, fillColor: colWarning } });
+            y = doc.lastAutoTable.finalY + 15;
+        }
+
+        const cardTables = [{id: 'bbTable', name: 'Banco do Brasil', tot: 'bbTotalBill'}, {id: 'mpTable', name: 'Mercado Pago', tot: 'mpTotalBill'}, {id: 'passaiTable', name: 'Passaí (Itaú)', tot: 'passaiTotalBill'}, {id: 'nubankTable', name: 'Nubank', tot: 'nubankTotalBill'}];
+        let hasCards = false;
+        cardTables.forEach(card => {
+            const rows = []; const totalBill = parseFloat(document.getElementById(card.tot).value)||0;
+            document.querySelectorAll(`#${card.id} tbody tr`).forEach(tr => { const inputs = tr.querySelectorAll('.sys-input'); const v = parseFloat(tr.querySelector('.val-input').value)||0; if(v>0) rows.push([`${inputs[1].value} (${inputs[0].value}) ${inputs[2].value ? '- '+inputs[2].value : ''}`, fmt(v)]); });
+
+            if(totalBill > 0 || rows.length > 0) {
+                if(!hasCards) { if(y > 250) { doc.addPage(); y=20; doc.setFillColor(...colPrimary); doc.rect(0, 0, 8, 297, 'F'); } doc.setTextColor(139, 92, 246); doc.text("Detalhamento de Cartões", 20, y); y += 5; hasCards = true; }
+                doc.setFontSize(10); doc.setTextColor(...colDark); doc.text(`${card.name} (Total: ${fmt(totalBill)})`, 20, y+4);
+                if(rows.length > 0) { doc.autoTable({ startY: y+6, head: [['Item / Responsável', 'Valor']], body: rows, ...tableStyles, headStyles: { ...tableStyles.headStyles, fillColor: [139, 92, 246] }, margin: { left: 25 } }); y = doc.lastAutoTable.finalY + 10; } else y += 15;
+            }
         });
 
-        document.getElementById('pdfPreviewFrame').src = doc.output('bloburl');
-        document.getElementById('pdfModal').style.display = 'flex';
-        document.getElementById('btnDownloadPDF').onclick = () => doc.save(`Relatorio_${currentDocId}.pdf`);
+        const debtors = []; document.querySelectorAll('.debt-card').forEach(d => { debtors.push([d.querySelector('.debt-header span').innerText, d.classList.contains('paid') ? "PAGO" : "PENDENTE", d.querySelector('.debt-amount').innerText]); });
+        if(debtors.length > 0) {
+            if(y > 240) { doc.addPage(); y=20; doc.setFillColor(...colPrimary); doc.rect(0, 0, 8, 297, 'F'); }
+            doc.setFontSize(12); doc.setTextColor(...colDanger); doc.text("Controle de Devedores", 20, y);
+            doc.autoTable({ startY: y+3, head: [['Devedor', 'Status', 'Valor']], body: debtors, ...tableStyles, columnStyles: { 0: {cellWidth:'auto'}, 1: {cellWidth:30}, 2: {cellWidth:40, halign:'right'} }, headStyles: { ...tableStyles.headStyles, fillColor: colDanger }, didParseCell: function(data) { if (data.section === 'body' && data.column.index === 1) { data.cell.styles.textColor = data.cell.raw === 'PAGO' ? colSuccess : colWarning; data.cell.styles.fontStyle = 'bold'; } } });
+        }
+
+        const pageCount = doc.internal.getNumberOfPages();
+        for(let i = 1; i <= pageCount; i++) { doc.setPage(i); doc.setFontSize(8); doc.setTextColor(150); doc.text(`Página ${i} de ${pageCount} - Financeiro 42.0`, 105, 290, { align: 'center' }); }
+        document.getElementById('pdfPreviewFrame').src = doc.output('bloburl'); document.getElementById('pdfModal').style.display = 'flex'; document.getElementById('btnDownloadPDF').onclick = () => doc.save(`Relatorio_Premium_${currentDocId}.pdf`);
     }
     window.closePDFModal = () => document.getElementById('pdfModal').style.display = 'none';
 
-    window.fetchHistoryData = async (range = 6, btnElement = null) => {
+    window.fetchHistoryData = async (range, btnElement = null) => {
         if(btnElement) { document.querySelectorAll('.chart-btn').forEach(b => b.classList.remove('active')); btnElement.classList.add('active'); }
-        const year = parseInt(currentDocId.split('-')[0]), month = parseInt(currentDocId.split('-')[1]);
+        
+        // Pega a referência correta do seletor
+        const pickerVal = document.getElementById('monthPicker').value;
+        const yearRef = parseInt(pickerVal.split('-')[0]);
+        const monthRef = parseInt(pickerVal.split('-')[1]);
+        
+        // Configuração do "MAX"
+        const finalRange = (range === 'max') ? 24 : range; // 24 meses (2 anos) é um bom "MAX"
+
         const reqs = [], labels = [];
-        for(let i=range-1; i>=0; i--) {
-            let m = month - i, y = year; while(m <= 0) { m += 12; y--; }
-            const id = `${y}-${String(m).padStart(2,'0')}`; labels.push(`${m}/${y}`);
+        for(let i=finalRange-1; i>=0; i--) {
+            let m = monthRef - i, y = yearRef; 
+            while(m <= 0) { m += 12; y--; }
+            const id = `${y}-${String(m).padStart(2,'0')}`; 
+            labels.push(`${m}/${y}`);
             reqs.push(getDoc(doc(db, "carteira_igor_v42", id)));
         }
         const snaps = await Promise.all(reqs);
