@@ -734,7 +734,7 @@
         const totalIncome = salary + extraIncome;
 
         document.getElementById('totalExpenses').innerText = fmt(totalExpenses);
-        document.getElementById('remaining').innerText = fmt(totalIncome - totalExpenses);
+        document.getElementById('remaining').innerText = fmt(totalIncome - totalExpenses - emergency);
         document.getElementById('myRealExpenses').innerText = fmt(myRealExpenses);
 
         const perc = totalIncome > 0 ? (totalExpenses/totalIncome)*100 : 0;
@@ -998,3 +998,4 @@
 </script>
 </body>
 </html>
+
