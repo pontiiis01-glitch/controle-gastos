@@ -365,7 +365,7 @@
                 </div>
             </div>
             <div class="sec-body">
-                <div class="table-wrap"><table id="bbTable"><thead><tr><th>Quem</th><th>Desc.</th><th>Parc.</th><th>Valor</th><th></th></tr></thead><tbody></tbody></table></div>
+                <div class="table-wrap"><table id="bbTable"><thead><tr><th>Quem</th><th>Dia</th><th>Desc.</th><th>Parc.</th><th>Valor</th><th></th></tr></thead><tbody></tbody></table></div>
                 <button class="btn-add" onclick="addSplitRow('bbTable')">+ Item no BB</button>
             </div>
         </div>
@@ -379,7 +379,7 @@
                 </div>
             </div>
             <div class="sec-body">
-                <div class="table-wrap"><table id="mpTable"><thead><tr><th>Quem</th><th>Desc.</th><th>Parc.</th><th>Valor</th><th></th></tr></thead><tbody></tbody></table></div>
+                <div class="table-wrap"><table id="mpTable"><thead><tr><th>Quem</th><th>Dia</th><th>Desc.</th><th>Parc.</th><th>Valor</th><th></th></tr></thead><tbody></tbody></table></div>
                 <button class="btn-add" onclick="addSplitRow('mpTable')">+ Item no MP</button>
             </div>
         </div>
@@ -393,7 +393,7 @@
                 </div>
             </div>
             <div class="sec-body">
-                <div class="table-wrap"><table id="passaiTable"><thead><tr><th>Quem</th><th>Desc.</th><th>Parc.</th><th>Valor</th><th></th></tr></thead><tbody></tbody></table></div>
+                <div class="table-wrap"><table id="passaiTable"><thead><tr><th>Quem</th><th>Dia</th><th>Desc.</th><th>Parc.</th><th>Valor</th><th></th></tr></thead><tbody></tbody></table></div>
                 <button class="btn-add" onclick="addSplitRow('passaiTable')">+ Item no Passaí</button>
             </div>
         </div>
@@ -407,7 +407,7 @@
                 </div>
             </div>
             <div class="sec-body">
-                <div class="table-wrap"><table id="nubankTable"><thead><tr><th>Quem</th><th>Desc.</th><th>Parc.</th><th>Valor</th><th></th></tr></thead><tbody></tbody></table></div>
+                <div class="table-wrap"><table id="nubankTable"><thead><tr><th>Quem</th><th>Dia</th><th>Desc.</th><th>Parc.</th><th>Valor</th><th></th></tr></thead><tbody></tbody></table></div>
                 <button class="btn-add" onclick="addSplitRow('nubankTable')">+ Item no Nubank</button>
             </div>
         </div>
@@ -652,8 +652,8 @@
             document.querySelectorAll(`#${tid} tbody tr`).forEach(tr => { 
                 const inputs = tr.querySelectorAll('.sys-input'); 
                 const val = tr.querySelector('.val-input').value;
-                if(inputs.length >= 3) {
-                     arr.push({ name: inputs[0].value, desc: inputs[1].value, inst: inputs[2].value, value: val }); 
+                if(inputs.length >= 4) {
+                     arr.push({ name: inputs[0].value, date: inputs[1].value, desc: inputs[2].value, inst: inputs[3].value, value: val }); 
                 }
             }); 
         };
@@ -666,7 +666,7 @@
         const data = captureScreenData();
         try { 
             await setDoc(doc(db, "carteira_igor_v42", targetId), data); 
-            if (navigator.vibrate) navigator.vibrate(50); // Feedback tátil
+            if (navigator.vibrate) navigator.vibrate(50); 
             showToast(); 
         } 
         catch(e) { console.error("Erro save sync", e); }
@@ -722,7 +722,8 @@
             }
         });
 
-        let totalExpenses = fixedSumTotal + cardsShareTotal + emergency;
+        // Emergência removida das saídas
+        let totalExpenses = fixedSumTotal + cardsShareTotal;
         let myRealExpenses = fixedSumMine + cardsShareTotal; 
 
         let extraIncome = 0;
@@ -742,7 +743,15 @@
         bar.style.background = perc < 50 ? '#10b981' : perc < 85 ? '#f59e0b' : '#ef4444';
 
         const allDebts = {};
-        const mergeDebts = (s) => { for(let k in s) { if(!allDebts[k]) allDebts[k]={...s[k]}; else { allDebts[k].total+=s[k].total; } } };
+        const mergeDebts = (s) => { 
+            for(let k in s) { 
+                if(!allDebts[k]) allDebts[k]={...s[k], dates: new Set(s[k].dates)}; 
+                else { 
+                    allDebts[k].total+=s[k].total; 
+                    if(s[k].dates) s[k].dates.forEach(d => allDebts[k].dates.add(d));
+                } 
+            } 
+        };
         mergeDebts(bb.debtors); mergeDebts(mp.debtors); mergeDebts(passai.debtors); mergeDebts(nubank.debtors);
         updateDebtors(allDebts);
         
@@ -750,7 +759,7 @@
         if(summaryChart) summaryChart.destroy();
         summaryChart = new Chart(ctx, { 
             type: 'doughnut', 
-            data: { labels: ['Fixos', 'Cartões', 'Reserva', 'Livre'], datasets: [{ data: [fixedSumTotal, cardsShareTotal, emergency, Math.max(0, totalIncome - totalExpenses)], backgroundColor: ['#3b82f6','#f59e0b','#8b5cf6','#10b981'], borderWidth: 0 }] }, 
+            data: { labels: ['Fixos', 'Cartões', 'Reserva', 'Livre'], datasets: [{ data: [fixedSumTotal, cardsShareTotal, emergency, Math.max(0, totalIncome - totalExpenses - emergency)], backgroundColor: ['#3b82f6','#f59e0b','#8b5cf6','#10b981'], borderWidth: 0 }] }, 
             options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'bottom'}} } 
         });
     };
@@ -770,13 +779,15 @@
         let others = 0, debtors = {};
         document.querySelectorAll(`#${tid} tbody tr`).forEach(tr => {
             const name = tr.querySelector('.sys-input.split-name').value.trim();
+            const date = tr.querySelector('.sys-input.split-date').value.trim();
             const val = parseFloat(tr.querySelector('.val-input').value) || 0;
             if(val>0) {
                 others += val;
                 if(name) {
                     const k = name.toLowerCase();
-                    if(!debtors[k]) debtors[k] = {name, total:0};
+                    if(!debtors[k]) debtors[k] = {name, total:0, dates: new Set()};
                     debtors[k].total += val;
+                    if(date) debtors[k].dates.add(date);
                 }
             }
         });
@@ -787,7 +798,7 @@
 
     window.addMainRow = () => { addMainRowHTML(document.querySelector("#mainTable tbody"), {icon:'💸',name:'',value:'',isMine:true}); scheduleSave(); }
     window.addIncomeRow = () => { addIncomeRowHTML(document.querySelector("#incomeTable tbody"), {desc:'',value:''}); scheduleSave(); }
-    window.addSplitRow = (id) => { addSplitRowHTML(document.querySelector(`#${id} tbody`), {name:'',desc:'',inst:'',value:''}); scheduleSave(); }
+    window.addSplitRow = (id) => { addSplitRowHTML(document.querySelector(`#${id} tbody`), {name:'',date:'',desc:'',inst:'',value:''}); scheduleSave(); }
     
     function addMainRowHTML(tbody, item) {
         const tr = document.createElement("tr");
@@ -804,7 +815,7 @@
     }
     function addSplitRowHTML(tbody, item) {
         const tr = document.createElement("tr");
-        tr.innerHTML = `<td><input type="text" class="sys-input split-name" value="${item.name}" placeholder="Nome" oninput="scheduleSave()" onfocus="window.isEditing=true" onblur="window.isEditing=false"></td><td><input type="text" class="sys-input" value="${item.desc}" placeholder="Item" oninput="scheduleSave()" onfocus="window.isEditing=true" onblur="window.isEditing=false"></td><td><input type="text" class="sys-input" value="${item.inst||''}" placeholder="1/10" oninput="updateBar(this);scheduleSave()" onfocus="window.isEditing=true" onblur="window.isEditing=false"><div class="prog-bar"><div class="prog-fill"></div></div></td><td><input type="number" class="val-input" value="${item.value}" step="0.01" oninput="scheduleSave()" onfocus="window.isEditing=true" onblur="window.isEditing=false"></td><td><button class="btn-del" onclick="removeRow(this)">×</button></td>`;
+        tr.innerHTML = `<td><input type="text" class="sys-input split-name" value="${item.name}" placeholder="Nome" oninput="scheduleSave()" onfocus="window.isEditing=true" onblur="window.isEditing=false"></td><td><input type="text" class="sys-input split-date" value="${item.date||''}" placeholder="Ex: 04/03" oninput="scheduleSave()" onfocus="window.isEditing=true" onblur="window.isEditing=false" style="width: 85px; text-align: center;"></td><td><input type="text" class="sys-input" value="${item.desc}" placeholder="Item" oninput="scheduleSave()" onfocus="window.isEditing=true" onblur="window.isEditing=false"></td><td><input type="text" class="sys-input" value="${item.inst||''}" placeholder="1/10" oninput="updateBar(this);scheduleSave()" onfocus="window.isEditing=true" onblur="window.isEditing=false"><div class="prog-bar"><div class="prog-fill"></div></div></td><td><input type="number" class="val-input" value="${item.value}" step="0.01" oninput="scheduleSave()" onfocus="window.isEditing=true" onblur="window.isEditing=false"></td><td><button class="btn-del" onclick="removeRow(this)">×</button></td>`;
         tbody.appendChild(tr);
         if(item.inst) updateBar(tr.querySelector('.sys-input[placeholder="1/10"]'));
     }
@@ -822,9 +833,10 @@
                 const p = all[k]; 
                 const isPaid = window.paidDebtors.includes(p.name);
                 if(isPaid) r+=p.total; else tr+=p.total;
+                const dateStr = (p.dates && p.dates.size > 0) ? `<div class="debt-dates" style="font-size:0.85rem; color:var(--text-muted); font-weight:600;">Dia(s): ${Array.from(p.dates).join(', ')}</div>` : '';
                 const div = document.createElement('div'); 
                 div.className = `debt-card ${isPaid?'paid':''}`;
-                div.innerHTML = `<div class="debt-header"><span>${p.name}</span></div><div class="debt-amount">${fmt(p.total)}</div><div class="debt-footer"><button class="status-btn ${isPaid?'paid':'pending'}" onclick="togglePaid('${p.name}')">${isPaid ? '✔ PAGO' : '⏳ PENDENTE'}</button></div>`;
+                div.innerHTML = `<div class="debt-header"><span>${p.name}</span></div><div class="debt-amount">${fmt(p.total)}</div>${dateStr}<div class="debt-footer"><button class="status-btn ${isPaid?'paid':'pending'}" onclick="togglePaid('${p.name}')">${isPaid ? '✔ PAGO' : '⏳ PENDENTE'}</button></div>`;
                 list.appendChild(div);
             }
         }
@@ -850,7 +862,7 @@
         const salary = parseFloat(document.getElementById('salary').value)||0;
         const extra = parseFloat(document.getElementById('extraIncomeTotal').innerText.replace(/[^\d,]/g,'').replace(',','.'))||0;
         let fixedSum = 0; document.querySelectorAll('#mainTable tbody tr').forEach(tr => { if(!tr.querySelector('.val-input').hasAttribute('readonly')) fixedSum += parseFloat(tr.querySelector('.val-input').value)||0; });
-        fixedSum += parseFloat(document.getElementById('emergencyFund').value)||0;
+        // Emergência removida de fixedSum para não inflar as saídas no PDF
         const bb = parseFloat(document.getElementById('bbTotalBill').value)||0; const mp = parseFloat(document.getElementById('mpTotalBill').value)||0; const passai = parseFloat(document.getElementById('passaiTotalBill').value)||0; const nubank = parseFloat(document.getElementById('nubankTotalBill').value)||0;
         const totalCards = bb + mp + passai + nubank;
         const saldoFinal = parseFloat(document.getElementById('remaining').innerText.replace(/[^\d,-]/g,'').replace(',','.'))||0;
@@ -890,7 +902,14 @@
         let hasCards = false;
         cardTables.forEach(card => {
             const rows = []; const totalBill = parseFloat(document.getElementById(card.tot).value)||0;
-            document.querySelectorAll(`#${card.id} tbody tr`).forEach(tr => { const inputs = tr.querySelectorAll('.sys-input'); const v = parseFloat(tr.querySelector('.val-input').value)||0; if(v>0) rows.push([`${inputs[1].value} (${inputs[0].value}) ${inputs[2].value ? '- '+inputs[2].value : ''}`, fmt(v)]); });
+            document.querySelectorAll(`#${card.id} tbody tr`).forEach(tr => { 
+                const inputs = tr.querySelectorAll('.sys-input'); 
+                const v = parseFloat(tr.querySelector('.val-input').value)||0; 
+                if(v>0) {
+                    const dateText = inputs[1].value ? ` [Dia: ${inputs[1].value}]` : '';
+                    rows.push([`${inputs[2].value} (${inputs[0].value})${dateText} ${inputs[3].value ? '- '+inputs[3].value : ''}`, fmt(v)]);
+                }
+            });
 
             if(totalBill > 0 || rows.length > 0) {
                 if(!hasCards) { if(y > 250) { doc.addPage(); y=20; doc.setFillColor(...colPrimary); doc.rect(0, 0, 8, 297, 'F'); } doc.setTextColor(139, 92, 246); doc.text("Detalhamento de Cartões", 20, y); y += 5; hasCards = true; }
@@ -899,7 +918,11 @@
             }
         });
 
-        const debtors = []; document.querySelectorAll('.debt-card').forEach(d => { debtors.push([d.querySelector('.debt-header span').innerText, d.classList.contains('paid') ? "PAGO" : "PENDENTE", d.querySelector('.debt-amount').innerText]); });
+        const debtors = []; document.querySelectorAll('.debt-card').forEach(d => { 
+            const dateDiv = d.querySelector('.debt-dates');
+            const dateText = dateDiv ? `\n${dateDiv.innerText}` : '';
+            debtors.push([d.querySelector('.debt-header span').innerText + dateText, d.classList.contains('paid') ? "PAGO" : "PENDENTE", d.querySelector('.debt-amount').innerText]); 
+        });
         if(debtors.length > 0) {
             if(y > 240) { doc.addPage(); y=20; doc.setFillColor(...colPrimary); doc.rect(0, 0, 8, 297, 'F'); }
             doc.setFontSize(12); doc.setTextColor(...colDanger); doc.text("Controle de Devedores", 20, y);
@@ -915,13 +938,11 @@
     window.fetchHistoryData = async (range, btnElement = null) => {
         if(btnElement) { document.querySelectorAll('.chart-btn').forEach(b => b.classList.remove('active')); btnElement.classList.add('active'); }
         
-        // Pega a referência correta do seletor
         const pickerVal = document.getElementById('monthPicker').value;
         const yearRef = parseInt(pickerVal.split('-')[0]);
         const monthRef = parseInt(pickerVal.split('-')[1]);
         
-        // Configuração do "MAX"
-        const finalRange = (range === 'max') ? 24 : range; // 24 meses (2 anos) é um bom "MAX"
+        const finalRange = (range === 'max') ? 24 : range; 
 
         const reqs = [], labels = [];
         for(let i=finalRange-1; i>=0; i--) {
@@ -937,7 +958,7 @@
             if(snap.exists()) {
                 const d = snap.data();
                 let inc = (parseFloat(d.salary)||0); if(d.extraIncome) d.extraIncome.forEach(x=>inc+=(parseFloat(x.value)||0));
-                let exp = (parseFloat(d.emergency)||0); 
+                let exp = 0; // Removida a contagem de emergência no histórico de saídas
                 const sumC = (l) => { let s=0; if(l) l.forEach(k=>s+=parseFloat(k.value)||0); return s; };
                 const calcB = (b,l) => (parseFloat(b)||0) - sumC(l);
                 if(d.main) d.main.forEach(x=>{if(!x.locked) exp+=parseFloat(x.value)||0;});
@@ -977,4 +998,3 @@
 </script>
 </body>
 </html>
-
