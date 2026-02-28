@@ -207,12 +207,12 @@
         .thumb-nubank { background-image: url('nubank.jpeg'); background-color: #a855f7; }
 
         /* DEVEDORES */
-        .debt-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; }
+        .debt-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
         .debt-card { background: var(--bg-card); border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
         .debt-card.paid { background: var(--success-bg); opacity: 0.8; }
-        .debt-header { display: flex; justify-content: space-between; font-weight: 700; font-size: 1.1rem; }
-        .debt-amount { font-size: 1.5rem; font-weight: 800; color: var(--text-main); }
-        .status-btn { padding: 8px; border-radius: 10px; border: none; font-size: 0.8rem; font-weight: 800; cursor: pointer; width: 100%; transition: 0.2s; }
+        .debt-header { display: flex; justify-content: space-between; align-items: center; font-weight: 800; font-size: 1.2rem; }
+        .debt-amount { font-size: 1.4rem; font-weight: 800; color: var(--text-main); }
+        .status-btn { padding: 10px; border-radius: 10px; border: none; font-size: 0.85rem; font-weight: 800; cursor: pointer; width: 100%; transition: 0.2s; text-transform: uppercase; }
         .status-btn.pending { background: #fef3c7; color: #b45309; }
         .status-btn.paid { background: #10b981; color: white; }
 
@@ -470,6 +470,7 @@
     let summaryChart = null; 
     let barChart = null;
     let pdfDocInstance = null;
+    window.lastDebts = {}; // Usado para exportar o PDF de forma mais inteligente
     
     window.paidDebtors = [];
     window.iconsList = ["💸", "🏠", "💡", "💧", "📶", "🏋️", "🚗", "⛽", "🍔", "💇", "💊", "💳", "🎓", "✈️"];
@@ -698,10 +699,11 @@
     }
 
     window.calculateAll = () => {
-        const bb = processCard('bbTable', 'bbTotalBill', 'bbMyShareDisplay');
-        const mp = processCard('mpTable', 'mpTotalBill', 'mpMyShareDisplay');
-        const passai = processCard('passaiTable', 'passaiTotalBill', 'passaiMyShareDisplay');
-        const nubank = processCard('nubankTable', 'nubankTotalBill', 'nubankMyShareDisplay');
+        // Agora passando qual cartão é, para o devedor saber de onde veio
+        const bb = processCard('bbTable', 'bbTotalBill', 'bbMyShareDisplay', 'BB');
+        const mp = processCard('mpTable', 'mpTotalBill', 'mpMyShareDisplay', 'MP');
+        const passai = processCard('passaiTable', 'passaiTotalBill', 'passaiMyShareDisplay', 'Passaí');
+        const nubank = processCard('nubankTable', 'nubankTotalBill', 'nubankMyShareDisplay', 'Nubank');
 
         const cardsShareTotal = bb.myShare + mp.myShare + passai.myShare + nubank.myShare;
 
@@ -722,7 +724,7 @@
             }
         });
 
-        // Emergência removida das saídas
+        // Emergência fora das saídas
         let totalExpenses = fixedSumTotal + cardsShareTotal;
         let myRealExpenses = fixedSumMine + cardsShareTotal; 
 
@@ -734,6 +736,7 @@
         const totalIncome = salary + extraIncome;
 
         document.getElementById('totalExpenses').innerText = fmt(totalExpenses);
+        // Descontando a emergência do livre também
         document.getElementById('remaining').innerText = fmt(totalIncome - totalExpenses - emergency);
         document.getElementById('myRealExpenses').innerText = fmt(myRealExpenses);
 
@@ -745,14 +748,14 @@
         const allDebts = {};
         const mergeDebts = (s) => { 
             for(let k in s) { 
-                if(!allDebts[k]) allDebts[k]={...s[k], dates: new Set(s[k].dates)}; 
-                else { 
-                    allDebts[k].total+=s[k].total; 
-                    if(s[k].dates) s[k].dates.forEach(d => allDebts[k].dates.add(d));
-                } 
+                if(!allDebts[k]) allDebts[k] = { name: s[k].name, total: 0, items: [] }; 
+                allDebts[k].total += s[k].total; 
+                allDebts[k].items = allDebts[k].items.concat(s[k].items);
             } 
         };
         mergeDebts(bb.debtors); mergeDebts(mp.debtors); mergeDebts(passai.debtors); mergeDebts(nubank.debtors);
+        
+        window.lastDebts = allDebts; // Salvando para o PDF usar depois
         updateDebtors(allDebts);
         
         const ctx = document.getElementById('expenseChart').getContext('2d');
@@ -774,26 +777,39 @@
         }
     }
 
-    function processCard(tid, totId, displayId) {
+    function processCard(tid, totId, displayId, cardName) {
         const bill = parseFloat(document.getElementById(totId).value) || 0;
         let others = 0, debtors = {};
         document.querySelectorAll(`#${tid} tbody tr`).forEach(tr => {
-            const name = tr.querySelector('.sys-input.split-name').value.trim();
-            const date = tr.querySelector('.sys-input.split-date').value.trim();
+            const inputs = tr.querySelectorAll('.sys-input');
+            const name = inputs[0].value.trim();
+            const date = inputs[1].value.trim();
+            const desc = inputs[2].value.trim();
+            const inst = inputs[3].value.trim();
             const val = parseFloat(tr.querySelector('.val-input').value) || 0;
+            
             if(val>0) {
                 others += val;
                 if(name) {
                     const k = name.toLowerCase();
-                    if(!debtors[k]) debtors[k] = {name, total:0, dates: new Set()};
+                    if(!debtors[k]) debtors[k] = { name, total: 0, items: [] };
                     debtors[k].total += val;
-                    if(date) debtors[k].dates.add(date);
+                    // Guardando a informação detalhada do item
+                    debtors[k].items.push({ card: cardName, date, desc, inst, val });
                 }
             }
         });
         const myShare = bill - others;
         document.getElementById(displayId).innerText = "Minha Parte: " + fmt(myShare);
         return { myShare, debtors };
+    }
+
+    function getCardBadge(card) {
+        if(card==='BB') return `<span style="background:#fcd34d; color:#854d0e; padding:2px 6px; border-radius:4px; font-size:0.65rem; font-weight:800; display:inline-block;">BB</span>`;
+        if(card==='MP') return `<span style="background:#3b82f6; color:#fff; padding:2px 6px; border-radius:4px; font-size:0.65rem; font-weight:800; display:inline-block;">MP</span>`;
+        if(card==='Passaí') return `<span style="background:#f97316; color:#fff; padding:2px 6px; border-radius:4px; font-size:0.65rem; font-weight:800; display:inline-block;">PASSAÍ</span>`;
+        if(card==='Nubank') return `<span style="background:#a855f7; color:#fff; padding:2px 6px; border-radius:4px; font-size:0.65rem; font-weight:800; display:inline-block;">NUBANK</span>`;
+        return '';
     }
 
     window.addMainRow = () => { addMainRowHTML(document.querySelector("#mainTable tbody"), {icon:'💸',name:'',value:'',isMine:true}); scheduleSave(); }
@@ -833,10 +849,41 @@
                 const p = all[k]; 
                 const isPaid = window.paidDebtors.includes(p.name);
                 if(isPaid) r+=p.total; else tr+=p.total;
-                const dateStr = (p.dates && p.dates.size > 0) ? `<div class="debt-dates" style="font-size:0.85rem; color:var(--text-muted); font-weight:600;">Dia(s): ${Array.from(p.dates).join(', ')}</div>` : '';
+                
+                // Construindo a lista detalhada para cada Devedor
+                let itemsHTML = `<div style="margin-top:10px; border-top:1px dashed var(--border); padding-top:10px; display:flex; flex-direction:column; gap:8px;">`;
+                
+                p.items.sort((a,b) => (a.date||'').localeCompare(b.date||'')); // Ordena por data
+                
+                p.items.forEach(it => {
+                    const badge = getCardBadge(it.card);
+                    const dt = it.date ? `<span style="color:var(--danger); font-weight:800; font-size:0.75rem; background:rgba(239, 68, 68, 0.1); padding:2px 6px; border-radius:4px;">🗓 ${it.date}</span>` : '';
+                    const parc = it.inst ? `<span style="font-size:0.75rem; color:var(--text-muted);">${it.inst}</span>` : '';
+                    
+                    itemsHTML += `
+                    <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.02); padding:8px 10px; border-radius:8px;">
+                        <div style="display:flex; flex-direction:column; gap:4px;">
+                            <div style="display:flex; align-items:center; gap:6px;">${badge} <span style="font-size:0.85rem; font-weight:700;">${it.desc || 'Sem desc.'}</span> ${parc}</div>
+                        </div>
+                        <div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px;">
+                            <span style="font-weight:800; color:var(--text-main); font-size:0.9rem;">${fmt(it.val)}</span>
+                            ${dt}
+                        </div>
+                    </div>`;
+                });
+                itemsHTML += `</div>`;
+
                 const div = document.createElement('div'); 
                 div.className = `debt-card ${isPaid?'paid':''}`;
-                div.innerHTML = `<div class="debt-header"><span>${p.name}</span></div><div class="debt-amount">${fmt(p.total)}</div>${dateStr}<div class="debt-footer"><button class="status-btn ${isPaid?'paid':'pending'}" onclick="togglePaid('${p.name}')">${isPaid ? '✔ PAGO' : '⏳ PENDENTE'}</button></div>`;
+                div.innerHTML = `
+                    <div class="debt-header">
+                        <span style="font-size:1.2rem;">${p.name}</span>
+                        <span class="debt-amount" style="color:${isPaid?'var(--success-text)':'var(--primary)'}">${fmt(p.total)}</span>
+                    </div>
+                    ${itemsHTML}
+                    <div class="debt-footer" style="margin-top:5px;">
+                        <button class="status-btn ${isPaid?'paid':'pending'}" onclick="togglePaid('${p.name}')">${isPaid ? '✔ PAGO' : '⏳ PENDENTE'}</button>
+                    </div>`;
                 list.appendChild(div);
             }
         }
@@ -918,11 +965,24 @@
             }
         });
 
-        const debtors = []; document.querySelectorAll('.debt-card').forEach(d => { 
-            const dateDiv = d.querySelector('.debt-dates');
-            const dateText = dateDiv ? `\n${dateDiv.innerText}` : '';
-            debtors.push([d.querySelector('.debt-header span').innerText + dateText, d.classList.contains('paid') ? "PAGO" : "PENDENTE", d.querySelector('.debt-amount').innerText]); 
-        });
+        // Lógica de Devedores para o PDF unificada
+        const debtors = []; 
+        for(let k in window.lastDebts) {
+            const p = window.lastDebts[k];
+            const isPaid = window.paidDebtors.includes(p.name);
+            let details = "";
+            p.items.forEach(it => {
+                const dt = it.date ? `Dia ${it.date} | ` : '';
+                const parc = it.inst ? `(${it.inst})` : '';
+                details += `• ${dt}${it.card}: ${it.desc} ${parc} - ${fmt(it.val)}\n`;
+            });
+            debtors.push([
+                `${p.name}\n${details.trim()}`,
+                isPaid ? "PAGO" : "PENDENTE",
+                fmt(p.total)
+            ]);
+        }
+        
         if(debtors.length > 0) {
             if(y > 240) { doc.addPage(); y=20; doc.setFillColor(...colPrimary); doc.rect(0, 0, 8, 297, 'F'); }
             doc.setFontSize(12); doc.setTextColor(...colDanger); doc.text("Controle de Devedores", 20, y);
@@ -998,4 +1058,3 @@
 </script>
 </body>
 </html>
-
