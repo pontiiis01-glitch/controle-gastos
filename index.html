@@ -215,6 +215,12 @@
         .status-btn { padding: 10px; border-radius: 10px; border: none; font-size: 0.85rem; font-weight: 800; cursor: pointer; width: 100%; transition: 0.2s; text-transform: uppercase; }
         .status-btn.pending { background: #fef3c7; color: #b45309; }
         .status-btn.paid { background: #10b981; color: white; }
+        
+        /* BOTÃO DE CHECK INDIVIDUAL */
+        .item-status-btn { background:transparent; border:none; padding:0; margin:0; cursor:pointer; display:flex; align-items:center; justify-content:center; color:var(--text-muted); transition:0.2s; }
+        .item-status-btn:hover { transform:scale(1.1); }
+        .item-status-btn.paid { color:var(--success); }
+        .item-status-btn.pending { color:var(--border); }
 
         /* HISTÓRICO CHART */
         .chart-controls { display: flex; gap: 5px; background: var(--bg-body); padding: 5px; border-radius: 10px; border: 1px solid var(--border); }
@@ -470,7 +476,7 @@
     let summaryChart = null; 
     let barChart = null;
     let pdfDocInstance = null;
-    window.lastDebts = {}; // Usado para exportar o PDF de forma mais inteligente
+    window.lastDebts = {}; 
     
     window.paidDebtors = [];
     window.iconsList = ["💸", "🏠", "💡", "💧", "📶", "🏋️", "🚗", "⛽", "🍔", "💇", "💊", "💳", "🎓", "✈️"];
@@ -699,7 +705,6 @@
     }
 
     window.calculateAll = () => {
-        // Agora passando qual cartão é, para o devedor saber de onde veio
         const bb = processCard('bbTable', 'bbTotalBill', 'bbMyShareDisplay', 'BB');
         const mp = processCard('mpTable', 'mpTotalBill', 'mpMyShareDisplay', 'MP');
         const passai = processCard('passaiTable', 'passaiTotalBill', 'passaiMyShareDisplay', 'Passaí');
@@ -724,7 +729,6 @@
             }
         });
 
-        // Emergência fora das saídas
         let totalExpenses = fixedSumTotal + cardsShareTotal;
         let myRealExpenses = fixedSumMine + cardsShareTotal; 
 
@@ -736,7 +740,6 @@
         const totalIncome = salary + extraIncome;
 
         document.getElementById('totalExpenses').innerText = fmt(totalExpenses);
-        // Descontando a emergência do livre também
         document.getElementById('remaining').innerText = fmt(totalIncome - totalExpenses - emergency);
         document.getElementById('myRealExpenses').innerText = fmt(myRealExpenses);
 
@@ -755,7 +758,7 @@
         };
         mergeDebts(bb.debtors); mergeDebts(mp.debtors); mergeDebts(passai.debtors); mergeDebts(nubank.debtors);
         
-        window.lastDebts = allDebts; // Salvando para o PDF usar depois
+        window.lastDebts = allDebts; 
         updateDebtors(allDebts);
         
         const ctx = document.getElementById('expenseChart').getContext('2d');
@@ -794,7 +797,6 @@
                     const k = name.toLowerCase();
                     if(!debtors[k]) debtors[k] = { name, total: 0, items: [] };
                     debtors[k].total += val;
-                    // Guardando a informação detalhada do item
                     debtors[k].items.push({ card: cardName, date, desc, inst, val });
                 }
             }
@@ -838,7 +840,38 @@
 
     window.removeRow = (btn) => { btn.closest('tr').remove(); scheduleSave(); }
     window.updateBar = (input) => { if(!input) return; const val = input.value; const bar = input.nextElementSibling.querySelector('.prog-fill'); if(val.includes('/')) { const [c,t] = val.split('/').map(Number); if(t>0) bar.style.width = Math.min((c/t)*100, 100)+'%'; } else bar.style.width = '0%'; }
-    window.togglePaid = (name) => { const idx = window.paidDebtors.indexOf(name); if(idx>-1) window.paidDebtors.splice(idx,1); else window.paidDebtors.push(name); scheduleSave(); }
+    
+    // NOVA LÓGICA DE QUITAÇÃO INDIVIDUAL
+    window.toggleItemPaid = (itemId) => {
+        const idx = window.paidDebtors.indexOf(itemId);
+        if(idx > -1) window.paidDebtors.splice(idx, 1);
+        else window.paidDebtors.push(itemId);
+        scheduleSave();
+    }
+
+    window.togglePaid = (name) => {
+        const key = name.toLowerCase();
+        const p = window.lastDebts[key];
+        if(!p) return;
+
+        const legacyIsPaid = window.paidDebtors.includes(p.name);
+        let allPaid = true;
+        const ids = p.items.map(it => `${p.name}|${it.card}|${(it.desc||'').replace(/'/g, "\\'")}|${it.val}|${it.date||''}|${it.inst||''}`);
+
+        ids.forEach(id => { if(!legacyIsPaid && !window.paidDebtors.includes(id)) allPaid = false; });
+
+        if(allPaid) {
+            const idxL = window.paidDebtors.indexOf(p.name);
+            if(idxL>-1) window.paidDebtors.splice(idxL,1);
+            ids.forEach(id => {
+                const idx = window.paidDebtors.indexOf(id);
+                if(idx>-1) window.paidDebtors.splice(idx,1);
+            });
+        } else {
+            ids.forEach(id => { if(!window.paidDebtors.includes(id)) window.paidDebtors.push(id); });
+        }
+        scheduleSave();
+    }
 
     function updateDebtors(all) {
         const list = document.getElementById('debtorsList'); list.innerHTML = "";
@@ -846,43 +879,59 @@
         if (Object.keys(all).length === 0) list.innerHTML = "<div style='color:var(--text-muted); width:100%; text-align:center'>Nenhum devedor.</div>";
         else {
             for(let k in all) {
-                const p = all[k]; 
-                const isPaid = window.paidDebtors.includes(p.name);
-                if(isPaid) r+=p.total; else tr+=p.total;
-                
-                // Construindo a lista detalhada para cada Devedor
+                const p = all[k];
+                const legacyIsPaid = window.paidDebtors.includes(p.name);
+                let debtorTotalPaid = 0;
+                let debtorTotalPending = 0;
+
                 let itemsHTML = `<div style="margin-top:10px; border-top:1px dashed var(--border); padding-top:10px; display:flex; flex-direction:column; gap:8px;">`;
-                
-                p.items.sort((a,b) => (a.date||'').localeCompare(b.date||'')); // Ordena por data
-                
+
+                p.items.sort((a,b) => (a.date||'').localeCompare(b.date||''));
+
                 p.items.forEach(it => {
+                    const safeDesc = (it.desc || '').replace(/'/g, "\\'");
+                    const itemId = `${p.name}|${it.card}|${safeDesc}|${it.val}|${it.date||''}|${it.inst||''}`;
+                    const isItemPaid = legacyIsPaid || window.paidDebtors.includes(itemId);
+
+                    if(isItemPaid) { r+=it.val; debtorTotalPaid+=it.val; } else { tr+=it.val; debtorTotalPending+=it.val; }
+
                     const badge = getCardBadge(it.card);
                     const dt = it.date ? `<span style="color:var(--danger); font-weight:800; font-size:0.75rem; background:rgba(239, 68, 68, 0.1); padding:2px 6px; border-radius:4px;">🗓 ${it.date}</span>` : '';
                     const parc = it.inst ? `<span style="font-size:0.75rem; color:var(--text-muted);">${it.inst}</span>` : '';
-                    
+
                     itemsHTML += `
-                    <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.02); padding:8px 10px; border-radius:8px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.02); padding:8px 10px; border-radius:8px; opacity: ${isItemPaid?'0.6':'1'}; transition: 0.2s;">
                         <div style="display:flex; flex-direction:column; gap:4px;">
-                            <div style="display:flex; align-items:center; gap:6px;">${badge} <span style="font-size:0.85rem; font-weight:700;">${it.desc || 'Sem desc.'}</span> ${parc}</div>
+                            <div style="display:flex; align-items:center; gap:6px;">
+                                <button class="item-status-btn ${isItemPaid?'paid':'pending'}" onclick="toggleItemPaid('${itemId}')">
+                                    <span class="material-icons-round" style="font-size:1.1rem;">${isItemPaid?'check_circle':'radio_button_unchecked'}</span>
+                                </button>
+                                ${badge} <span style="font-size:0.85rem; font-weight:700; text-decoration: ${isItemPaid?'line-through':'none'}">${it.desc || 'Sem desc.'}</span> ${parc}
+                            </div>
                         </div>
                         <div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px;">
-                            <span style="font-weight:800; color:var(--text-main); font-size:0.9rem;">${fmt(it.val)}</span>
+                            <span style="font-weight:800; color:var(--text-main); font-size:0.9rem; text-decoration: ${isItemPaid?'line-through':'none'}">${fmt(it.val)}</span>
                             ${dt}
                         </div>
                     </div>`;
                 });
                 itemsHTML += `</div>`;
 
-                const div = document.createElement('div'); 
-                div.className = `debt-card ${isPaid?'paid':''}`;
+                const allItemsPaid = (debtorTotalPending === 0 && p.items.length > 0);
+
+                const div = document.createElement('div');
+                div.className = `debt-card ${allItemsPaid?'paid':''}`;
                 div.innerHTML = `
                     <div class="debt-header">
                         <span style="font-size:1.2rem;">${p.name}</span>
-                        <span class="debt-amount" style="color:${isPaid?'var(--success-text)':'var(--primary)'}">${fmt(p.total)}</span>
+                        <div style="text-align:right">
+                            <span class="debt-amount" style="color:${allItemsPaid?'var(--success-text)':'var(--primary)'}">${fmt(p.total)}</span>
+                            <div style="font-size:0.75rem; color:var(--text-muted); font-weight:700;">Pago: ${fmt(debtorTotalPaid)}</div>
+                        </div>
                     </div>
                     ${itemsHTML}
                     <div class="debt-footer" style="margin-top:5px;">
-                        <button class="status-btn ${isPaid?'paid':'pending'}" onclick="togglePaid('${p.name}')">${isPaid ? '✔ PAGO' : '⏳ PENDENTE'}</button>
+                        <button class="status-btn ${allItemsPaid?'paid':'pending'}" onclick="togglePaid('${p.name}')">${allItemsPaid ? '✔ TUDO PAGO' : '⏳ QUITAR TUDO'}</button>
                     </div>`;
                 list.appendChild(div);
             }
@@ -909,7 +958,6 @@
         const salary = parseFloat(document.getElementById('salary').value)||0;
         const extra = parseFloat(document.getElementById('extraIncomeTotal').innerText.replace(/[^\d,]/g,'').replace(',','.'))||0;
         let fixedSum = 0; document.querySelectorAll('#mainTable tbody tr').forEach(tr => { if(!tr.querySelector('.val-input').hasAttribute('readonly')) fixedSum += parseFloat(tr.querySelector('.val-input').value)||0; });
-        // Emergência removida de fixedSum para não inflar as saídas no PDF
         const bb = parseFloat(document.getElementById('bbTotalBill').value)||0; const mp = parseFloat(document.getElementById('mpTotalBill').value)||0; const passai = parseFloat(document.getElementById('passaiTotalBill').value)||0; const nubank = parseFloat(document.getElementById('nubankTotalBill').value)||0;
         const totalCards = bb + mp + passai + nubank;
         const saldoFinal = parseFloat(document.getElementById('remaining').innerText.replace(/[^\d,-]/g,'').replace(',','.'))||0;
@@ -965,20 +1013,27 @@
             }
         });
 
-        // Lógica de Devedores para o PDF unificada
         const debtors = []; 
         for(let k in window.lastDebts) {
             const p = window.lastDebts[k];
-            const isPaid = window.paidDebtors.includes(p.name);
+            const legacyIsPaid = window.paidDebtors.includes(p.name);
+            let debtorTotalPending = 0;
             let details = "";
             p.items.forEach(it => {
+                const safeDesc = (it.desc || '').replace(/'/g, "\\'");
+                const itemId = `${p.name}|${it.card}|${safeDesc}|${it.val}|${it.date||''}|${it.inst||''}`;
+                const isItemPaid = legacyIsPaid || window.paidDebtors.includes(itemId);
+                if(!isItemPaid) debtorTotalPending += it.val;
+
                 const dt = it.date ? `Dia ${it.date} | ` : '';
                 const parc = it.inst ? `(${it.inst})` : '';
-                details += `• ${dt}${it.card}: ${it.desc} ${parc} - ${fmt(it.val)}\n`;
+                const statusStr = isItemPaid ? "[PAGO]" : "[PENDENTE]";
+                details += `• ${dt}${it.card}: ${it.desc} ${parc} - ${fmt(it.val)} ${statusStr}\n`;
             });
+            const allItemsPaid = (debtorTotalPending === 0 && p.items.length > 0);
             debtors.push([
                 `${p.name}\n${details.trim()}`,
-                isPaid ? "PAGO" : "PENDENTE",
+                allItemsPaid ? "PAGO" : "PENDENTE",
                 fmt(p.total)
             ]);
         }
@@ -1018,7 +1073,7 @@
             if(snap.exists()) {
                 const d = snap.data();
                 let inc = (parseFloat(d.salary)||0); if(d.extraIncome) d.extraIncome.forEach(x=>inc+=(parseFloat(x.value)||0));
-                let exp = 0; // Removida a contagem de emergência no histórico de saídas
+                let exp = 0; 
                 const sumC = (l) => { let s=0; if(l) l.forEach(k=>s+=parseFloat(k.value)||0); return s; };
                 const calcB = (b,l) => (parseFloat(b)||0) - sumC(l);
                 if(d.main) d.main.forEach(x=>{if(!x.locked) exp+=parseFloat(x.value)||0;});
