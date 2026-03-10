@@ -89,7 +89,7 @@
 
         @media (max-width: 768px) {
             body { flex-direction: column; }
-            #sidebar { order: 2; width: 100%; height: 85px; flex-direction: row; justify-content: space-between; padding: 10px 15px 25px 15px; border-right: none; border-top: 1px solid var(--border-light); box-shadow: 0 -10px 30px rgba(0,0,0,0.05); }
+            #sidebar { order: 2; width: 100%; height: 85px; flex-direction: row; justify-content: space-between; padding: 10px 15px 25px 15px; border-right: none; border-top: 1px solid var(--border-light); box-shadow: 0 -10px 30px rgba(0,0,0,0.05); z-index: 999; background: var(--bg-sidebar); }
             .brand, .menu-divider, .btn-config, .btn-lock { display: none; }
             .nav-btn { flex-direction: column; gap: 4px; padding: 8px; justify-content: center; text-align: center; margin: 0; font-size: 0.65rem; font-weight: 700; border-radius: 16px; flex: 1; }
             .nav-btn .material-icons-round { font-size: 1.5rem; margin-bottom: 2px; }
@@ -99,14 +99,16 @@
             
             #main-content { 
                 order: 1; 
-                /* CORREÇÃO 1: Evita que o app fique embaixo da bateria/hora no celular */
-                padding: max(35px, env(safe-area-inset-top)) 15px 20px 15px; 
+                /* CORREÇÃO DO TOPO: Garante de 50px a 60px de espaço no topo livre da bateria/hora */
+                padding: max(55px, env(safe-area-inset-top)) 15px 20px 15px; 
                 height: calc(100vh - 85px); 
             }
-            .mobile-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
-            .mobile-header h1 { margin: 0; font-size: 1.5rem; font-weight: 900; letter-spacing: -1px; }
-            .mobile-header-actions { display: flex; gap: 10px; }
-            .mobile-btn { background: var(--bg-card); border: 1px solid var(--border-light); color: var(--text-main); border-radius: 50%; width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-sm); }
+            /* O Mobile Header agora acompanha a rolagem normal, sem ficar grudado no notch */
+            .mobile-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding: 0 5px; }
+            .mobile-header h1 { margin: 0; font-size: 1.8rem; font-weight: 900; letter-spacing: -1px; }
+            .mobile-header-actions { display: flex; gap: 12px; }
+            .mobile-btn { background: var(--bg-card); border: 1px solid var(--border-light); color: var(--text-main); border-radius: 50%; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-sm); cursor: pointer; transition: 0.2s; }
+            .mobile-btn:active { transform: scale(0.9); }
         }
 
         /* HEADER E CONTROLES */
@@ -127,7 +129,6 @@
             .date-control { justify-content: center; background: var(--bg-body); padding: 12px; border-radius: var(--radius-md); }
             .actions-group { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; }
             .btn-action { justify-content: center; width: 100%; padding: 14px; }
-            /* CORREÇÃO: Arruma os botões do topo para o "Salvar" ficar inteiro */
             .actions-group > :nth-child(1) { grid-column: span 2; }
             .actions-group > :nth-child(4) { grid-column: span 2; } 
         }
@@ -153,14 +154,13 @@
         .salary-bar-bg { width: 100%; height: 8px; background: var(--bg-body); border-radius: 10px; margin-top: 20px; overflow: hidden; }
         .salary-bar-fill { height: 100%; width: 0%; transition: width 1s cubic-bezier(0.16, 1, 0.3, 1); background: var(--success); border-radius: 10px; }
 
-        /* CORREÇÃO 2: TABELAS FLUTUANTES (Scroll na Tabela ativado corretamente) */
+        /* TABELAS FLUTUANTES (Scroll na Tabela ativado corretamente) */
         .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 15px; }
-        table { width: 100%; border-collapse: separate; border-spacing: 0 12px; min-width: 650px; } /* Força uma largura mínima para criar o scroll e não esmagar */
+        table { width: 100%; border-collapse: separate; border-spacing: 0 12px; min-width: 650px; } 
         th { text-align: left; padding: 0 20px 10px 20px; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; font-weight: 800; border: none; }
         td { padding: 15px 20px; background: var(--bg-body); vertical-align: middle; border: 1px solid transparent; transition: 0.2s; }
         tr:hover td { border-color: var(--primary-light); background: var(--bg-card); box-shadow: 0 4px 15px rgba(0,0,0,0.02); }
         
-        /* Limites pros Inputs não serem esmagados */
         td input.sys-input { min-width: 150px; }
         td input.val-input { min-width: 110px; }
 
@@ -221,7 +221,6 @@
         .item-status-btn:hover { transform: scale(1.1); border-color: var(--primary); color: var(--primary); }
         .item-status-btn.paid { background: var(--success); border-color: var(--success); color: white; }
 
-        /* CORREÇÃO 3: Ajuste Devedores para não sobrepor números */
         @media (max-width: 768px) {
             .debt-summary { flex-direction: column !important; gap: 20px !important; padding: 20px !important; }
             .debt-divider { width: 100% !important; height: 1px !important; min-height: 1px !important; margin: 0 !important; }
@@ -301,14 +300,6 @@
     </div>
 </div>
 
-<div class="mobile-header" id="mobileHeader">
-    <h1>Financeiro</h1>
-    <div class="mobile-header-actions">
-        <button class="mobile-btn" onclick="toggleTheme()"><span class="material-icons-round">dark_mode</span></button>
-        <button class="mobile-btn" onclick="lockApp()" style="color: var(--danger);"><span class="material-icons-round">lock</span></button>
-    </div>
-</div>
-
 <nav id="sidebar">
     <div class="brand"><span class="material-icons-round">account_balance_wallet</span> Financeiro</div>
     
@@ -331,6 +322,14 @@
 
 <main id="main-content">
     
+    <div class="mobile-header" id="mobileHeader">
+        <h1>Financeiro</h1>
+        <div class="mobile-header-actions">
+            <button class="mobile-btn" onclick="toggleTheme()"><span class="material-icons-round">dark_mode</span></button>
+            <button class="mobile-btn" onclick="lockApp()" style="color: var(--danger);"><span class="material-icons-round">lock</span></button>
+        </div>
+    </div>
+
     <div class="controls-row">
         <div class="date-control">
             <span class="material-icons-round" style="background: var(--bg-body); padding: 8px; border-radius: 10px;">calendar_month</span>
