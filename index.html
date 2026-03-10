@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Financeiro">
     <title>Minhas Finanças Pro</title>
 
     <link rel="icon" type="image/png" href="icone2.0.png">
@@ -89,7 +90,23 @@
 
         @media (max-width: 768px) {
             body { flex-direction: column; }
-            #sidebar { order: 2; width: 100%; height: 85px; flex-direction: row; justify-content: space-between; padding: 10px 15px 25px 15px; border-right: none; border-top: 1px solid var(--border-light); box-shadow: 0 -10px 30px rgba(0,0,0,0.05); z-index: 999; background: var(--bg-sidebar); }
+            
+            /* AJUSTE NATIVO DA BARRA INFERIOR DO IPHONE */
+            #sidebar { 
+                order: 2; 
+                width: 100%; 
+                /* A altura agora soma os 75px do menu + a margem de segurança debaixo do iOS */
+                height: calc(75px + env(safe-area-inset-bottom)); 
+                flex-direction: row; 
+                justify-content: space-between; 
+                /* O padding de baixo empurra os ícones pra cima do risquinho de fechar app */
+                padding: 10px 15px max(15px, env(safe-area-inset-bottom)) 15px; 
+                border-right: none; 
+                border-top: 1px solid var(--border-light); 
+                box-shadow: 0 -10px 30px rgba(0,0,0,0.05); 
+                z-index: 999; 
+                background: var(--bg-sidebar); 
+            }
             .brand, .menu-divider, .btn-config, .btn-lock { display: none; }
             .nav-btn { flex-direction: column; gap: 4px; padding: 8px; justify-content: center; text-align: center; margin: 0; font-size: 0.65rem; font-weight: 700; border-radius: 16px; flex: 1; }
             .nav-btn .material-icons-round { font-size: 1.5rem; margin-bottom: 2px; }
@@ -99,11 +116,11 @@
             
             #main-content { 
                 order: 1; 
-                /* CORREÇÃO DO TOPO: Garante de 50px a 60px de espaço no topo livre da bateria/hora */
+                /* O topo repeita a Dynamic Island */
                 padding: max(55px, env(safe-area-inset-top)) 15px 20px 15px; 
-                height: calc(100vh - 85px); 
+                /* A altura desconta o menu de baixo */
+                height: calc(100vh - 75px - env(safe-area-inset-bottom)); 
             }
-            /* O Mobile Header agora acompanha a rolagem normal, sem ficar grudado no notch */
             .mobile-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding: 0 5px; }
             .mobile-header h1 { margin: 0; font-size: 1.8rem; font-weight: 900; letter-spacing: -1px; }
             .mobile-header-actions { display: flex; gap: 12px; }
@@ -154,7 +171,7 @@
         .salary-bar-bg { width: 100%; height: 8px; background: var(--bg-body); border-radius: 10px; margin-top: 20px; overflow: hidden; }
         .salary-bar-fill { height: 100%; width: 0%; transition: width 1s cubic-bezier(0.16, 1, 0.3, 1); background: var(--success); border-radius: 10px; }
 
-        /* TABELAS FLUTUANTES (Scroll na Tabela ativado corretamente) */
+        /* TABELAS FLUTUANTES */
         .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 15px; }
         table { width: 100%; border-collapse: separate; border-spacing: 0 12px; min-width: 650px; } 
         th { text-align: left; padding: 0 20px 10px 20px; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; font-weight: 800; border: none; }
