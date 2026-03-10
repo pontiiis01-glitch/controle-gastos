@@ -530,7 +530,7 @@
     let unsubscribe = null;
     let summaryChart = null; 
     let barChart = null;
-    let historyCategoryChart = null; // Instância do novo gráfico
+    let historyCategoryChart = null; 
     let pdfDocInstance = null;
     window.lastDebts = {}; 
     
@@ -561,7 +561,7 @@
         const newTheme = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
         html.setAttribute('data-theme', newTheme);
         localStorage.setItem('theme', newTheme);
-        if (summaryChart) summaryChart.update(); // Atualiza cores do gráfico se necessário
+        if (summaryChart) summaryChart.update(); 
         if (barChart) barChart.update();
         if (historyCategoryChart) historyCategoryChart.update();
     };
@@ -614,7 +614,7 @@
         document.getElementById('totalExpenses').innerText = "R$ 0,00";
         document.querySelectorAll('tbody').forEach(b => b.innerHTML = "");
         ['bbTotalBill', 'mpTotalBill', 'passaiTotalBill', 'nubankTotalBill'].forEach(id => document.getElementById(id).value = "");
-        document.getElementById('goalsList').innerHTML = ""; // Limpa metas
+        document.getElementById('goalsList').innerHTML = ""; 
     }
 
     function loadMonthData(dateString) {
@@ -649,7 +649,6 @@
         if (!data) data = getDefaultData();
         if (data.main && !data.main.some(i => i.id === 'nubank_auto')) data.main.unshift({ icon: '💳', name: 'Nubank', value: 0, isMine: true, locked: true, id: 'nubank_auto' });
         
-        // Garante que a estrutura de metas exista
         if (!data.goals) data.goals = getDefaultData().goals;
 
         document.getElementById('salary').value = data.salary || 0;
@@ -685,7 +684,6 @@
         };
     }
 
-    // --- NOVA LÓGICA DE METAS ---
     function renderGoals(goalsArray) {
         const list = document.getElementById('goalsList');
         list.innerHTML = "";
@@ -722,15 +720,11 @@
     }
 
     window.updateGoalData = (id, field, value) => {
-        // Apenas atualiza o DOM e prepara o save, captureScreenData varre o DOM depois
-        // Na verdade, como capturamos do DOM no save, essa função é apenas gatilho para atualizar a barra visualmente se quisermos
-        const cards = document.querySelectorAll('.goal-card');
-        // A lógica real de captura ocorre em captureScreenData. 
+        // Atualiza dom antes do save puxar os valores
     };
 
     window.addGoal = () => {
         const newGoal = { id: 'g'+Date.now(), name: 'Nova Meta', icon: '🎯', target: 1000, current: 0 };
-        // Preciso capturar os atuais antes de re-renderizar para não perder edição em andamento
         const currentData = captureScreenData();
         currentData.goals.push(newGoal);
         renderGoals(currentData.goals);
@@ -768,7 +762,6 @@
             goals: [], main: [], bb: [], mp: [], passai: [], nubank: [], extraIncome: [] 
         };
 
-        // Captura Metas
         document.querySelectorAll('.goal-card').forEach(card => {
             const inputs = card.querySelectorAll('input');
             const name = inputs[0].value;
@@ -822,7 +815,6 @@
 
     window.scheduleSave = (force=false) => {
         calculateAll();
-        // Atualiza as barras visuais das metas antes de salvar
         document.querySelectorAll('.goal-card').forEach(card => {
             const inputs = card.querySelectorAll('input');
             const current = parseFloat(inputs[1].value) || 0;
@@ -1090,11 +1082,115 @@
         document.getElementById('totalToReceive').innerText = fmt(tr); document.getElementById('totalReceived').innerText = fmt(r);
     }
 
-    // --- PDF MANTIDO IGUAL ---
-    window.openPDFPreview = () => { /* ... (mesmo código do PDF do original) ... */ }
+    window.openPDFPreview = () => {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        
+        const colPrimary = [37, 99, 235]; const colSuccess = [16, 185, 129]; const colDanger = [239, 68, 68]; const colWarning = [245, 158, 11]; const colDark = [15, 23, 42]; const colGray = [100, 116, 139];
+
+        doc.setFillColor(...colPrimary); doc.rect(0, 0, 8, 297, 'F'); 
+        doc.setFont("helvetica", "bold"); doc.setFontSize(22); doc.setTextColor(...colDark); doc.text("Relatório Mensal", 20, 20);
+        doc.setFont("helvetica", "normal"); doc.setFontSize(10); doc.setTextColor(...colGray);
+        doc.text(`Referência: ${document.getElementById('monthPicker').value}  |  Gerado em: ${new Date().toLocaleDateString('pt-BR')}`, 20, 26);
+        doc.setDrawColor(226, 232, 240); doc.line(20, 32, 190, 32);
+
+        let y = 45;
+        const salary = parseFloat(document.getElementById('salary').value)||0;
+        const extra = parseFloat(document.getElementById('extraIncomeTotal').innerText.replace(/[^\d,]/g,'').replace(',','.'))||0;
+        let fixedSum = 0; document.querySelectorAll('#mainTable tbody tr').forEach(tr => { if(!tr.querySelector('.val-input').hasAttribute('readonly')) fixedSum += parseFloat(tr.querySelector('.val-input').value)||0; });
+        const bb = parseFloat(document.getElementById('bbTotalBill').value)||0; const mp = parseFloat(document.getElementById('mpTotalBill').value)||0; const passai = parseFloat(document.getElementById('passaiTotalBill').value)||0; const nubank = parseFloat(document.getElementById('nubankTotalBill').value)||0;
+        const totalCards = bb + mp + passai + nubank;
+        const saldoFinal = parseFloat(document.getElementById('remaining').innerText.replace(/[^\d,-]/g,'').replace(',','.'))||0;
+
+        const drawCard = (x, title, value, color) => {
+            doc.setFillColor(255, 255, 255); doc.setDrawColor(...color); doc.setLineWidth(0.5); doc.roundedRect(x, y, 40, 25, 3, 3, 'FD');
+            doc.setFillColor(...color); doc.rect(x, y, 40, 2, 'F');
+            doc.setFontSize(8); doc.setTextColor(...colGray); doc.text(title, x+2, y+8);
+            doc.setFontSize(11); doc.setFont("helvetica", "bold"); doc.setTextColor(...colDark); doc.text(fmt(value), x+2, y+18);
+        };
+
+        drawCard(20, "RECEITA TOTAL", salary+extra, colSuccess);
+        drawCard(65, "GASTOS FIXOS", fixedSum, colWarning);
+        drawCard(110, "FATURA CARTÕES", totalCards, [139, 92, 246]);
+        drawCard(155, "SALDO FINAL", saldoFinal, saldoFinal >= 0 ? colPrimary : colDanger);
+
+        y += 35; 
+        const tableStyles = { theme: 'grid', headStyles: { fontStyle: 'bold', fontSize: 9, halign: 'left' }, bodyStyles: { fontSize: 9, textColor: 50 }, alternateRowStyles: { fillColor: [248, 250, 252] }, columnStyles: { 0: { cellWidth: 'auto' }, 1: { cellWidth: 40, halign: 'right', fontStyle: 'bold' } }, margin: { left: 20, right: 20 } };
+
+        const incomeRows = [['Salário Base', fmt(salary)]];
+        document.querySelectorAll('#incomeTable tbody tr').forEach(tr => { const d = tr.querySelector('.sys-input').value; const v = parseFloat(tr.querySelector('.val-input').value)||0; if(v>0) incomeRows.push([d, fmt(v)]); });
+        
+        doc.setFontSize(12); doc.setTextColor(...colSuccess); doc.setFont("helvetica", "bold"); doc.text("Entradas & Rendas", 20, y);
+        doc.autoTable({ startY: y+3, head: [['Fonte', 'Valor']], body: incomeRows, ...tableStyles, headStyles: { ...tableStyles.headStyles, fillColor: colSuccess } });
+        y = doc.lastAutoTable.finalY + 15;
+
+        const fixedRows = []; document.querySelectorAll('#mainTable tbody tr').forEach(tr => { const n = tr.querySelector('.sys-input').value; const v = parseFloat(tr.querySelector('.val-input').value)||0; const isMine = tr.querySelector('input[type="checkbox"]').checked; if(v>0 && !tr.querySelector('.val-input').hasAttribute('readonly')) fixedRows.push([n + (isMine ? "" : " (Terceiros)"), fmt(v)]); });
+        const emerg = parseFloat(document.getElementById('emergencyFund').value)||0; if(emerg>0) fixedRows.push(['Reserva / Investimento', fmt(emerg)]);
+
+        if(fixedRows.length > 0) {
+            doc.setTextColor(...colWarning); doc.text("Despesas Fixas", 20, y);
+            doc.autoTable({ startY: y+3, head: [['Despesa', 'Valor']], body: fixedRows, ...tableStyles, headStyles: { ...tableStyles.headStyles, fillColor: colWarning } });
+            y = doc.lastAutoTable.finalY + 15;
+        }
+
+        const cardTables = [{id: 'bbTable', name: 'Banco do Brasil', tot: 'bbTotalBill'}, {id: 'mpTable', name: 'Mercado Pago', tot: 'mpTotalBill'}, {id: 'passaiTable', name: 'Passaí (Itaú)', tot: 'passaiTotalBill'}, {id: 'nubankTable', name: 'Nubank', tot: 'nubankTotalBill'}];
+        let hasCards = false;
+        cardTables.forEach(card => {
+            const rows = []; const totalBill = parseFloat(document.getElementById(card.tot).value)||0;
+            document.querySelectorAll(`#${card.id} tbody tr`).forEach(tr => { 
+                const inputs = tr.querySelectorAll('.sys-input'); 
+                const v = parseFloat(tr.querySelector('.val-input').value)||0; 
+                if(v>0) {
+                    const dateText = inputs[1].value ? ` [Dia: ${inputs[1].value}]` : '';
+                    rows.push([`${inputs[2].value} (${inputs[0].value})${dateText} ${inputs[3].value ? '- '+inputs[3].value : ''}`, fmt(v)]);
+                }
+            });
+
+            if(totalBill > 0 || rows.length > 0) {
+                if(!hasCards) { if(y > 250) { doc.addPage(); y=20; doc.setFillColor(...colPrimary); doc.rect(0, 0, 8, 297, 'F'); } doc.setTextColor(139, 92, 246); doc.text("Detalhamento de Cartões", 20, y); y += 5; hasCards = true; }
+                doc.setFontSize(10); doc.setTextColor(...colDark); doc.text(`${card.name} (Total: ${fmt(totalBill)})`, 20, y+4);
+                if(rows.length > 0) { doc.autoTable({ startY: y+6, head: [['Item / Responsável', 'Valor']], body: rows, ...tableStyles, headStyles: { ...tableStyles.headStyles, fillColor: [139, 92, 246] }, margin: { left: 25 } }); y = doc.lastAutoTable.finalY + 10; } else y += 15;
+            }
+        });
+
+        const debtors = []; 
+        for(let k in window.lastDebts) {
+            const p = window.lastDebts[k];
+            const legacyIsPaid = window.paidDebtors.includes(p.name);
+            let debtorTotalPending = 0;
+            let details = "";
+            p.items.forEach(it => {
+                const safeDesc = (it.desc || '').replace(/'/g, "\\'");
+                const itemId = `${p.name}|${it.card}|${safeDesc}|${it.val}|${it.date||''}|${it.inst||''}`;
+                const isItemPaid = legacyIsPaid || window.paidDebtors.includes(itemId);
+                if(!isItemPaid) debtorTotalPending += it.val;
+
+                const dt = it.date ? `Dia ${it.date} | ` : '';
+                const parc = it.inst ? `(${it.inst})` : '';
+                const statusStr = isItemPaid ? "[PAGO]" : "[PENDENTE]";
+                details += `• ${dt}${it.card}: ${it.desc} ${parc} - ${fmt(it.val)} ${statusStr}\n`;
+            });
+            const allItemsPaid = (debtorTotalPending === 0 && p.items.length > 0);
+            debtors.push([
+                `${p.name}\n${details.trim()}`,
+                allItemsPaid ? "PAGO" : "PENDENTE",
+                fmt(p.total)
+            ]);
+        }
+        
+        if(debtors.length > 0) {
+            if(y > 240) { doc.addPage(); y=20; doc.setFillColor(...colPrimary); doc.rect(0, 0, 8, 297, 'F'); }
+            doc.setFontSize(12); doc.setTextColor(...colDanger); doc.text("Controle de Devedores", 20, y);
+            doc.autoTable({ startY: y+3, head: [['Devedor', 'Status', 'Valor']], body: debtors, ...tableStyles, columnStyles: { 0: {cellWidth:'auto'}, 1: {cellWidth:30}, 2: {cellWidth:40, halign:'right'} }, headStyles: { ...tableStyles.headStyles, fillColor: colDanger }, didParseCell: function(data) { if (data.section === 'body' && data.column.index === 1) { data.cell.styles.textColor = data.cell.raw === 'PAGO' ? colSuccess : colWarning; data.cell.styles.fontStyle = 'bold'; } } });
+        }
+
+        const pageCount = doc.internal.getNumberOfPages();
+        for(let i = 1; i <= pageCount; i++) { doc.setPage(i); doc.setFontSize(8); doc.setTextColor(150); doc.text(`Página ${i} de ${pageCount} - Financeiro 42.0`, 105, 290, { align: 'center' }); }
+        document.getElementById('pdfPreviewFrame').src = doc.output('bloburl'); document.getElementById('pdfModal').style.display = 'flex'; document.getElementById('btnDownloadPDF').onclick = () => doc.save(`Relatorio_Premium_${currentDocId}.pdf`);
+    }
+    
     window.closePDFModal = () => document.getElementById('pdfModal').style.display = 'none';
 
-    // --- HISTÓRICO COM DOIS GRÁFICOS (Evolução + Comparação Cartão/Fixo) ---
     window.fetchHistoryData = async (range, btnElement = null) => {
         if(btnElement) { document.querySelectorAll('.chart-btn').forEach(b => b.classList.remove('active')); btnElement.classList.add('active'); }
         
@@ -1140,7 +1236,6 @@
 
         Chart.defaults.color = localStorage.getItem('theme') === 'dark' ? '#94a3b8' : '#64748b';
 
-        // Gráfico 1: Balanço Geral (Barras)
         const ctxBar = document.getElementById('historyChart').getContext('2d');
         if(barChart) barChart.destroy();
         barChart = new Chart(ctxBar, { 
@@ -1160,7 +1255,6 @@
             } 
         });
 
-        // Gráfico 2: Evolução de Cartões vs Fixos (Linhas)
         const ctxCat = document.getElementById('historyCategoryChart').getContext('2d');
         if(historyCategoryChart) historyCategoryChart.destroy();
         historyCategoryChart = new Chart(ctxCat, {
@@ -1204,7 +1298,6 @@
                 const inc = (arr) => arr.forEach(i => { if(i.inst && i.inst.includes('/')){ let [c,t]=i.inst.split('/'); if(c<t) i.inst=`${parseInt(c)+1}/${t}`; } });
                 if(data.bb) inc(data.bb); if(data.mp) inc(data.mp); if(data.passai) inc(data.passai); if(data.nubank) inc(data.nubank);
                 
-                // Trás as metas atualizadas do mês anterior para não zerar
                 if(data.goals) data.goals = data.goals; 
 
                 updateScreen(data); setTimeout(() => { saveDataSync(currentDocId); toggleSkeleton(false); }, 500);
