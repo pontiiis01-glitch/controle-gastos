@@ -121,7 +121,7 @@
             </div>
             <div class="card-stat c-income">
                 <h3><span class="material-icons-round" style="font-size: 1.2rem;">add_circle</span> Renda Extra</h3>
-                <div class="val" id="extraIncomeTotal">R$ 0,00</div>
+                <input type="number" id="extraIncomeTotal" class="stat-input" value="0" oninput="scheduleSave()" onfocus="window.isEditing=true" onblur="window.isEditing=false" style="color: #0D9488;">
             </div>
             <div class="card-stat c-total">
                 <h3><span class="material-icons-round" style="font-size: 1.2rem;">arrow_circle_down</span> Total Saídas</h3>
@@ -139,14 +139,7 @@
                 <h3><span class="material-icons-round" style="font-size: 1.2rem;">savings</span> Reserva</h3>
                 <input type="number" id="emergencyFund" class="stat-input" oninput="scheduleSave()" onfocus="window.isEditing=true" onblur="window.isEditing=false">
             </div>
-        </div>
-        <div class="section">
-            <div class="sec-header"><h2 style="color:var(--success)"><span class="material-icons-round">payments</span> Entradas Extras</h2></div>
-            <div class="sec-body" style="background: var(--bg-body);">
-                <div class="table-wrap"><table id="incomeTable"><thead><tr><th>Descrição da Renda</th><th style="width:150px">Valor (R$)</th><th style="width:50px"></th></tr></thead><tbody></tbody></table></div>
-                <button class="btn-add" onclick="addIncomeRow()"><span class="material-icons-round">add</span> Adicionar Renda</button>
-            </div>
-        </div>
+
         <div class="section">
             <div class="sec-header"><h2><span class="material-icons-round" style="color:var(--primary)">pie_chart</span> Distribuição</h2></div>
             <div class="sec-body" style="height:350px; display:flex; justify-content:center;"><canvas id="expenseChart"></canvas></div>
@@ -477,8 +470,12 @@ function updateScreen(data) {
     document.getElementById('passaiTotalBill').value = data.passaiTotalBill || 0;
     document.getElementById('nubankTotalBill').value = data.nubankTotalBill || 0;
 
+    let ei = 0;
+    if(data.extraIncomeTotal !== undefined) ei = data.extraIncomeTotal;
+    else if(data.extraIncome) ei = data.extraIncome.reduce((acc, item) => acc + (parseFloat(item.value)||0), 0);
+    document.getElementById('extraIncomeTotal').value = ei || 0;
+
     renderGoals(data.goals);
-    renderTable('incomeTable', data.extraIncome || [], 'income');
     renderTable('mainTable', data.main || [], 'main');
     renderTable('bbTable', data.bb || [], 'split');
     renderTable('mpTable', data.mp || [], 'split');
@@ -570,7 +567,6 @@ function renderTable(id, data, type) {
     tbody.innerHTML = "";
     data.forEach(item => {
         if(type === 'main') addMainRowHTML(tbody, item);
-        else if(type === 'income') addIncomeRowHTML(tbody, item);
         else if(type === 'split') addSplitRowHTML(tbody, item);
     });
 }
@@ -583,8 +579,9 @@ function captureScreenData() {
         mpTotalBill: document.getElementById('mpTotalBill').value, 
         passaiTotalBill: document.getElementById('passaiTotalBill').value, 
         nubankTotalBill: document.getElementById('nubankTotalBill').value, 
+        extraIncomeTotal: document.getElementById('extraIncomeTotal').value,
         paidDebtors: window.paidDebtors, 
-        goals: [], main: [], bb: [], mp: [], passai: [], nubank: [], extraIncome: [] 
+        goals: [], main: [], bb: [], mp: [], passai: [], nubank: []
     };
 
     document.querySelectorAll('.goal-card').forEach(card => {
@@ -597,11 +594,7 @@ function captureScreenData() {
         data.goals.push({ id, name, icon, target, current });
     });
 
-    document.querySelectorAll('#incomeTable tbody tr').forEach(tr => {
-        const desc = tr.querySelector('.sys-input').value; 
-        const val = tr.querySelector('.val-input').value; 
-        data.extraIncome.push({ desc: desc, value: val });
-    });
+
 
     document.querySelectorAll('#mainTable tbody tr').forEach(tr => { 
         const name = tr.querySelector('.sys-input').value; 
@@ -699,9 +692,7 @@ window.calculateAll = () => {
     let totalExpenses = fixedSumTotal + cardsShareTotal;
     let myRealExpenses = fixedSumMine + cardsShareTotal; 
 
-    let extraIncome = 0;
-    document.querySelectorAll('#incomeTable tbody tr').forEach(tr => extraIncome += parseFloat(tr.querySelector('.val-input').value)||0);
-    document.getElementById('extraIncomeTotal').innerText = fmt(extraIncome);
+    let extraIncome = parseFloat(document.getElementById('extraIncomeTotal').value) || 0;
 
     const salary = parseFloat(document.getElementById('salary').value) || 0;
     const totalIncome = salary + extraIncome;
@@ -821,7 +812,7 @@ function getCardBadge(card) {
 }
 
 window.addMainRow = () => { addMainRowHTML(document.querySelector("#mainTable tbody"), {icon:'💸',name:'',value:'',isMine:true}); scheduleSave(); }
-window.addIncomeRow = () => { addIncomeRowHTML(document.querySelector("#incomeTable tbody"), {desc:'',value:''}); scheduleSave(); }
+
 window.addSplitRow = (id) => { addSplitRowHTML(document.querySelector(`#${id} tbody`), {name:'',date:'',desc:'',inst:'',value:''}); scheduleSave(); }
 
 function addMainRowHTML(tbody, item) {
@@ -832,11 +823,7 @@ function addMainRowHTML(tbody, item) {
     tr.innerHTML = `<td><select class="sys-select" onchange="scheduleSave()">${opts}</select></td><td><input type="text" class="sys-input" value="${item.name}" ${locked} oninput="scheduleSave()"></td><td><input type="number" class="val-input" value="${item.value}" step="0.01" id="${item.id||''}" ${locked} oninput="scheduleSave()"></td><td style="text-align:center"><input type="checkbox" ${item.isMine?'checked':''} onchange="scheduleSave()"></td><td style="text-align:center">${del}</td>`;
     tbody.appendChild(tr);
 }
-function addIncomeRowHTML(tbody, item) {
-    const tr = document.createElement("tr");
-    tr.innerHTML = `<td><input type="text" class="sys-input" value="${item.desc}" placeholder="Descrição" oninput="scheduleSave()" onfocus="window.isEditing=true" onblur="window.isEditing=false"></td><td><input type="number" class="val-input" value="${item.value}" step="0.01" oninput="scheduleSave()" onfocus="window.isEditing=true" onblur="window.isEditing=false"></td><td style="text-align:center"><button class="btn-del" onclick="removeRow(this)"><span class="material-icons-round">close</span></button></td>`;
-    tbody.appendChild(tr);
-}
+
 function addSplitRowHTML(tbody, item) {
     const tr = document.createElement("tr");
     tr.innerHTML = `<td><input type="text" class="sys-input split-name" value="${item.name}" placeholder="Nome" oninput="scheduleSave()" onfocus="window.isEditing=true" onblur="window.isEditing=false"></td><td><input type="text" class="sys-input split-date" value="${item.date||''}" placeholder="Ex: 04/03" oninput="scheduleSave()" onfocus="window.isEditing=true" onblur="window.isEditing=false" style="text-align: center;"></td><td><input type="text" class="sys-input" value="${item.desc}" placeholder="Item" oninput="scheduleSave()" onfocus="window.isEditing=true" onblur="window.isEditing=false"></td><td><input type="text" class="sys-input" value="${item.inst||''}" placeholder="1/10" oninput="updateBar(this);scheduleSave()" onfocus="window.isEditing=true" onblur="window.isEditing=false"></td><td><input type="number" class="val-input" value="${item.value}" step="0.01" oninput="scheduleSave()" onfocus="window.isEditing=true" onblur="window.isEditing=false"></td><td style="text-align:center"><button class="btn-del" onclick="removeRow(this)"><span class="material-icons-round">close</span></button></td>`;
@@ -992,7 +979,7 @@ window.openPDFPreview = () => {
 
     let y = 48;
     const salary = parseFloat(document.getElementById('salary').value)||0;
-    const extra = parseFloat(document.getElementById('extraIncomeTotal').innerText.replace(/[^\d,]/g,'').replace(',','.'))||0;
+    const extra = parseFloat(document.getElementById('extraIncomeTotal').value)||0;
     let fixedSum = 0; document.querySelectorAll('#mainTable tbody tr').forEach(tr => { if(!tr.querySelector('.val-input').hasAttribute('readonly')) fixedSum += parseFloat(tr.querySelector('.val-input').value)||0; });
     const bb = parseFloat(document.getElementById('bbTotalBill').value)||0; const mp = parseFloat(document.getElementById('mpTotalBill').value)||0; const passai = parseFloat(document.getElementById('passaiTotalBill').value)||0; const nubank = parseFloat(document.getElementById('nubankTotalBill').value)||0;
     const totalCards = bb + mp + passai + nubank;
@@ -1014,7 +1001,7 @@ window.openPDFPreview = () => {
     const tableStyles = { theme: 'grid', headStyles: { fontStyle: 'bold', fontSize: 9, halign: 'left' }, bodyStyles: { fontSize: 9, textColor: 50 }, alternateRowStyles: { fillColor: [248, 250, 252] }, columnStyles: { 0: { cellWidth: 'auto' }, 1: { cellWidth: 40, halign: 'right', fontStyle: 'bold' } }, margin: { left: 20, right: 20 } };
 
     const incomeRows = [['Salário Base', fmt(salary)]];
-    document.querySelectorAll('#incomeTable tbody tr').forEach(tr => { const d = tr.querySelector('.sys-input').value; const v = parseFloat(tr.querySelector('.val-input').value)||0; if(v>0) incomeRows.push([d, fmt(v)]); });
+    if (extra > 0) incomeRows.push(['Renda Extra', fmt(extra)]);
     
     doc.setFontSize(12); doc.setTextColor(...colSuccess); doc.setFont("helvetica", "bold"); doc.text("Entradas & Rendas", 20, y);
     doc.autoTable({ startY: y+3, head: [['Fonte', 'Valor']], body: incomeRows, ...tableStyles, headStyles: { ...tableStyles.headStyles, fillColor: colSuccess } });
@@ -1105,7 +1092,8 @@ window.exportToCSV = async () => {
             const d = snap.data();
             const mes = snap.id;
             csv += `${mes},Salario,Base,${d.salary||0}\n`;
-            if(d.extraIncome) d.extraIncome.forEach(x => csv += `${mes},RendaExtra,${x.desc},${x.value}\n`);
+            if(d.extraIncomeTotal) csv += `${mes},RendaExtra,Total,${d.extraIncomeTotal}\n`;
+            else if(d.extraIncome) d.extraIncome.forEach(x => csv += `${mes},RendaExtra,${x.desc},${x.value}\n`);
             if(d.main) d.main.forEach(x => csv += `${mes},Fixo,${x.name},${x.value}\n`);
             ['bb','mp','passai','nubank'].forEach(c => {
                 if(d[c]) d[c].forEach(x => csv += `${mes},Cartao_${c.toUpperCase()},${x.desc},${x.value}\n`);
@@ -1148,7 +1136,8 @@ window.fetchHistoryData = async (range, btnElement = null) => {
         let inc = 0, expFixed = 0, expCards = 0;
         if(snap.exists()) {
             const d = snap.data();
-            inc = (parseFloat(d.salary)||0); if(d.extraIncome) d.extraIncome.forEach(x=>inc+=(parseFloat(x.value)||0));
+            inc = (parseFloat(d.salary)||0) + (parseFloat(d.extraIncomeTotal)||0); 
+            if(!d.extraIncomeTotal && d.extraIncome) d.extraIncome.forEach(x=>inc+=(parseFloat(x.value)||0));
             
             if(d.main) d.main.forEach(x=>{
                 const v = parseFloat(x.value)||0;

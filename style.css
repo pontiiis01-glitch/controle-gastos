@@ -472,6 +472,25 @@ td:last-child { border-radius: 0 var(--radius-md) var(--radius-md) 0; border-lef
 
     #main-content { padding: 24px 20px 120px 20px; }
     .mobile-header h1 { font-size: 2.2rem; }
+
+    /* DASHBOARD MOBILE OPTIMIZATIONS */
+    .dashboard-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+        margin-bottom: 30px;
+    }
+    .card-stat {
+        padding: 20px 16px;
+        border-radius: var(--radius-lg);
+    }
+    .card-stat h3 {
+        font-size: 0.75rem;
+        margin-bottom: 15px;
+    }
+    .val, .stat-input {
+        font-size: 1.6rem;
+    }
+    .salary-bar-bg { margin-top: 15px; }
 }
 
 /* HISTÓRICO CHART */
