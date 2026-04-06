@@ -87,7 +87,7 @@ tbody tr:nth-child(1) { animation-delay: 0.05s; } tbody tr:nth-child(2) { animat
 .sec-body { padding: 30px; }
 
 /* INPUTS ESTILO APPLE (Generais) */
-.stat-input, .goal-card input { width: 100%; padding: 14px 16px; border: 2px solid transparent; border-radius: var(--radius-md); background: var(--bg-body); color: var(--text-main); font-family: 'Inter'; font-weight: 600; font-size: 1rem; transition: var(--transition-smooth); box-sizing: border-box; }
+.stat-input, .goal-card input { width: 100%; min-width: 0; padding: 14px 16px; border: 2px solid transparent; border-radius: var(--radius-md); background: var(--bg-body); color: var(--text-main); font-family: 'Inter'; font-weight: 600; font-size: 1rem; transition: var(--transition-smooth); box-sizing: border-box; }
 .stat-input:focus, .goal-card input:focus { background: var(--bg-card); border-color: var(--primary); outline: none; box-shadow: 0 0 0 4px var(--primary-light); transform: translateY(-2px); }
 select.sys-select { border: none; background: transparent; font-size: 1.5rem; cursor: pointer; transition: 0.2s; appearance: none; }
 select.sys-select:hover { transform: scale(1.15) rotate(5deg); }
@@ -245,6 +245,12 @@ input[type="month"] { background: transparent; border: none; font-family: 'Inter
     margin-bottom: 48px; 
 }
 
+.chart-grid {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr;
+    gap: 24px;
+}
+
 .card-stat { 
     background: var(--bg-card); 
     padding: 32px; 
@@ -310,6 +316,7 @@ input[type="month"] { background: transparent; border: none; font-family: 'Inter
     letter-spacing: -1px; 
     position: relative;
     z-index: 1;
+    min-width: 0;
 }
 
 .stat-input:focus { outline: none; border-color: var(--primary); transform: scale(1.05); }
@@ -470,27 +477,48 @@ td:last-child { border-radius: 0 var(--radius-md) var(--radius-md) 0; border-lef
     .nav-btn.active { background: var(--primary-light); color: var(--primary); box-shadow: none; }
     .nav-btn.active::after { display: none; }
 
-    #main-content { padding: 24px 20px 120px 20px; }
+    #main-content { padding: max(55px, env(safe-area-inset-top)) 20px 120px 20px; }
     .mobile-header h1 { font-size: 2.2rem; }
+
+    .chart-grid { grid-template-columns: 1fr; }
 
     /* DASHBOARD MOBILE OPTIMIZATIONS */
     .dashboard-grid {
         grid-template-columns: repeat(2, 1fr);
-        gap: 16px;
+        gap: 12px;
         margin-bottom: 30px;
     }
     .card-stat {
-        padding: 20px 16px;
+        padding: 16px 14px;
         border-radius: var(--radius-lg);
+        min-width: 0;
     }
     .card-stat h3 {
         font-size: 0.75rem;
-        margin-bottom: 15px;
+        margin-bottom: 12px;
+        gap: 6px;
+    }
+    .card-stat h3 .material-icons-round {
+        font-size: 1rem !important;
     }
     .val, .stat-input {
-        font-size: 1.6rem;
+        font-size: 1.45rem;
+        word-break: break-all;
     }
     .salary-bar-bg { margin-top: 15px; }
+    
+    .card-row { flex-direction: column; align-items: flex-start; padding: 20px; gap: 16px; }
+    .card-thumb { width: 100%; height: 160px; }
+    .card-info { width: 100%; }
+    .card-info input { width: 100%; font-size: 1.1rem; padding: 10px; }
+    .my-share-text { display: flex; width: 100%; justify-content: space-between; font-size: 0.85rem; padding: 10px; }
+    .my-share-text small { display: none; }
+    .my-share-text b { font-size: 1rem; }
+    
+    .insights-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .insight-card { padding: 16px !important; }
+    .insight-card h3 { font-size: 0.7rem !important; margin-bottom: 8px !important; }
+    .insight-card .val { font-size: 1.4rem !important; }
 }
 
 /* HISTÓRICO CHART */
