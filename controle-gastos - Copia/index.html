@@ -1,0 +1,1324 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Financeiro">
+    <title>Minhas Finanças Pro</title>
+
+    <link rel="icon" type="image/png" href="icone2.0.png">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#4f46e5">
+    <meta name="mobile-web-app-capable" content="yes">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <link rel="stylesheet" href="style.css">
+    
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('service-worker.js').catch(err => console.log('SW reg error:', err));
+        });
+      }
+    </script>
+</head>
+<body>
+
+<div id="saveToast"><span class="material-icons-round">check_circle</span> Salvo!</div>
+
+<div id="pdfModal">
+    <div class="pdf-box">
+        <div class="pdf-header">
+            <h3 style="margin:0; color:var(--text-main); font-size: 1.3rem; font-weight: 900;">Relatório do Mês</h3>
+            <div style="display:flex; gap:10px;">
+                <button class="btn-action btn-save" id="btnDownloadPDF"><span class="material-icons-round">download</span> Baixar</button>
+                <button class="btn-action btn-outline" onclick="closePDFModal()">Fechar</button>
+            </div>
+        </div>
+        <iframe id="pdfPreviewFrame"></iframe>
+    </div>
+</div>
+
+<div id="skeletonScreen">
+    <div class="dashboard-grid">
+        <div class="skeleton-block sk-card"></div>
+        <div class="skeleton-block sk-card"></div>
+        <div class="skeleton-block sk-card"></div>
+        <div class="skeleton-block sk-card"></div>
+    </div>
+    <div class="skeleton-block sk-chart"></div>
+</div>
+
+<div id="lockScreen">
+    <div class="lock-box">
+        <div style="font-size: 3.5rem; margin-bottom: 10px;">🛡️</div>
+        <h2 style="margin:0; font-weight: 900; color: var(--text-main);">Área Segura</h2>
+        <p style="color:var(--text-muted); font-size: 0.9rem;">Insira seu PIN de acesso</p>
+        <input type="password" id="passInput" class="lock-input" placeholder="••••" inputmode="numeric" maxlength="4">
+        <div id="passError" style="color:var(--danger); font-weight:bold; height:20px; font-size: 0.9rem; margin-bottom: 15px;"></div>
+        <button class="btn-action btn-save" style="width:100%; justify-content:center; padding:16px; font-size:1.1rem;" onclick="checkPassword()">Desbloquear</button>
+    </div>
+</div>
+
+<nav id="sidebar">
+    <div class="brand"><span class="material-icons-round">account_balance_wallet</span> Financeiro</div>
+    
+    <button class="nav-btn active" onclick="switchView('dashboard')"><span class="material-icons-round">dashboard</span> Resumo</button>
+    <button class="nav-btn" onclick="switchView('income')"><span class="material-icons-round">sync_alt</span> Fixos</button>
+    <button class="nav-btn" onclick="switchView('cards')"><span class="material-icons-round">credit_card</span> Cartões</button>
+    <button class="nav-btn" onclick="switchView('debts')"><span class="material-icons-round">group</span> Devedores</button>
+    <button class="nav-btn" onclick="switchView('goals')"><span class="material-icons-round">flag</span> Metas</button>
+    <button class="nav-btn" onclick="switchView('history')"><span class="material-icons-round">insights</span> Dados</button>
+    
+    <div class="menu-divider"></div>
+
+    <button class="nav-btn btn-config" onclick="toggleTheme()">
+        <span class="material-icons-round">dark_mode</span> Tema
+    </button>
+    <button class="nav-btn btn-lock" onclick="lockApp()">
+        <span class="material-icons-round">lock</span> Bloquear
+    </button>
+</nav>
+
+<main id="main-content">
+    
+    <div class="mobile-header" id="mobileHeader">
+        <h1>Financeiro</h1>
+        <div class="mobile-header-actions">
+            <button class="mobile-btn" onclick="toggleTheme()"><span class="material-icons-round">dark_mode</span></button>
+            <button class="mobile-btn" onclick="lockApp()" style="color: var(--danger);"><span class="material-icons-round">lock</span></button>
+        </div>
+    </div>
+
+    <div class="controls-row">
+        <div class="date-control">
+            <span class="material-icons-round" style="background: var(--bg-body); padding: 8px; border-radius: 10px;">calendar_month</span>
+            <input type="month" id="monthPicker" onchange="changeMonthSafe()">
+        </div>
+        <div class="actions-group">
+            <button class="btn-action btn-outline" onclick="resetMonthData()"><span class="material-icons-round">delete_outline</span></button>
+            <button class="btn-action btn-outline" onclick="copyPreviousMonth()"><span class="material-icons-round">content_copy</span> Importar</button>
+            <button class="btn-action btn-outline" onclick="openPDFPreview()"><span class="material-icons-round">picture_as_pdf</span> Relatório</button>
+            <button class="btn-action btn-save" onclick="scheduleSave(true)"><span class="material-icons-round">done_all</span> Salvar</button>
+        </div>
+        <div id="syncStatus" style="font-size:0.8rem; font-weight:bold; color:var(--text-muted); display:flex; align-items:center; gap:5px; transition: 0.3s; width: 100%; text-align: center; justify-content: center; display: none;">...</div>
+    </div>
+
+    <div id="view-dashboard" class="view-section active">
+        <div class="dashboard-grid">
+            <div class="card-stat c-salary">
+                <h3><span class="material-icons-round" style="font-size: 1.2rem;">account_balance</span> Salário Base</h3>
+                <input type="number" id="salary" class="stat-input" value="0" oninput="scheduleSave()" onfocus="window.isEditing=true" onblur="window.isEditing=false">
+                <div class="salary-bar-bg"><div class="salary-bar-fill" id="salaryBar"></div></div>
+            </div>
+            <div class="card-stat c-income">
+                <h3><span class="material-icons-round" style="font-size: 1.2rem;">add_circle</span> Renda Extra</h3>
+                <input type="number" id="extraIncomeTotal" class="stat-input" value="0" oninput="scheduleSave()" onfocus="window.isEditing=true" onblur="window.isEditing=false" style="color: #0D9488;">
+            </div>
+            <div class="card-stat c-total">
+                <h3><span class="material-icons-round" style="font-size: 1.2rem;">arrow_circle_down</span> Total Saídas</h3>
+                <div class="val" id="totalExpenses">R$ 0,00</div>
+            </div>
+            <div class="card-stat c-rest">
+                <h3 style="color: rgba(255,255,255,0.9);"><span class="material-icons-round" style="font-size: 1.2rem;">wallet</span> Livre (Total)</h3>
+                <div class="val" id="remaining">R$ 0,00</div>
+            </div>
+            <div class="card-stat c-mine">
+                <h3><span class="material-icons-round" style="font-size: 1.2rem;">person</span> Meu Custo</h3>
+                <div class="val" id="myRealExpenses">R$ 0,00</div>
+            </div>
+            <div class="card-stat c-emerg">
+                <h3><span class="material-icons-round" style="font-size: 1.2rem;">savings</span> Reserva</h3>
+                <input type="number" id="emergencyFund" class="stat-input" oninput="scheduleSave()" onfocus="window.isEditing=true" onblur="window.isEditing=false">
+            </div>
+        </div>
+        <div class="section">
+            <div class="sec-header"><h2><span class="material-icons-round" style="color:var(--primary)">pie_chart</span> Distribuição</h2></div>
+            <div class="sec-body" style="height:350px; display:flex; justify-content:center;"><canvas id="expenseChart"></canvas></div>
+        </div>
+    </div>
+
+    <div id="view-goals" class="view-section">
+        <div class="section">
+            <div class="sec-header">
+                <h2><span class="material-icons-round" style="color:var(--primary)">tour</span> Metas e Projetos</h2>
+                <button class="btn-action btn-outline" onclick="addGoal()" style="padding: 8px 16px; font-size: 0.85rem;"><span class="material-icons-round">add</span> Nova Meta</button>
+            </div>
+            <div class="sec-body" style="padding: 20px; background: var(--bg-body);">
+                <div class="goals-grid" id="goalsList">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="view-income" class="view-section">
+        <div class="section">
+            <div class="sec-header"><h2><span class="material-icons-round" style="color:var(--danger)">trending_down</span> Gastos Fixos</h2></div>
+            <div class="sec-body" style="background: var(--bg-body);">
+                <div class="table-wrap"><table id="mainTable"><thead><tr><th style="width:60px">Ícone</th><th>Item / Descrição</th><th style="width:150px">Valor (R$)</th><th style="width:70px; text-align:center;">É Meu?</th><th style="width:50px"></th></tr></thead><tbody></tbody></table></div>
+                <button class="btn-add" onclick="addMainRow()"><span class="material-icons-round">add</span> Adicionar Gasto Fixo</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="view-cards" class="view-section">
+        <div class="section">
+            <div class="card-row">
+                <div class="card-thumb thumb-bb"></div>
+                <div class="card-info">
+                    <h2>Banco do Brasil</h2>
+                    <div class="bill-wrapper">Fatura: R$ <input type="number" id="bbTotalBill" oninput="scheduleSave()" onfocus="window.isEditing=true" onblur="window.isEditing=false"></div>
+                    <div class="my-share-text" id="bbMyShareDisplay">Minha Parte: R$ 0,00</div>
+                </div>
+            </div>
+            <div class="sec-body" style="background: var(--bg-body);">
+                <div class="table-wrap"><table id="bbTable"><thead><tr><th>Quem</th><th>Dia</th><th>Descrição</th><th>Parc.</th><th>Valor (R$)</th><th></th></tr></thead><tbody></tbody></table></div>
+                <button class="btn-add" onclick="addSplitRow('bbTable')"><span class="material-icons-round">add</span> Item Fatura BB</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="card-row">
+                <div class="card-thumb thumb-mp"></div>
+                <div class="card-info">
+                    <h2>Mercado Pago</h2>
+                    <div class="bill-wrapper">Fatura: R$ <input type="number" id="mpTotalBill" oninput="scheduleSave()" onfocus="window.isEditing=true" onblur="window.isEditing=false"></div>
+                    <div class="my-share-text" id="mpMyShareDisplay">Minha Parte: R$ 0,00</div>
+                </div>
+            </div>
+            <div class="sec-body" style="background: var(--bg-body);">
+                <div class="table-wrap"><table id="mpTable"><thead><tr><th>Quem</th><th>Dia</th><th>Descrição</th><th>Parc.</th><th>Valor (R$)</th><th></th></tr></thead><tbody></tbody></table></div>
+                <button class="btn-add" onclick="addSplitRow('mpTable')"><span class="material-icons-round">add</span> Item Fatura MP</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="card-row">
+                <div class="card-thumb thumb-passai"></div>
+                <div class="card-info">
+                    <h2>Passaí (Itaú)</h2>
+                    <div class="bill-wrapper">Fatura: R$ <input type="number" id="passaiTotalBill" oninput="scheduleSave()" onfocus="window.isEditing=true" onblur="window.isEditing=false"></div>
+                    <div class="my-share-text" id="passaiMyShareDisplay">Minha Parte: R$ 0,00</div>
+                </div>
+            </div>
+            <div class="sec-body" style="background: var(--bg-body);">
+                <div class="table-wrap"><table id="passaiTable"><thead><tr><th>Quem</th><th>Dia</th><th>Descrição</th><th>Parc.</th><th>Valor (R$)</th><th></th></tr></thead><tbody></tbody></table></div>
+                <button class="btn-add" onclick="addSplitRow('passaiTable')"><span class="material-icons-round">add</span> Item Fatura Passaí</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="card-row">
+                <div class="card-thumb thumb-nubank"></div>
+                <div class="card-info">
+                    <h2>Nubank</h2>
+                    <div class="bill-wrapper">Fatura: R$ <input type="number" id="nubankTotalBill" oninput="scheduleSave()" onfocus="window.isEditing=true" onblur="window.isEditing=false"></div>
+                    <div class="my-share-text" id="nubankMyShareDisplay">Minha Parte: R$ 0,00</div>
+                </div>
+            </div>
+            <div class="sec-body" style="background: var(--bg-body);">
+                <div class="table-wrap"><table id="nubankTable"><thead><tr><th>Quem</th><th>Dia</th><th>Descrição</th><th>Parc.</th><th>Valor (R$)</th><th></th></tr></thead><tbody></tbody></table></div>
+                <button class="btn-add" onclick="addSplitRow('nubankTable')"><span class="material-icons-round">add</span> Item Fatura Nubank</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="view-debts" class="view-section">
+        <div class="section">
+            <div class="sec-header"><h2><span class="material-icons-round" style="color:var(--warning)">people_alt</span> Devedores</h2></div>
+            <div class="sec-body" style="background: var(--bg-body);">
+                <div class="debt-summary" style="display:flex; justify-content:space-around; margin-bottom:30px; padding: 25px; background: var(--bg-card); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); border: 1px solid var(--border-light); align-items: center;">
+                    <div style="text-align:center; flex: 1; min-width: 120px;">
+                        <small style="color:var(--danger); font-weight:800; letter-spacing: 1px;">A RECEBER</small>
+                        <div style="font-size: clamp(1.4rem, 4vw, 2rem); font-weight:900; color:var(--danger); letter-spacing: -1px; word-break: break-word;" id="totalToReceive">R$ 0,00</div>
+                    </div>
+                    <div class="debt-divider" style="width: 1px; background: var(--border-light); min-height: 40px; margin: 0 15px;"></div>
+                    <div style="text-align:center; flex: 1; min-width: 120px;">
+                        <small style="color:var(--success); font-weight:800; letter-spacing: 1px;">JÁ PAGO</small>
+                        <div style="font-size: clamp(1.4rem, 4vw, 2rem); font-weight:900; color:var(--success); letter-spacing: -1px; word-break: break-word;" id="totalReceived">R$ 0,00</div>
+                    </div>
+                </div>
+                <div id="debtorsList" class="debt-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="view-history" class="view-section">
+        <!-- Dashboard de Inteligência -->
+        <div class="insights-grid">
+            <div class="card-stat insight-card">
+                <h3><span class="material-icons-round">analytics</span> MÉDIA DE GASTOS</h3>
+                <div class="val" id="insightAvgExpense">R$ 0,00</div>
+            </div>
+            <div class="card-stat insight-card">
+                <h3><span class="material-icons-round">savings</span> MÉDIA LIVRE</h3>
+                <div class="val" id="insightAvgRemaining" style="color: var(--success);">R$ 0,00</div>
+            </div>
+            <div class="card-stat insight-card">
+                <h3><span class="material-icons-round">bolt</span> TENDÊNCIA</h3>
+                <div class="val" id="insightTrend">0%</div>
+            </div>
+            <div class="card-stat insight-card">
+                <h3><span class="material-icons-round">local_fire_department</span> SITUAÇÃO</h3>
+                <div class="val" id="insightStatus" style="font-size: 1.1rem; margin-top: 5px;">ESTÁVEL</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="sec-header">
+                <h2><span class="material-icons-round" style="color:var(--primary)">bar_chart</span> Balanço Geral</h2>
+                <div class="chart-controls">
+                    <button class="chart-btn" onclick="fetchHistoryData(3, this)">3M</button>
+                    <button class="chart-btn active" onclick="fetchHistoryData(6, this)">6M</button>
+                    <button class="chart-btn" onclick="fetchHistoryData(12, this)">1A</button>
+                    <button class="chart-btn" onclick="fetchHistoryData('max', this)">MAX</button>
+                </div>
+            </div>
+            <div class="sec-body" style="height:450px;"><canvas id="historyChart"></canvas></div>
+            <div class="sec-body" style="padding-top: 0; text-align: right;">
+                <button class="btn-action btn-outline" style="font-size: 0.8rem; padding: 8px 16px;" onclick="exportToCSV()">
+                    <span class="material-icons-round" style="font-size: 1.1rem;">download</span> Exportar CSV
+                </button>
+            </div>
+        </div>
+        
+        <div style="display:grid; grid-template-columns: 1.5fr 1fr; gap: 24px;">
+            <div class="section">
+                <div class="sec-header">
+                    <h2><span class="material-icons-round" style="color:var(--warning)">stacked_line_chart</span> Comparativo por Tipo</h2>
+                </div>
+                <div class="sec-body" style="height:450px;"><canvas id="historyCategoryChart"></canvas></div>
+            </div>
+
+            <div class="section">
+                <div class="sec-header">
+                    <h2><span class="material-icons-round" style="color:var(--success)">pie_chart</span> Distribuição Mensal</h2>
+                </div>
+                <div class="sec-body" style="height:450px;"><canvas id="historyIconChart"></canvas></div>
+            </div>
+        </div>
+    </div>
+
+</main>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+import { getFirestore, doc, onSnapshot, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+
+const firebaseConfig = {
+    apiKey: "AIzaSyDBcLEJw2PiFoBvocr3Zq01sRjjakteHfs",
+    authDomain: "app-controle-gastos-1e658.firebaseapp.com",
+    projectId: "app-controle-gastos-1e658",
+    storageBucket: "app-controle-gastos-1e658.firebasestorage.app",
+    messagingSenderId: "738629744462",
+    appId: "1:738629744462:web:f299e491bafe5a059cd01f",
+    measurementId: "G-02QPMRE4M8"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const SENHA = "1234"; 
+
+window.isEditing = false; 
+let currentDocId = "";
+let isReceiving = false; 
+let isLoading = false;
+let saveTimer;
+let unsubscribe = null;
+let summaryChart = null; 
+let barChart = null;
+let historyCategoryChart = null; 
+let historyIconChart = null; 
+window.lastDebts = {}; 
+
+window.paidDebtors = [];
+window.iconsList = ["💸", "🏠", "💡", "💧", "📶", "🏋️", "🚗", "⛽", "🍔", "💇", "💊", "💳", "🎓", "✈️", "💰", "🎮", "🐾", "🛒"];
+
+window.onload = () => {
+    if(localStorage.getItem('theme') === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+    const lastMonth = localStorage.getItem('lastViewedMonth');
+    const now = new Date();
+    const d = lastMonth || `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+    document.getElementById('monthPicker').value = d;
+    
+    if(window.innerWidth <= 768) {
+        document.getElementById('main-content').addEventListener('scroll', () => {
+            if(window.isEditing) document.activeElement.blur(); 
+        });
+    }
+};
+
+window.switchView = (viewName) => {
+    document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+    document.getElementById('view-'+viewName).classList.add('active');
+    document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+    event.currentTarget.classList.add('active');
+    
+    document.getElementById('main-content').scrollTo(0,0); 
+
+    if(viewName === 'history') setTimeout(() => fetchHistoryData(6), 100);
+};
+
+window.toggleTheme = () => {
+    const html = document.documentElement;
+    const newTheme = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    html.setAttribute('data-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+    if (summaryChart) summaryChart.update(); 
+    if (barChart) barChart.update();
+    if (historyCategoryChart) historyCategoryChart.update();
+};
+
+window.checkPassword = () => {
+    if(document.getElementById('passInput').value === SENHA) {
+        document.getElementById('lockScreen').style.opacity = '0';
+        setTimeout(() => document.getElementById('lockScreen').style.display = 'none', 300);
+        initApp();
+    } else {
+        document.getElementById('passError').innerText = "Senha incorreta";
+        document.getElementById('passInput').value = "";
+    }
+};
+document.getElementById('passInput').addEventListener("keypress", (e) => { if(e.key==="Enter") window.checkPassword() });
+window.lockApp = () => { location.reload(); };
+
+function initApp() {
+    const d = document.getElementById('monthPicker').value;
+    loadMonthData(d);
+}
+
+function showToast() {
+    const toast = document.getElementById('saveToast');
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2000);
+}
+
+function toggleSkeleton(show) {
+    const skel = document.getElementById('skeletonScreen');
+    if(show) { skel.style.display = 'block'; setTimeout(()=>skel.style.opacity = '1',10); } 
+    else { skel.style.opacity = '0'; setTimeout(()=>skel.style.display = 'none',300); }
+}
+
+window.changeMonthSafe = () => {
+    const newDate = document.getElementById('monthPicker').value;
+    if (!newDate || newDate === currentDocId) return;
+
+    isLoading = true;
+    toggleSkeleton(true); 
+    
+    if (unsubscribe) unsubscribe();
+    clearTimeout(saveTimer);
+
+    if (currentDocId && !isReceiving) saveDataSync(currentDocId); 
+
+    clearScreen();
+    localStorage.setItem('lastViewedMonth', newDate);
+    loadMonthData(newDate);
+}
+
+function clearScreen() {
+    document.getElementById('salary').value = 0;
+    document.getElementById('totalExpenses').innerText = "R$ 0,00";
+    document.querySelectorAll('tbody').forEach(b => b.innerHTML = "");
+    ['bbTotalBill', 'mpTotalBill', 'passaiTotalBill', 'nubankTotalBill'].forEach(id => document.getElementById(id).value = "");
+    document.getElementById('goalsList').innerHTML = ""; 
+}
+
+function loadMonthData(dateString) {
+    currentDocId = dateString;
+    
+    const docRef = doc(db, "carteira_igor_v42", currentDocId);
+    
+    unsubscribe = onSnapshot(docRef, (docSnap) => {
+        if (docSnap.exists()) {
+            if (window.isEditing) return; 
+
+            isReceiving = true;
+            const data = docSnap.data();
+            window.paidDebtors = data.paidDebtors || []; 
+            window.partialPayments = data.partialPayments || {};
+            updateScreen(data);
+            
+            setTimeout(() => { isReceiving = false; isLoading = false; toggleSkeleton(false); }, 400);
+        } else { 
+            window.paidDebtors = []; 
+            window.partialPayments = {};
+            const defData = getDefaultData();
+            updateScreen(defData); 
+            saveDataSync(currentDocId); 
+            isLoading = false; isReceiving = false; toggleSkeleton(false);
+        }
+    });
+}
+
+function updateScreen(data) {
+    if (!data) data = getDefaultData();
+    if (data.main && !data.main.some(i => i.id === 'nubank_auto')) data.main.unshift({ icon: '💳', name: 'Nubank', value: 0, isMine: true, locked: true, id: 'nubank_auto' });
+    
+    if (!data.goals) data.goals = getDefaultData().goals;
+
+    document.getElementById('salary').value = data.salary || 0;
+    document.getElementById('emergencyFund').value = data.emergency || 0;
+    document.getElementById('bbTotalBill').value = data.bbTotalBill || 0;
+    document.getElementById('mpTotalBill').value = data.mpTotalBill || 0;
+    document.getElementById('passaiTotalBill').value = data.passaiTotalBill || 0;
+    document.getElementById('nubankTotalBill').value = data.nubankTotalBill || 0;
+
+    let ei = 0;
+    if(data.extraIncomeTotal !== undefined) ei = data.extraIncomeTotal;
+    else if(data.extraIncome) ei = data.extraIncome.reduce((acc, item) => acc + (parseFloat(item.value)||0), 0);
+    document.getElementById('extraIncomeTotal').value = ei || 0;
+
+    renderGoals(data.goals);
+    renderTable('mainTable', data.main || [], 'main');
+    renderTable('bbTable', data.bb || [], 'split');
+    renderTable('mpTable', data.mp || [], 'split');
+    renderTable('passaiTable', data.passai || [], 'split');
+    renderTable('nubankTable', data.nubank || [], 'split');
+    calculateAll(); 
+}
+
+function getDefaultData() {
+    return { salary: 0, emergency: 0, bbTotalBill: 0, mpTotalBill: 0, passaiTotalBill: 0, nubankTotalBill: 0,
+        goals: [
+            { id: 'g1', name: 'Reserva 40k', icon: '💰', target: 40000, current: 0 },
+            { id: 'g2', name: 'Manutenção Argo', icon: '🚗', target: 2000, current: 0 }
+        ],
+        main: [
+            { icon: '💳', name: 'Cartão BB', value: 0, isMine: true, locked: true, id: 'bb_auto' },
+            { icon: '💳', name: 'Mercado Pago', value: 0, isMine: true, locked: true, id: 'mp_auto' },
+            { icon: '💳', name: 'Passaí', value: 0, isMine: true, locked: true, id: 'passai_auto' },
+            { icon: '💳', name: 'Nubank', value: 0, isMine: true, locked: true, id: 'nubank_auto' },
+            { icon: '🏋️', name: 'Academia', value: 0, isMine: true }, { icon: '💡', name: 'Luz', value: 0, isMine: true }
+        ], bb: [], mp: [], passai: [], nubank: [], extraIncome: [], paidDebtors: [], partialPayments: {}
+    };
+}
+
+function renderGoals(goalsArray) {
+    const list = document.getElementById('goalsList');
+    list.innerHTML = "";
+    goalsArray.forEach(g => {
+        const perc = g.target > 0 ? Math.min((g.current / g.target) * 100, 100) : 0;
+        const div = document.createElement('div');
+        div.className = 'goal-card';
+        div.innerHTML = `
+            <div class="goal-header">
+                <div class="goal-icon">${g.icon}</div>
+                <div class="goal-details">
+                    <input type="text" value="${g.name}" class="goal-title" 
+                           oninput="scheduleSave()" onfocus="window.isEditing=true" onblur="window.isEditing=false"
+                           style="background:transparent; border:none; padding:0; outline:none; font-family:'Outfit';">
+                    <div class="goal-target">Objetivo: R$ ${fmtNumber(g.target)}</div>
+                </div>
+                <button class="btn-del" onclick="removeGoal('${g.id}')" style="background:transparent; color:var(--text-muted); padding:0;"><span class="material-icons-round">close</span></button>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:flex-end;">
+                <div class="goal-perc">${perc.toFixed(0)}%</div>
+            </div>
+            <div class="goal-progress-wrap">
+                <div class="goal-progress-fill" style="width: ${perc}%"></div>
+            </div>
+            <div class="goal-inputs">
+                <div class="goal-input-group">
+                    <label>Já Tenho</label>
+                    <input type="number" class="sys-input" value="${g.current}" oninput="scheduleSave()" onfocus="window.isEditing=true" onblur="window.isEditing=false">
+                </div>
+                <div class="goal-input-group">
+                    <label>Meta</label>
+                    <input type="number" class="sys-input" value="${g.target}" oninput="scheduleSave()" onfocus="window.isEditing=true" onblur="window.isEditing=false">
+                </div>
+            </div>
+        `;
+        list.appendChild(div);
+    });
+}
+
+window.addGoal = () => {
+    const newGoal = { id: 'g'+Date.now(), name: 'Nova Meta', icon: '🎯', target: 1000, current: 0 };
+    const currentData = captureScreenData();
+    currentData.goals.push(newGoal);
+    renderGoals(currentData.goals);
+    scheduleSave();
+};
+
+window.removeGoal = (id) => {
+    Swal.fire({
+        title: 'Apagar meta?', text: "Tem certeza que deseja remover este projeto?", icon: 'warning',
+        showCancelButton: true, confirmButtonText: 'Sim', cancelButtonText: 'Não',
+        customClass: { popup: 'meu-popup-sweet', confirmButton: 'meu-botao-sweet-confirm', cancelButton: 'meu-botao-sweet-cancel' }, buttonsStyling: false
+    }).then((result) => {
+        if (result.isConfirmed) {
+            let currentData = captureScreenData();
+            currentData.goals = currentData.goals.filter(g => g.id !== id);
+            renderGoals(currentData.goals);
+            scheduleSave();
+        }
+    });
+};
+
+function renderTable(id, data, type) {
+    const tbody = document.querySelector(`#${id} tbody`);
+    tbody.innerHTML = "";
+    data.forEach(item => {
+        if(type === 'main') addMainRowHTML(tbody, item);
+        else if(type === 'split') addSplitRowHTML(tbody, item);
+    });
+}
+
+function captureScreenData() {
+    const data = { 
+        salary: document.getElementById('salary').value, 
+        emergency: document.getElementById('emergencyFund').value, 
+        bbTotalBill: document.getElementById('bbTotalBill').value, 
+        mpTotalBill: document.getElementById('mpTotalBill').value, 
+        passaiTotalBill: document.getElementById('passaiTotalBill').value, 
+        nubankTotalBill: document.getElementById('nubankTotalBill').value, 
+        extraIncomeTotal: document.getElementById('extraIncomeTotal').value,
+        paidDebtors: window.paidDebtors, 
+        partialPayments: window.partialPayments || {},
+        goals: [], main: [], bb: [], mp: [], passai: [], nubank: []
+    };
+
+    document.querySelectorAll('.goal-card').forEach(card => {
+        const inputs = card.querySelectorAll('input');
+        const name = inputs[0].value;
+        const current = parseFloat(inputs[1].value) || 0;
+        const target = parseFloat(inputs[2].value) || 0;
+        const icon = card.querySelector('.goal-icon').innerText;
+        const id = card.querySelector('.btn-del').getAttribute('onclick').match(/'([^']+)'/)[1];
+        data.goals.push({ id, name, icon, target, current });
+    });
+
+
+
+    document.querySelectorAll('#mainTable tbody tr').forEach(tr => { 
+        const name = tr.querySelector('.sys-input').value; 
+        const val = tr.querySelector('.val-input').value; 
+        const isMine = tr.querySelector('input[type="checkbox"]').checked;
+        const locked = tr.querySelector('.val-input').hasAttribute('readonly');
+        const icon = tr.querySelector('.sys-select').value;
+        const id = tr.querySelector('.val-input').id || null;
+
+        data.main.push({ icon, name, value: val, isMine, locked, id }); 
+    });
+
+    const scrape = (tid, arr) => { 
+        document.querySelectorAll(`#${tid} tbody tr`).forEach(tr => { 
+            const inputs = tr.querySelectorAll('.sys-input'); 
+            const val = tr.querySelector('.val-input').value;
+            if(inputs.length >= 4) {
+                 arr.push({ name: inputs[0].value, date: inputs[1].value, desc: inputs[2].value, inst: inputs[3].value, value: val }); 
+            }
+        }); 
+    };
+    scrape('bbTable', data.bb); scrape('mpTable', data.mp); scrape('passaiTable', data.passai); scrape('nubankTable', data.nubank);
+    return data;
+}
+
+async function saveDataSync(targetId) {
+    if(isLoading) return; 
+    const data = captureScreenData();
+    try { 
+        await setDoc(doc(db, "carteira_igor_v42", targetId), data); 
+        if (navigator.vibrate) navigator.vibrate(50); 
+        showToast(); 
+    } 
+    catch(e) { console.error("Erro save sync", e); }
+}
+
+window.scheduleSave = (force=false) => {
+    calculateAll();
+    document.querySelectorAll('.goal-card').forEach(card => {
+        const inputs = card.querySelectorAll('input');
+        const current = parseFloat(inputs[1].value) || 0;
+        const target = parseFloat(inputs[2].value) || 0;
+        const perc = target > 0 ? Math.min((current / target) * 100, 100) : 0;
+        card.querySelector('.goal-progress-fill').style.width = perc + '%';
+        card.querySelector('.goal-perc').innerText = perc.toFixed(0) + '%';
+    });
+
+    if (isReceiving && !force) return;
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => saveDataSync(currentDocId), 800); 
+}
+
+window.resetMonthData = async () => {
+    const result = await Swal.fire({
+        title: 'Limpar mês?', text: "Você vai apagar TODOS os dados deste mês.", icon: 'warning',
+        showCancelButton: true, confirmButtonText: 'Sim, limpar!', cancelButtonText: 'Cancelar',
+        customClass: { popup: 'meu-popup-sweet', confirmButton: 'meu-botao-sweet-confirm', cancelButton: 'meu-botao-sweet-cancel' }, buttonsStyling: false
+    });
+
+    if (result.isConfirmed) {
+        isReceiving = true;
+        const emptyData = getDefaultData();
+        updateScreen(emptyData); 
+        await saveDataSync(currentDocId); 
+        isReceiving = false;
+        Swal.fire({ title: 'Limpo!', icon: 'success', timer: 1500, showConfirmButton: false, customClass: { popup: 'meu-popup-sweet' } });
+    }
+}
+
+window.calculateAll = () => {
+    const bb = processCard('bbTable', 'bbTotalBill', 'bbMyShareDisplay', 'BB');
+    const mp = processCard('mpTable', 'mpTotalBill', 'mpMyShareDisplay', 'MP');
+    const passai = processCard('passaiTable', 'passaiTotalBill', 'passaiMyShareDisplay', 'Passaí');
+    const nubank = processCard('nubankTable', 'nubankTotalBill', 'nubankMyShareDisplay', 'Nubank');
+
+    const cardsShareTotal = bb.myShare + mp.myShare + passai.myShare + nubank.myShare;
+
+    updateAutoRow('Cartão BB', bb.myShare);
+    updateAutoRow('Mercado Pago', mp.myShare);
+    updateAutoRow('Passaí', passai.myShare);
+    updateAutoRow('Nubank', nubank.myShare);
+
+    let fixedSumMine = 0; let fixedSumTotal = 0;
+    const emergency = parseFloat(document.getElementById('emergencyFund').value) || 0;
+
+    document.querySelectorAll('#mainTable tbody tr').forEach(tr => {
+        const val = parseFloat(tr.querySelector('.val-input').value) || 0;
+        const isMine = tr.querySelector('input[type="checkbox"]').checked;
+        if (!tr.querySelector('.val-input').hasAttribute('readonly')) {
+            fixedSumTotal += val;
+            if (isMine) fixedSumMine += val;
+        }
+    });
+
+    let totalExpenses = fixedSumTotal + cardsShareTotal;
+    let myRealExpenses = fixedSumMine + cardsShareTotal; 
+
+    let extraIncome = parseFloat(document.getElementById('extraIncomeTotal').value) || 0;
+
+    const salary = parseFloat(document.getElementById('salary').value) || 0;
+    const totalIncome = salary + extraIncome;
+
+    document.getElementById('totalExpenses').innerText = fmt(totalExpenses);
+    document.getElementById('remaining').innerText = fmt(totalIncome - totalExpenses - emergency);
+    document.getElementById('myRealExpenses').innerText = fmt(myRealExpenses);
+
+    const perc = totalIncome > 0 ? (totalExpenses/totalIncome)*100 : 0;
+    const bar = document.getElementById('salaryBar');
+    bar.style.width = Math.min(perc, 100)+'%';
+    bar.style.background = perc < 50 ? 'var(--success)' : perc < 85 ? 'var(--warning)' : 'var(--danger)';
+
+    const allDebts = {};
+    const mergeDebts = (s) => { 
+        for(let k in s) { 
+            if(!allDebts[k]) allDebts[k] = { name: s[k].name, total: 0, items: [] }; 
+            allDebts[k].total += s[k].total; 
+            allDebts[k].items = allDebts[k].items.concat(s[k].items);
+        } 
+    };
+    mergeDebts(bb.debtors); mergeDebts(mp.debtors); mergeDebts(passai.debtors); mergeDebts(nubank.debtors);
+    
+    window.lastDebts = allDebts; 
+    updateDebtors(allDebts);
+    
+    const ctx = document.getElementById('expenseChart').getContext('2d');
+    Chart.defaults.color = localStorage.getItem('theme') === 'dark' ? '#94a3b8' : '#64748b';
+    Chart.defaults.font.family = "'Inter', sans-serif";
+    
+    if(summaryChart) summaryChart.destroy();
+    summaryChart = new Chart(ctx, { 
+        type: 'doughnut', 
+        data: { 
+            labels: ['Fixos', 'Cartões', 'Reserva', 'Livre'], 
+            datasets: [{ 
+                data: [fixedSumTotal, cardsShareTotal, emergency, Math.max(0, totalIncome - totalExpenses - emergency)], 
+                backgroundColor: [
+                    'hsl(243, 75%, 59%)', // Indigo (Primary)
+                    'hsl(35, 92%, 55%)',  // Amber
+                    'hsl(263, 70%, 50%)', // Purple
+                    'hsl(162, 75%, 45%)'  // Emerald
+                ], 
+                borderWidth: 0, 
+                hoverOffset: 15 
+            }] 
+        }, 
+        options: { 
+            responsive:true, 
+            maintainAspectRatio:false, 
+            plugins:{
+                legend:{
+                    position:'bottom', 
+                    labels: {
+                        padding: 20,
+                        usePointStyle: true,
+                        font: { family: "'Outfit', sans-serif", weight: '700', size: 13 }
+                    }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                    padding: 12,
+                    cornerRadius: 12,
+                    titleFont: { family: "'Outfit', sans-serif", size: 14 },
+                    bodyFont: { family: "'Inter', sans-serif", size: 13 }
+                }
+            }, 
+            cutout: '72%', 
+            animation: { animateScale: true, duration: 1500, easing: 'easeOutQuart' } 
+        } 
+    });
+};
+
+function updateAutoRow(name, value) {
+    const inputs = document.querySelectorAll('#mainTable tbody input.sys-input');
+    for (let input of inputs) {
+        if (input.value === name) {
+            input.closest('tr').querySelector('.val-input').value = value.toFixed(2);
+            break;
+        }
+    }
+}
+
+function processCard(tid, totId, displayId, cardName) {
+    const bill = parseFloat(document.getElementById(totId).value) || 0;
+    let others = 0, debtors = {};
+    document.querySelectorAll(`#${tid} tbody tr`).forEach(tr => {
+        const inputs = tr.querySelectorAll('.sys-input');
+        const name = inputs[0].value.trim();
+        const date = inputs[1].value.trim();
+        const desc = inputs[2].value.trim();
+        const inst = inputs[3].value.trim();
+        const val = parseFloat(tr.querySelector('.val-input').value) || 0;
+        
+        if(val>0) {
+            others += val;
+            if(name) {
+                const k = name.toLowerCase();
+                if(!debtors[k]) debtors[k] = { name, total: 0, items: [] };
+                debtors[k].total += val;
+                debtors[k].items.push({ card: cardName, date, desc, inst, val });
+            }
+        }
+    });
+    const myShare = bill - others;
+    const detailText = `${fmt(bill)} (Fatura) - ${fmt(others)} (Terceiros) = `;
+    document.getElementById(displayId).innerHTML = `<small style="font-size:0.75rem; opacity:0.7; color:var(--text-main); font-weight:600;">${detailText}</small> <b>Minha Parte: ${fmt(myShare)}</b>`;
+    return { myShare, debtors };
+}
+
+function getCardBadge(card) {
+    if(card==='BB') return `<span style="background:#fcd34d; color:#854d0e; padding:4px 8px; border-radius:6px; font-size:0.7rem; font-weight:900; display:inline-block;">BB</span>`;
+    if(card==='MP') return `<span style="background:#3b82f6; color:#fff; padding:4px 8px; border-radius:6px; font-size:0.7rem; font-weight:900; display:inline-block;">MP</span>`;
+    if(card==='Passaí') return `<span style="background:#f97316; color:#fff; padding:4px 8px; border-radius:6px; font-size:0.7rem; font-weight:900; display:inline-block;">PASSAÍ</span>`;
+    if(card==='Nubank') return `<span style="background:#a855f7; color:#fff; padding:4px 8px; border-radius:6px; font-size:0.7rem; font-weight:900; display:inline-block;">NUBANK</span>`;
+    return '';
+}
+
+window.addMainRow = () => { addMainRowHTML(document.querySelector("#mainTable tbody"), {icon:'💸',name:'',value:'',isMine:true}); scheduleSave(); }
+
+window.addSplitRow = (id) => { addSplitRowHTML(document.querySelector(`#${id} tbody`), {name:'',date:'',desc:'',inst:'',value:''}); scheduleSave(); }
+
+function addMainRowHTML(tbody, item) {
+    const tr = document.createElement("tr");
+    let opts = window.iconsList.map(i => `<option value="${i}" ${i === item.icon ? 'selected' : ''}>${i}</option>`).join('');
+    const locked = item.locked ? 'readonly style="background:transparent; color:var(--text-muted); opacity:0.8"' : 'onfocus="window.isEditing=true" onblur="window.isEditing=false"';
+    const del = item.locked ? '' : `<button class="btn-del" onclick="removeRow(this)"><span class="material-icons-round">close</span></button>`;
+    tr.innerHTML = `<td><select class="sys-select" onchange="scheduleSave()">${opts}</select></td><td><input type="text" class="sys-input" value="${item.name}" ${locked} oninput="scheduleSave()"></td><td><input type="number" class="val-input" value="${item.value}" step="0.01" id="${item.id||''}" ${locked} oninput="scheduleSave()"></td><td style="text-align:center"><input type="checkbox" ${item.isMine?'checked':''} onchange="scheduleSave()"></td><td style="text-align:center">${del}</td>`;
+    tbody.appendChild(tr);
+}
+
+function addSplitRowHTML(tbody, item) {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td><input type="text" class="sys-input split-name" value="${item.name}" placeholder="Nome" oninput="scheduleSave()" onfocus="window.isEditing=true" onblur="window.isEditing=false"></td><td><input type="text" class="sys-input split-date" value="${item.date||''}" placeholder="Ex: 04/03" oninput="scheduleSave()" onfocus="window.isEditing=true" onblur="window.isEditing=false" style="text-align: center;"></td><td><input type="text" class="sys-input" value="${item.desc}" placeholder="Item" oninput="scheduleSave()" onfocus="window.isEditing=true" onblur="window.isEditing=false"></td><td><input type="text" class="sys-input" value="${item.inst||''}" placeholder="1/10" oninput="updateBar(this);scheduleSave()" onfocus="window.isEditing=true" onblur="window.isEditing=false"></td><td><input type="number" class="val-input" value="${item.value}" step="0.01" oninput="scheduleSave()" onfocus="window.isEditing=true" onblur="window.isEditing=false"></td><td style="text-align:center"><button class="btn-del" onclick="removeRow(this)"><span class="material-icons-round">close</span></button></td>`;
+    tbody.appendChild(tr);
+}
+
+window.removeRow = (btn) => { btn.closest('tr').remove(); scheduleSave(); }
+
+window.toggleItemPaid = (itemId) => {
+    const idx = window.paidDebtors.indexOf(itemId);
+    if(idx > -1) window.paidDebtors.splice(idx, 1);
+    else window.paidDebtors.push(itemId);
+    scheduleSave();
+}
+
+window.togglePaid = (name) => {
+    const key = name.toLowerCase();
+    const p = window.lastDebts[key];
+    if(!p) return;
+
+    const legacyIsPaid = window.paidDebtors.includes(p.name);
+    let allPaid = true;
+    const ids = p.items.map(it => `${p.name}|${it.card}|${(it.desc||'').replace(/'/g, "\\'")}|${it.val}|${it.date||''}|${it.inst||''}`);
+
+    ids.forEach(id => { if(!legacyIsPaid && !window.paidDebtors.includes(id)) allPaid = false; });
+
+    ids.forEach(id => {
+        const idx = window.paidDebtors.indexOf(id);
+        if(legacyIsPaid) { if(idx === -1) window.paidDebtors.push(id); }
+        else {
+            if(allPaid && idx === -1) window.paidDebtors.push(id);
+            else if(!allPaid && idx > -1) window.paidDebtors.splice(idx, 1);
+        }
+    });
+
+    if(legacyIsPaid) {
+        window.paidDebtors = window.paidDebtors.filter(i => i !== p.name);
+    } else {
+        if(allPaid) window.paidDebtors.push(p.name);
+        else window.paidDebtors = window.paidDebtors.filter(i => i !== p.name);
+    }
+    scheduleSave();
+}
+
+window.payAllForDebtor = (name) => {
+    const key = name.toLowerCase();
+    const p = window.lastDebts[key];
+    if(!p) return;
+    p.items.forEach(it => {
+        const id = `${p.name}|${it.card}|${(it.desc||'').replace(/'/g, "\\'")}|${it.val}|${it.date||''}|${it.inst||''}`;
+        if(!window.paidDebtors.includes(id)) window.paidDebtors.push(id);
+    });
+    if(!window.paidDebtors.includes(p.name)) window.paidDebtors.push(p.name);
+    scheduleSave();
+}
+
+window.abaterValor = async (name) => {
+    const currentVal = (window.partialPayments && window.partialPayments[name]) ? window.partialPayments[name] : 0;
+    const { value: amount } = await Swal.fire({
+        title: 'Abater Valor Avulso',
+        html: `Defina um valor extra que <b>${name}</b> já pagou.<br><br><small>Coloque 0 para remover o abatimento.</small>`,
+        input: 'number',
+        inputValue: currentVal > 0 ? currentVal : '',
+        inputAttributes: { step: '0.01' },
+        showCancelButton: true,
+        confirmButtonText: 'Salvar',
+        cancelButtonText: 'Cancelar',
+        customClass: { popup: 'meu-popup-sweet', confirmButton: 'meu-botao-sweet-confirm', cancelButton: 'meu-botao-sweet-cancel' }
+    });
+
+    if (amount !== undefined) {
+        let val = parseFloat(amount);
+        if(isNaN(val) || val < 0) val = 0;
+        if(!window.partialPayments) window.partialPayments = {};
+        window.partialPayments[name] = val;
+        scheduleSave();
+    }
+}
+
+function updateDebtors(all) {
+    const list = document.getElementById('debtorsList'); list.innerHTML = "";
+    let tr=0, r=0;
+    if (Object.keys(all).length === 0) list.innerHTML = "<div style='color:var(--text-muted); width:100%; text-align:center; padding: 20px; font-weight: 700;'>Nenhum devedor no momento.</div>";
+    else {
+        for(let k in all) {
+            const p = all[k];
+            const legacyIsPaid = window.paidDebtors.includes(p.name);
+            let debtorTotalPaid = 0;
+            let debtorTotalPending = 0;
+
+            let itemsHTML = `<div style="margin-top:10px; border-top:1px dashed var(--border-light); padding-top:15px; display:flex; flex-direction:column; gap:10px;">`;
+
+            p.items.sort((a,b) => (a.date||'').localeCompare(b.date||''));
+
+            p.items.forEach(it => {
+                const safeDesc = (it.desc || '').replace(/'/g, "\\'");
+                const itemId = `${p.name}|${it.card}|${safeDesc}|${it.val}|${it.date||''}|${it.inst||''}`;
+                const isItemPaid = legacyIsPaid || window.paidDebtors.includes(itemId);
+
+                if(isItemPaid) { r+=it.val; debtorTotalPaid+=it.val; } else { tr+=it.val; debtorTotalPending+=it.val; }
+
+                const badge = getCardBadge(it.card);
+                const dt = it.date ? `<span style="color:var(--text-muted); font-weight:800; font-size:0.75rem; background:var(--border-light); padding:4px 8px; border-radius:6px; margin-top:5px; display:inline-block;">🗓 ${it.date}</span>` : '';
+                const parc = it.inst ? `<span style="font-size:0.8rem; color:var(--text-muted); font-weight:700;">${it.inst}</span>` : '';
+
+                itemsHTML += `
+                <div style="display:flex; justify-content:space-between; align-items:center; background:var(--bg-body); padding:10px 12px; border-radius:var(--radius-sm); opacity: ${isItemPaid?'0.5':'1'}; border: 1px solid var(--border-light);">
+                    <div style="display:flex; align-items:center; gap:8px; min-width: 0; flex: 1;">
+                        <button class="item-status-btn ${isItemPaid?'paid':'pending'}" onclick="toggleItemPaid('${itemId}')" style="width:30px; height:30px; flex-shrink:0;">
+                            <span class="material-icons-round" style="font-size:1.1rem;">${isItemPaid?'check':'horizontal_rule'}</span>
+                        </button>
+                        <div style="display:flex; flex-direction:column; gap:2px; min-width: 0;">
+                            <div style="display:flex; align-items:center; gap:6px;">
+                                ${badge}
+                                <span style="font-size:0.85rem; font-weight:800; text-decoration: ${isItemPaid?'line-through':'none'}; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${it.desc || 'Item'}</span>
+                            </div>
+                            <div style="display:flex; align-items:center; gap:6px;">
+                                ${parc ? `<span style="font-size:0.75rem; color:var(--text-muted); font-weight:700;">${it.inst}</span>` : ''}
+                                ${dt}
+                            </div>
+                        </div>
+                    </div>
+                    <div style="text-align:right; flex-shrink:0;">
+                        <span style="font-weight:900; color:var(--text-main); font-size:0.95rem; text-decoration: ${isItemPaid?'line-through':'none'}">${fmt(it.val)}</span>
+                    </div>
+                </div>`;
+            });
+            itemsHTML += `</div>`;
+
+            let partial = window.partialPayments ? (window.partialPayments[p.name] || 0) : 0;
+            let effectivePartial = Math.min(partial, debtorTotalPending);
+            debtorTotalPaid += effectivePartial;
+            debtorTotalPending -= effectivePartial;
+            r += effectivePartial;
+            tr -= effectivePartial;
+
+            const allItemsPaid = (debtorTotalPending <= 0 && p.items.length > 0);
+
+            const div = document.createElement('div');
+            div.className = `debt-card ${allItemsPaid?'paid':''}`;
+            div.innerHTML = `
+                <div class="debt-header" style="margin-bottom: 20px;">
+                    <div style="flex: 1;">
+                        <span style="font-size:1.3rem; display: block; font-weight: 800; color:var(--text-main);">${p.name}</span>
+                        <div style="font-size:0.75rem; color:var(--primary); font-weight:900; text-transform: uppercase; letter-spacing: 1px;">
+                            ${allItemsPaid ? '✔ Tudo Pago' : (debtorTotalPaid > 0 ? `Abatido: ${fmt(debtorTotalPaid)}` : 'Em Aberto')}
+                        </div>
+                    </div>
+                    <div style="text-align:right">
+                        <span class="debt-amount">${fmt(p.total)}</span>
+                        <div style="font-size:0.8rem; color:var(--text-muted); font-weight:700;">Restante: ${fmt(debtorTotalPending)}</div>
+                    </div>
+                </div>
+
+                ${!allItemsPaid ? `
+                <div style="display:flex; gap:10px; margin-bottom: 10px;">
+                    <button class="status-btn pending" style="flex:1; display:flex; align-items:center; justify-content:center; gap:8px; background:transparent;" onclick="payAllForDebtor('${p.name}')">
+                        <span class="material-icons-round" style="font-size:1.1rem;">done_all</span> QUITAR TUDO
+                    </button>
+                    <button class="status-btn pending" style="flex:1; display:flex; align-items:center; justify-content:center; gap:8px; background:transparent; border-color: var(--primary); color: var(--primary);" onclick="abaterValor('${p.name}')">
+                        <span class="material-icons-round" style="font-size:1.1rem;">payments</span> ABATER
+                    </button>
+                </div>` : `
+                <div style="display:flex; gap:10px; margin-bottom: 10px;">
+                    <div style="flex:1; background:var(--success-bg); color:var(--success); padding:10px; border-radius:12px; text-align:center; font-weight:800; font-size:0.8rem; border: 1px solid var(--success);">
+                       <span class="material-icons-round" style="vertical-align:middle; font-size:1rem;">verified</span> QUITADO
+                    </div>
+                    ${partial > 0 ? `
+                    <button class="status-btn pending" style="display:flex; align-items:center; justify-content:center; padding:10px; background:transparent; border-color: var(--primary); color: var(--primary);" onclick="abaterValor('${p.name}')" title="Editar abatimento">
+                        <span class="material-icons-round" style="font-size:1.1rem;">edit</span>
+                    </button>` : ''}
+                </div>`}
+                
+                ${itemsHTML}
+            `;
+            list.appendChild(div);
+        }
+    }
+    document.getElementById('totalToReceive').innerText = fmt(tr); document.getElementById('totalReceived').innerText = fmt(r);
+}
+
+// RELATORIO PDF
+window.openPDFPreview = () => {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    
+    const colPrimary = [79, 70, 229]; const colSuccess = [16, 185, 129]; const colDanger = [239, 68, 68]; const colWarning = [245, 158, 11]; const colDark = [15, 23, 42]; const colGray = [100, 116, 139];
+
+    doc.setFillColor(...colPrimary); doc.rect(0, 0, 8, 297, 'F'); 
+    doc.setFont("helvetica", "bold"); doc.setFontSize(24); doc.setTextColor(...colDark); doc.text("Relatório PRO", 20, 22);
+    doc.setFont("helvetica", "normal"); doc.setFontSize(10); doc.setTextColor(...colGray);
+    doc.text(`Referência: ${document.getElementById('monthPicker').value}  |  Gerado em: ${new Date().toLocaleDateString('pt-BR')}`, 20, 30);
+    doc.setDrawColor(226, 232, 240); doc.line(20, 36, 190, 36);
+
+    let y = 48;
+    const salary = parseFloat(document.getElementById('salary').value)||0;
+    const extra = parseFloat(document.getElementById('extraIncomeTotal').value)||0;
+    let fixedSum = 0; document.querySelectorAll('#mainTable tbody tr').forEach(tr => { if(!tr.querySelector('.val-input').hasAttribute('readonly')) fixedSum += parseFloat(tr.querySelector('.val-input').value)||0; });
+    const bb = parseFloat(document.getElementById('bbTotalBill').value)||0; const mp = parseFloat(document.getElementById('mpTotalBill').value)||0; const passai = parseFloat(document.getElementById('passaiTotalBill').value)||0; const nubank = parseFloat(document.getElementById('nubankTotalBill').value)||0;
+    const totalCards = bb + mp + passai + nubank;
+    const saldoFinal = parseFloat(document.getElementById('remaining').innerText.replace(/[^\d,-]/g,'').replace(',','.'))||0;
+
+    const drawCard = (x, title, value, color) => {
+        doc.setFillColor(250, 250, 250); doc.setDrawColor(220, 220, 220); doc.setLineWidth(0.2); doc.roundedRect(x, y, 40, 25, 3, 3, 'FD');
+        doc.setFillColor(...color); doc.rect(x, y, 40, 3, 'F');
+        doc.setFontSize(7); doc.setTextColor(...colGray); doc.text(title, x+3, y+10);
+        doc.setFontSize(11); doc.setFont("helvetica", "bold"); doc.setTextColor(...colDark); doc.text(fmt(value), x+3, y+20);
+    };
+
+    drawCard(20, "RECEITA TOTAL", salary+extra, colSuccess);
+    drawCard(65, "GASTOS FIXOS", fixedSum, colWarning);
+    drawCard(110, "FATURA CARTÕES", totalCards, [139, 92, 246]);
+    drawCard(155, "SALDO FINAL", saldoFinal, saldoFinal >= 0 ? colPrimary : colDanger);
+
+    y += 38; 
+    const tableStyles = { theme: 'grid', headStyles: { fontStyle: 'bold', fontSize: 9, halign: 'left' }, bodyStyles: { fontSize: 9, textColor: 50 }, alternateRowStyles: { fillColor: [248, 250, 252] }, columnStyles: { 0: { cellWidth: 'auto' }, 1: { cellWidth: 40, halign: 'right', fontStyle: 'bold' } }, margin: { left: 20, right: 20 } };
+
+    const incomeRows = [['Salário Base', fmt(salary)]];
+    if (extra > 0) incomeRows.push(['Renda Extra', fmt(extra)]);
+    
+    doc.setFontSize(12); doc.setTextColor(...colSuccess); doc.setFont("helvetica", "bold"); doc.text("Entradas & Rendas", 20, y);
+    doc.autoTable({ startY: y+3, head: [['Fonte', 'Valor']], body: incomeRows, ...tableStyles, headStyles: { ...tableStyles.headStyles, fillColor: colSuccess } });
+    y = doc.lastAutoTable.finalY + 15;
+
+    const fixedRows = []; document.querySelectorAll('#mainTable tbody tr').forEach(tr => { const n = tr.querySelector('.sys-input').value; const v = parseFloat(tr.querySelector('.val-input').value)||0; const isMine = tr.querySelector('input[type="checkbox"]').checked; if(v>0 && !tr.querySelector('.val-input').hasAttribute('readonly')) fixedRows.push([n + (isMine ? "" : " (Terceiros)"), fmt(v)]); });
+    const emerg = parseFloat(document.getElementById('emergencyFund').value)||0; if(emerg>0) fixedRows.push(['Reserva / Investimento', fmt(emerg)]);
+
+    if(fixedRows.length > 0) {
+        doc.setTextColor(...colWarning); doc.text("Despesas Fixas", 20, y);
+        doc.autoTable({ startY: y+3, head: [['Despesa', 'Valor']], body: fixedRows, ...tableStyles, headStyles: { ...tableStyles.headStyles, fillColor: colWarning } });
+        y = doc.lastAutoTable.finalY + 15;
+    }
+
+    const cardTables = [{id: 'bbTable', name: 'Banco do Brasil', tot: 'bbTotalBill'}, {id: 'mpTable', name: 'Mercado Pago', tot: 'mpTotalBill'}, {id: 'passaiTable', name: 'Passaí (Itaú)', tot: 'passaiTotalBill'}, {id: 'nubankTable', name: 'Nubank', tot: 'nubankTotalBill'}];
+    let hasCards = false;
+    cardTables.forEach(card => {
+        const rows = []; const totalBill = parseFloat(document.getElementById(card.tot).value)||0;
+        document.querySelectorAll(`#${card.id} tbody tr`).forEach(tr => { 
+            const inputs = tr.querySelectorAll('.sys-input'); 
+            const v = parseFloat(tr.querySelector('.val-input').value)||0; 
+            if(v>0) {
+                const dateText = inputs[1].value ? ` [Dia: ${inputs[1].value}]` : '';
+                rows.push([`${inputs[2].value} (${inputs[0].value})${dateText} ${inputs[3].value ? '- '+inputs[3].value : ''}`, fmt(v)]);
+            }
+        });
+
+        if(totalBill > 0 || rows.length > 0) {
+            if(!hasCards) { if(y > 250) { doc.addPage(); y=20; doc.setFillColor(...colPrimary); doc.rect(0, 0, 8, 297, 'F'); } doc.setTextColor(139, 92, 246); doc.text("Detalhamento de Cartões", 20, y); y += 5; hasCards = true; }
+            doc.setFontSize(10); doc.setTextColor(...colDark); doc.text(`${card.name} (Total: ${fmt(totalBill)})`, 20, y+4);
+            if(rows.length > 0) { doc.autoTable({ startY: y+6, head: [['Item / Responsável', 'Valor']], body: rows, ...tableStyles, headStyles: { ...tableStyles.headStyles, fillColor: [139, 92, 246] }, margin: { left: 25 } }); y = doc.lastAutoTable.finalY + 10; } else y += 15;
+        }
+    });
+
+    const debtors = []; 
+    for(let k in window.lastDebts) {
+        const p = window.lastDebts[k];
+        const legacyIsPaid = window.paidDebtors.includes(p.name);
+        let debtorTotalPending = 0;
+        let details = "";
+        p.items.forEach(it => {
+            const safeDesc = (it.desc || '').replace(/'/g, "\\'");
+            const itemId = `${p.name}|${it.card}|${safeDesc}|${it.val}|${it.date||''}|${it.inst||''}`;
+            const isItemPaid = legacyIsPaid || window.paidDebtors.includes(itemId);
+            if(!isItemPaid) debtorTotalPending += it.val;
+
+            const dt = it.date ? `Dia ${it.date} | ` : '';
+            const parc = it.inst ? `(${it.inst})` : '';
+            const statusStr = isItemPaid ? "[PAGO]" : "[PENDENTE]";
+            details += `• ${dt}${it.card}: ${it.desc} ${parc} - ${fmt(it.val)} ${statusStr}\n`;
+        });
+        const allItemsPaid = (debtorTotalPending === 0 && p.items.length > 0);
+        debtors.push([
+            `${p.name}\n${details.trim()}`,
+            allItemsPaid ? "PAGO" : "PENDENTE",
+            fmt(p.total)
+        ]);
+    }
+    
+    if(debtors.length > 0) {
+        if(y > 240) { doc.addPage(); y=20; doc.setFillColor(...colPrimary); doc.rect(0, 0, 8, 297, 'F'); }
+        doc.setFontSize(12); doc.setTextColor(...colDanger); doc.text("Controle de Devedores", 20, y);
+        doc.autoTable({ startY: y+3, head: [['Devedor', 'Status', 'Valor']], body: debtors, ...tableStyles, columnStyles: { 0: {cellWidth:'auto'}, 1: {cellWidth:30}, 2: {cellWidth:40, halign:'right'} }, headStyles: { ...tableStyles.headStyles, fillColor: colDanger }, didParseCell: function(data) { if (data.section === 'body' && data.column.index === 1) { data.cell.styles.textColor = data.cell.raw === 'PAGO' ? colSuccess : colWarning; data.cell.styles.fontStyle = 'bold'; } } });
+    }
+
+    const pageCount = doc.internal.getNumberOfPages();
+    for(let i = 1; i <= pageCount; i++) { doc.setPage(i); doc.setFontSize(8); doc.setTextColor(150); doc.text(`Página ${i} de ${pageCount} - Financeiro Pro`, 105, 290, { align: 'center' }); }
+    document.getElementById('pdfPreviewFrame').src = doc.output('bloburl'); document.getElementById('pdfModal').style.display = 'flex'; document.getElementById('btnDownloadPDF').onclick = () => doc.save(`Relatorio_Pro_${currentDocId}.pdf`);
+}
+
+window.exportToCSV = async () => {
+    const pickerVal = document.getElementById('monthPicker').value;
+    const yearRef = parseInt(pickerVal.split('-')[0]);
+    const monthRef = parseInt(pickerVal.split('-')[1]);
+    
+    const reqs = [];
+    for(let i=11; i>=0; i--) {
+        let m = monthRef - i, y = yearRef; 
+        while(m <= 0) { m += 12; y--; }
+        const id = `${y}-${String(m).padStart(2,'0')}`; 
+        reqs.push(getDoc(doc(db, "carteira_igor_v42", id)));
+    }
+    const snaps = await Promise.all(reqs);
+    
+    let csv = "Mes,Tipo,Descricao,Valor\n";
+    snaps.forEach((snap, idx) => {
+        if(snap.exists()){
+            const d = snap.data();
+            const mes = snap.id;
+            csv += `${mes},Salario,Base,${d.salary||0}\n`;
+            if(d.extraIncomeTotal) csv += `${mes},RendaExtra,Total,${d.extraIncomeTotal}\n`;
+            else if(d.extraIncome) d.extraIncome.forEach(x => csv += `${mes},RendaExtra,${x.desc},${x.value}\n`);
+            if(d.main) d.main.forEach(x => csv += `${mes},Fixo,${x.name},${x.value}\n`);
+            ['bb','mp','passai','nubank'].forEach(c => {
+                if(d[c]) d[c].forEach(x => csv += `${mes},Cartao_${c.toUpperCase()},${x.desc},${x.value}\n`);
+            });
+        }
+    });
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `Historico_Financeiro_${pickerVal}.csv`;
+    link.click();
+}
+
+window.closePDFModal = () => document.getElementById('pdfModal').style.display = 'none';
+
+// HISTÓRICO
+window.fetchHistoryData = async (range, btnElement = null) => {
+    if(btnElement) { document.querySelectorAll('.chart-btn').forEach(b => b.classList.remove('active')); btnElement.classList.add('active'); }
+    
+    const pickerVal = document.getElementById('monthPicker').value;
+    const yearRef = parseInt(pickerVal.split('-')[0]);
+    const monthRef = parseInt(pickerVal.split('-')[1]);
+    const finalRange = (range === 'max') ? 24 : range; 
+
+    const reqs = [], labels = [];
+    for(let i=finalRange-1; i>=0; i--) {
+        let m = monthRef - i, y = yearRef; 
+        while(m <= 0) { m += 12; y--; }
+        const id = `${y}-${String(m).padStart(2,'0')}`; 
+        labels.push(`${m}/${y}`);
+        reqs.push(getDoc(doc(db, "carteira_igor_v42", id)));
+    }
+    const snaps = await Promise.all(reqs);
+    
+    const dataIncome = [], dataExpense = [], dataCards = [], dataFixed = [], dataRemaining = [];
+    const iconCounts = {};
+
+    snaps.forEach(snap => {
+        let inc = 0, expFixed = 0, expCards = 0;
+        if(snap.exists()) {
+            const d = snap.data();
+            inc = (parseFloat(d.salary)||0) + (parseFloat(d.extraIncomeTotal)||0); 
+            if(!d.extraIncomeTotal && d.extraIncome) d.extraIncome.forEach(x=>inc+=(parseFloat(x.value)||0));
+            
+            if(d.main) d.main.forEach(x=>{
+                const v = parseFloat(x.value)||0;
+                if(!x.locked) {
+                    expFixed += v;
+                    if(v > 0) {
+                        const icon = x.icon || '💸';
+                        iconCounts[icon] = (iconCounts[icon] || 0) + v;
+                    }
+                }
+            });
+            const sumC = (l) => { let s=0; if(l) l.forEach(k=>s+=parseFloat(k.value)||0); return s; };
+            expCards = (parseFloat(d.bbTotalBill)||0) - sumC(d.bb) + (parseFloat(d.mpTotalBill)||0) - sumC(d.mp) + (parseFloat(d.passaiTotalBill)||0) - sumC(d.passai) + (parseFloat(d.nubankTotalBill)||0) - sumC(d.nubank);
+            
+            // Add my part of cards to icon counts
+            if(expCards > 0) {
+                iconCounts['💳 Cartões'] = (iconCounts['💳 Cartões'] || 0) + expCards;
+            }
+        }
+        dataIncome.push(inc); dataExpense.push(expFixed + expCards); dataCards.push(expCards); dataFixed.push(expFixed);
+        dataRemaining.push(Math.max(0, inc - (expFixed + expCards)));
+    });
+
+    // Insights
+    const avgExp = dataExpense.reduce((a,b)=>a+b,0) / dataExpense.filter(x=>x>0).length || 0;
+    const avgRem = dataRemaining.reduce((a,b)=>a+b,0) / dataRemaining.filter(x=>x>0).length || 0;
+    document.getElementById('insightAvgExpense').innerText = fmt(avgExp);
+    document.getElementById('insightAvgRemaining').innerText = fmt(avgRem);
+
+    const last = dataExpense[dataExpense.length-1] || 0;
+    const prev = dataExpense[dataExpense.length-2] || 0;
+    if(prev > 0) {
+        const trend = ((last - prev) / prev) * 100;
+        const trendEl = document.getElementById('insightTrend');
+        trendEl.innerText = (trend > 0 ? '+' : '') + trend.toFixed(1) + '%';
+        trendEl.style.color = trend > 0 ? 'var(--danger)' : 'var(--success)';
+        
+        const statusEl = document.getElementById('insightStatus');
+        if(trend > 10) { statusEl.innerText = 'ALERTA 📈'; statusEl.style.color = 'var(--danger)'; }
+        else if(trend < -10) { statusEl.innerText = 'ECONOMIA 📉'; statusEl.style.color = 'var(--success)'; }
+        else { statusEl.innerText = 'ESTÁVEL ⚖️'; statusEl.style.color = 'var(--primary)'; }
+    }
+
+    Chart.defaults.color = localStorage.getItem('theme') === 'dark' ? '#94a3b8' : '#64748b';
+    Chart.defaults.font.family = "'Inter', sans-serif";
+
+    const ctxBar = document.getElementById('historyChart').getContext('2d');
+    if(barChart) barChart.destroy();
+    barChart = new Chart(ctxBar, { 
+        type: 'bar', 
+        data: { labels: labels, datasets: [
+            { label: 'Entradas', data: dataIncome, backgroundColor: 'hsl(162, 75%, 45%)', borderRadius: 10, barPercentage: 0.5 }, 
+            { label: 'Saídas', data: dataExpense, backgroundColor: 'hsl(0, 84%, 60%)', borderRadius: 10, barPercentage: 0.5 }
+        ]}, 
+        options: { responsive:true, maintainAspectRatio:false, scales: { y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.03)', drawBorder: false } }, x: { grid: { display: false } } }, plugins: { legend: { position: 'top', labels: { font: { family: "'Outfit', sans-serif", weight: '700' } } } }, animation: { duration: 1200 } } 
+    });
+
+    const ctxCat = document.getElementById('historyCategoryChart').getContext('2d');
+    if(historyCategoryChart) historyCategoryChart.destroy();
+    historyCategoryChart = new Chart(ctxCat, {
+        type: 'line',
+        data: { labels: labels, datasets: [
+            { label: 'Cartões', data: dataCards, borderColor: 'hsl(35, 92%, 55%)', backgroundColor: 'rgba(245, 158, 11, 0.05)', fill: true, tension: 0.4, borderWidth: 4, pointRadius: 4 },
+            { label: 'Fixos', data: dataFixed, borderColor: 'hsl(243, 75%, 59%)', backgroundColor: 'rgba(79, 70, 229, 0.05)', fill: true, tension: 0.4, borderWidth: 4, pointRadius: 4 }
+        ]},
+        options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.03)', drawBorder: false } }, x: { grid: { display: false } } }, plugins: { legend: { position: 'top', labels: { font: { family: "'Outfit', sans-serif", weight: '700' } } } }, animation: { duration: 1500 } }
+    });
+
+    const ctxIcon = document.getElementById('historyIconChart').getContext('2d');
+    if(historyIconChart) historyIconChart.destroy();
+    
+    const monthCount = snaps.filter(s => s.exists()).length || 1;
+    const iconLabels = Object.keys(iconCounts);
+    const iconValues = Object.values(iconCounts).map(v => v / monthCount);
+    
+    historyIconChart = new Chart(ctxIcon, {
+        type: 'doughnut',
+        data: { labels: iconLabels, datasets: [{ data: iconValues, backgroundColor: ['#6366f1','#10b981','#f59e0b','#ef4444','#8b5cf6','#ec4899','#06b6d4','#14b8a6','#f97316'], borderWidth: 0 }]},
+        options: { 
+            responsive: true, maintainAspectRatio: false, cutout: '65%', 
+            plugins: { 
+                legend: { position: 'right', labels: { padding: 15, font: { family: "'Outfit', sans-serif", weight: '600' } } },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return ` Média: ${fmt(context.raw)}`;
+                        }
+                    }
+                }
+            }, 
+            animation: { animateScale: true, duration: 2000 } 
+        }
+    });
+};
+
+function fmt(n) { return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
+function fmtNumber(n) { return n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+
+window.copyPreviousMonth = async function() {
+    const result = await Swal.fire({
+        title: 'Importar Mês Anterior?', text: "Puxar parcelas e devedores do mês passado.", icon: 'question',
+        showCancelButton: true, confirmButtonText: 'Sim, importar', cancelButtonText: 'Cancelar',
+        customClass: { popup: 'meu-popup-sweet', confirmButton: 'meu-botao-sweet-confirm', cancelButton: 'meu-botao-sweet-cancel' }, buttonsStyling: false
+    });
+
+    if (result.isConfirmed) {
+        const parts = currentDocId.split('-'); let year = parseInt(parts[0]); let month = parseInt(parts[1]);
+        month--; if(month===0) { month=12; year--; }
+        const prevId = `${year}-${String(month).padStart(2,'0')}`;
+        toggleSkeleton(true);
+        const snap = await getDoc(doc(db, "carteira_igor_v42", prevId));
+        if(snap.exists()) {
+            const data = snap.data(); data.paidDebtors = [];
+            if(data.main) { data.main = data.main.filter(i => !i.locked); } 
+            
+            const processItems = (arr) => {
+                if(!arr) return [];
+                return arr.map(i => {
+                    if(i.inst && i.inst.includes('/')) {
+                        let [c,t] = i.inst.split('/').map(n => parseInt(n));
+                        if(c < t) { i.inst = `${c+1}/${t}`; return i; }
+                        return null; // Completed installment
+                    }
+                    return i; // Item without installments (like a monthly recurrency manual)
+                }).filter(i => i !== null);
+            };
+            
+            data.bb = processItems(data.bb); 
+            data.mp = processItems(data.mp); 
+            data.passai = processItems(data.passai); 
+            data.nubank = processItems(data.nubank);
+
+            updateScreen(data); setTimeout(() => { saveDataSync(currentDocId); toggleSkeleton(false); }, 500);
+        } else { toggleSkeleton(false); Swal.fire({ title: 'Ops', text: 'Mês anterior vazio.', icon: 'info' }); }
+    }
+};
+</script>
+
+</body>
+</html>
