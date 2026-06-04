@@ -1,287 +1,4 @@
-<!DOCTYPE html>
-<html lang="pt-BR" data-theme="light">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Financeiro">
-    <title>Minhas Finanças Pro</title>
-
-    <link rel="icon" type="image/png" href="icone2.0.png">
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#4f46e5">
-    <meta name="mobile-web-app-capable" content="yes">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
-    
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    
-    <link rel="stylesheet" href="style.css">
-    
-    <script>
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('service-worker.js').catch(err => console.log('SW reg error:', err));
-        });
-      }
-    </script>
-</head>
-<body>
-
-<div id="saveToast"><span class="material-icons-round">check_circle</span> Salvo!</div>
-
-<div id="pdfModal">
-    <div class="pdf-box">
-        <div class="pdf-header">
-            <h3 style="margin:0; color:var(--text-main); font-size: 1.3rem; font-weight: 900;">Relatório do Mês</h3>
-            <div style="display:flex; gap:10px;">
-                <button class="btn-action btn-save" id="btnDownloadPDF"><span class="material-icons-round">download</span> Baixar</button>
-                <button class="btn-action btn-outline" onclick="closePDFModal()">Fechar</button>
-            </div>
-        </div>
-        <iframe id="pdfPreviewFrame"></iframe>
-    </div>
-</div>
-
-<div id="skeletonScreen">
-    <div class="dashboard-grid">
-        <div class="skeleton-block sk-card"></div>
-        <div class="skeleton-block sk-card"></div>
-        <div class="skeleton-block sk-card"></div>
-        <div class="skeleton-block sk-card"></div>
-    </div>
-    <div class="skeleton-block sk-chart"></div>
-</div>
-
-<div id="lockScreen">
-    <div class="lock-box">
-        <div class="lock-logo">💰</div>
-        <h2 class="lock-title">Minhas Finanças Pro</h2>
-        <p class="lock-subtitle">Entre com sua conta Google para continuar</p>
-
-        <button id="googleLoginBtn" class="google-signin-btn" onclick="loginWithGoogle()">
-            <svg width="20" height="20" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-                <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
-                <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
-                <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
-                <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
-            </svg>
-            Entrar com Google
-        </button>
-
-        <div id="loginSpinner" style="display:none; align-items:center; gap:10px; color:var(--text-muted); font-weight:600; font-size:0.95rem; margin-top:20px; justify-content:center;">
-            <span class="material-icons-round" style="animation: spin 0.9s linear infinite; font-size:1.4rem; color:var(--primary);">sync</span> Autenticando...
-        </div>
-        <div id="loginError" style="color:var(--danger); font-weight:700; font-size:0.85rem; margin-top:14px; min-height:20px; text-align:center;"></div>
-    </div>
-</div>
-
-<nav id="sidebar">
-    <div class="brand"><span class="material-icons-round">account_balance_wallet</span> Financeiro</div>
-
-    <div class="user-info-sidebar" id="userInfoSidebar">
-        <div id="userAvatarWrap" style="position:relative; width:38px; height:38px; flex-shrink:0;">
-            <img id="userPhoto" src="" alt="" referrerpolicy="no-referrer"
-                 style="display:none; width:38px; height:38px; border-radius:50%; object-fit:cover; border:2px solid var(--primary); position:absolute; inset:0;"
-                 onerror="this.style.display='none'; document.getElementById('userInitials').style.display='flex';">
-            <div id="userInitials"
-                 style="display:none; width:38px; height:38px; border-radius:50%; background:var(--primary-gradient); color:white; font-weight:900; font-size:0.95rem; align-items:center; justify-content:center; font-family:'Outfit',sans-serif; border:2px solid var(--primary); letter-spacing:-0.5px;">
-            </div>
-        </div>
-        <div class="user-info-text">
-            <div id="userDisplayName" style="font-weight:800; font-size:0.9rem; color:var(--text-main); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"></div>
-            <div id="userEmail" style="font-size:0.72rem; color:var(--text-muted); font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"></div>
-        </div>
-    </div>
-    
-    <button class="nav-btn active" onclick="switchView('dashboard')"><span class="material-icons-round">dashboard</span> Resumo</button>
-    <button class="nav-btn" onclick="switchView('income')"><span class="material-icons-round">sync_alt</span> Fixos</button>
-    <button class="nav-btn" onclick="switchView('cards')"><span class="material-icons-round">credit_card</span> Cartões</button>
-    <button class="nav-btn" onclick="switchView('debts')"><span class="material-icons-round">group</span> Devedores</button>
-    <button class="nav-btn" onclick="switchView('goals')"><span class="material-icons-round">flag</span> Metas</button>
-    <button class="nav-btn" onclick="switchView('history')"><span class="material-icons-round">insights</span> Dados</button>
-    
-    <div class="menu-divider"></div>
-
-    <button class="nav-btn btn-config" onclick="toggleTheme()">
-        <span class="material-icons-round">dark_mode</span> Tema
-    </button>
-    <button class="nav-btn btn-lock" onclick="lockApp()">
-        <span class="material-icons-round">logout</span> Sair
-    </button>
-</nav>
-
-<main id="main-content">
-    
-    <div class="mobile-header" id="mobileHeader">
-        <h1>Financeiro</h1>
-        <div class="mobile-header-actions">
-            <button class="mobile-btn" onclick="toggleTheme()"><span class="material-icons-round">dark_mode</span></button>
-            <button class="mobile-btn" onclick="lockApp()" style="color: var(--danger);"><span class="material-icons-round">logout</span></button>
-        </div>
-    </div>
-
-    <div class="controls-row">
-        <div class="date-control">
-            <span class="material-icons-round" style="background: var(--bg-body); padding: 8px; border-radius: 10px;">calendar_month</span>
-            <input type="month" id="monthPicker" onchange="changeMonthSafe()">
-        </div>
-        <div class="actions-group">
-            <button class="btn-action btn-outline" onclick="resetMonthData()"><span class="material-icons-round">delete_outline</span></button>
-            <button class="btn-action btn-outline" onclick="copyPreviousMonth()"><span class="material-icons-round">content_copy</span> Importar</button>
-            <button class="btn-action btn-outline" onclick="openPDFPreview()"><span class="material-icons-round">picture_as_pdf</span> Relatório</button>
-            <button class="btn-action btn-save" onclick="scheduleSave(true)"><span class="material-icons-round">done_all</span> Salvar</button>
-        </div>
-        <div id="syncStatus" style="font-size:0.8rem; font-weight:bold; color:var(--text-muted); display:flex; align-items:center; gap:5px; transition: 0.3s; width: 100%; text-align: center; justify-content: center; display: none;">...</div>
-    </div>
-
-    <div id="view-dashboard" class="view-section active">
-        <div class="dashboard-grid">
-            <div class="card-stat c-salary">
-                <h3><span class="material-icons-round" style="font-size: 1.2rem;">account_balance</span> Salário Base</h3>
-                <input type="number" id="salary" class="stat-input" value="0" oninput="scheduleSave()" onfocus="window.isEditing=true" onblur="window.isEditing=false">
-                <div class="salary-bar-bg"><div class="salary-bar-fill" id="salaryBar"></div></div>
-            </div>
-            <div class="card-stat c-income">
-                <h3><span class="material-icons-round" style="font-size: 1.2rem;">add_circle</span> Renda Extra</h3>
-                <input type="number" id="extraIncomeTotal" class="stat-input" value="0" oninput="scheduleSave()" onfocus="window.isEditing=true" onblur="window.isEditing=false" style="color: #0D9488;">
-            </div>
-            <div class="card-stat c-total">
-                <h3><span class="material-icons-round" style="font-size: 1.2rem;">arrow_circle_down</span> Total Saídas</h3>
-                <div class="val" id="totalExpenses">R$ 0,00</div>
-            </div>
-            <div class="card-stat c-rest">
-                <h3 style="color: rgba(255,255,255,0.9);"><span class="material-icons-round" style="font-size: 1.2rem;">wallet</span> Livre (Total)</h3>
-                <div class="val" id="remaining">R$ 0,00</div>
-            </div>
-            <div class="card-stat c-mine">
-                <h3><span class="material-icons-round" style="font-size: 1.2rem;">person</span> Meu Custo</h3>
-                <div class="val" id="myRealExpenses">R$ 0,00</div>
-            </div>
-            <div class="card-stat c-emerg">
-                <h3><span class="material-icons-round" style="font-size: 1.2rem;">savings</span> Reserva</h3>
-                <input type="number" id="emergencyFund" class="stat-input" oninput="scheduleSave()" onfocus="window.isEditing=true" onblur="window.isEditing=false">
-            </div>
-        </div>
-        <div class="section">
-            <div class="sec-header"><h2><span class="material-icons-round" style="color:var(--primary)">pie_chart</span> Distribuição</h2></div>
-            <div class="sec-body" style="height:350px; display:flex; justify-content:center;"><canvas id="expenseChart"></canvas></div>
-        </div>
-    </div>
-
-    <div id="view-goals" class="view-section">
-        <div class="section">
-            <div class="sec-header">
-                <h2><span class="material-icons-round" style="color:var(--primary)">tour</span> Metas e Projetos</h2>
-                <button class="btn-action btn-outline" onclick="addGoal()" style="padding: 8px 16px; font-size: 0.85rem;"><span class="material-icons-round">add</span> Nova Meta</button>
-            </div>
-            <div class="sec-body" style="padding: 20px; background: var(--bg-body);">
-                <div class="goals-grid" id="goalsList">
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="view-income" class="view-section">
-        <div class="section">
-            <div class="sec-header"><h2><span class="material-icons-round" style="color:var(--danger)">trending_down</span> Gastos Fixos</h2></div>
-            <div class="sec-body" style="background: var(--bg-body);">
-                <div class="table-wrap"><table id="mainTable"><thead><tr><th style="width:60px">Ícone</th><th>Item / Descrição</th><th style="width:150px">Valor (R$)</th><th style="width:70px; text-align:center;">É Meu?</th><th style="width:50px"></th></tr></thead><tbody></tbody></table></div>
-                <button class="btn-add" onclick="addMainRow()"><span class="material-icons-round">add</span> Adicionar Gasto Fixo</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="view-cards" class="view-section">
-        <div id="cardsContainer"></div>
-        <button class="btn-add btn-add-card" onclick="addCard()" style="margin-bottom: 30px;">
-            <span class="material-icons-round">add_card</span> Adicionar Novo Cartão
-        </button>
-    </div>
-
-    <div id="view-debts" class="view-section">
-        <div class="section">
-            <div class="sec-header"><h2><span class="material-icons-round" style="color:var(--warning)">people_alt</span> Devedores</h2></div>
-            <div class="sec-body" style="background: var(--bg-body);">
-                <div class="debt-summary" style="display:flex; justify-content:space-around; margin-bottom:30px; padding: 25px; background: var(--bg-card); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); border: 1px solid var(--border-light); align-items: center;">
-                    <div style="text-align:center; flex: 1; min-width: 120px;">
-                        <small style="color:var(--danger); font-weight:800; letter-spacing: 1px;">A RECEBER</small>
-                        <div style="font-size: clamp(1.4rem, 4vw, 2rem); font-weight:900; color:var(--danger); letter-spacing: -1px; word-break: break-word;" id="totalToReceive">R$ 0,00</div>
-                    </div>
-                    <div class="debt-divider" style="width: 1px; background: var(--border-light); min-height: 40px; margin: 0 15px;"></div>
-                    <div style="text-align:center; flex: 1; min-width: 120px;">
-                        <small style="color:var(--success); font-weight:800; letter-spacing: 1px;">JÁ PAGO</small>
-                        <div style="font-size: clamp(1.4rem, 4vw, 2rem); font-weight:900; color:var(--success); letter-spacing: -1px; word-break: break-word;" id="totalReceived">R$ 0,00</div>
-                    </div>
-                </div>
-                <div id="debtorsList" class="debt-list"></div>
-            </div>
-        </div>
-    </div>
-
-    <div id="view-history" class="view-section">
-        <!-- Dashboard de Inteligência -->
-        <div class="insights-grid">
-            <div class="card-stat insight-card">
-                <h3><span class="material-icons-round">analytics</span> MÉDIA DE GASTOS</h3>
-                <div class="val" id="insightAvgExpense">R$ 0,00</div>
-            </div>
-            <div class="card-stat insight-card">
-                <h3><span class="material-icons-round">savings</span> MÉDIA LIVRE</h3>
-                <div class="val" id="insightAvgRemaining" style="color: var(--success);">R$ 0,00</div>
-            </div>
-            <div class="card-stat insight-card">
-                <h3><span class="material-icons-round">bolt</span> TENDÊNCIA</h3>
-                <div class="val" id="insightTrend">0%</div>
-            </div>
-            <div class="card-stat insight-card">
-                <h3><span class="material-icons-round">local_fire_department</span> SITUAÇÃO</h3>
-                <div class="val" id="insightStatus" style="font-size: 1.1rem; margin-top: 5px;">ESTÁVEL</div>
-            </div>
-        </div>
-
-        <div class="section">
-            <div class="sec-header">
-                <h2><span class="material-icons-round" style="color:var(--primary)">bar_chart</span> Balanço Geral</h2>
-                <div class="chart-controls">
-                    <button class="chart-btn" onclick="fetchHistoryData(3, this)">3M</button>
-                    <button class="chart-btn active" onclick="fetchHistoryData(6, this)">6M</button>
-                    <button class="chart-btn" onclick="fetchHistoryData(12, this)">1A</button>
-                    <button class="chart-btn" onclick="fetchHistoryData('max', this)">MAX</button>
-                </div>
-            </div>
-            <div class="sec-body" style="height:450px;"><canvas id="historyChart"></canvas></div>
-            <div class="sec-body" style="padding-top: 0; text-align: right;">
-                <button class="btn-action btn-outline" style="font-size: 0.8rem; padding: 8px 16px;" onclick="exportToCSV()">
-                    <span class="material-icons-round" style="font-size: 1.1rem;">download</span> Exportar CSV
-                </button>
-            </div>
-        </div>
-        
-        <div style="display:grid; grid-template-columns: 1.5fr 1fr; gap: 24px;">
-            <div class="section">
-                <div class="sec-header">
-                    <h2><span class="material-icons-round" style="color:var(--warning)">stacked_line_chart</span> Comparativo por Tipo</h2>
-                </div>
-                <div class="sec-body" style="height:450px;"><canvas id="historyCategoryChart"></canvas></div>
-            </div>
-
-            <div class="section">
-                <div class="sec-header">
-                    <h2><span class="material-icons-round" style="color:var(--success)">pie_chart</span> Distribuição Mensal</h2>
-                </div>
-                <div class="sec-body" style="height:450px;"><canvas id="historyIconChart"></canvas></div>
-            </div>
-        </div>
-    </div>
-
-</main>
-
-<script type="module">
+﻿
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
 import { getFirestore, doc, onSnapshot, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
@@ -315,32 +32,32 @@ let historyIconChart = null;
 window.lastDebts = {}; 
 
 window.paidDebtors = [];
-window.iconsList = ["💸", "🏠", "💡", "💧", "📶", "🏋️", "🚗", "⛽", "🍔", "💇", "💊", "💳", "🎓", "✈️", "💰", "🎮", "🐾", "🛒"];
+window.iconsList = ["ðŸ’¸", "ðŸ ", "ðŸ’¡", "ðŸ’§", "ðŸ“¶", "ðŸ‹ï¸", "ðŸš—", "â›½", "ðŸ”", "ðŸ’‡", "ðŸ’Š", "ðŸ’³", "ðŸŽ“", "âœˆï¸", "ðŸ’°", "ðŸŽ®", "ðŸ¾", "ðŸ›’"];
 
 window.CATEGORIES = [
-    { value: 'Moradia',     emoji: '🏠', label: 'Moradia' },
-    { value: 'Energia',     emoji: '⚡', label: 'Energia' },
-    { value: 'Água',       emoji: '💧', label: 'Água' },
-    { value: 'Telecom',     emoji: '📱', label: 'Telecom' },
-    { value: 'Saúde',       emoji: '💊', label: 'Saúde' },
-    { value: 'Transporte',  emoji: '🚗', label: 'Transporte' },
-    { value: 'Alimentação', emoji: '🍔', label: 'Alimentação' },
-    { value: 'Educação',    emoji: '🎓', label: 'Educação' },
-    { value: 'Lazer',       emoji: '🎮', label: 'Lazer' },
-    { value: 'Assinatura',  emoji: '📺', label: 'Assinatura' },
-    { value: 'Investimento',emoji: '💰', label: 'Investimento' },
-    { value: 'Outros',      emoji: '📦', label: 'Outros' },
+    { value: 'Moradia',     emoji: 'ðŸ ', label: 'Moradia' },
+    { value: 'Energia',     emoji: 'âš¡', label: 'Energia' },
+    { value: 'Ãgua',       emoji: 'ðŸ’§', label: 'Ãgua' },
+    { value: 'Telecom',     emoji: 'ðŸ“±', label: 'Telecom' },
+    { value: 'SaÃºde',       emoji: 'ðŸ’Š', label: 'SaÃºde' },
+    { value: 'Transporte',  emoji: 'ðŸš—', label: 'Transporte' },
+    { value: 'AlimentaÃ§Ã£o', emoji: 'ðŸ”', label: 'AlimentaÃ§Ã£o' },
+    { value: 'EducaÃ§Ã£o',    emoji: 'ðŸŽ“', label: 'EducaÃ§Ã£o' },
+    { value: 'Lazer',       emoji: 'ðŸŽ®', label: 'Lazer' },
+    { value: 'Assinatura',  emoji: 'ðŸ“º', label: 'Assinatura' },
+    { value: 'Investimento',emoji: 'ðŸ’°', label: 'Investimento' },
+    { value: 'Outros',      emoji: 'ðŸ“¦', label: 'Outros' },
 ];
 
 window.DEFAULT_CARDS = [
-    { id: 'bb',     name: 'Banco do Brasil', emoji: '🏦', color1: '#FCD34D', color2: '#F59E0B' },
-    { id: 'mp',     name: 'Mercado Pago',    emoji: '💳', color1: '#3B82F6', color2: '#1D4ED8' },
-    { id: 'passai', name: 'Passaí (Itaú)',  emoji: '🟠', color1: '#F97316', color2: '#EA580C' },
-    { id: 'nubank', name: 'Nubank',           emoji: '💜', color1: '#A855F7', color2: '#7C3AED' },
+    { id: 'bb',     name: 'Banco do Brasil', emoji: 'ðŸ¦', color1: '#FCD34D', color2: '#F59E0B' },
+    { id: 'mp',     name: 'Mercado Pago',    emoji: 'ðŸ’³', color1: '#3B82F6', color2: '#1D4ED8' },
+    { id: 'passai', name: 'PassaÃ­ (ItaÃº)',  emoji: 'ðŸŸ ', color1: '#F97316', color2: '#EA580C' },
+    { id: 'nubank', name: 'Nubank',           emoji: 'ðŸ’œ', color1: '#A855F7', color2: '#7C3AED' },
 ];
 window.cardsConfig = JSON.parse(JSON.stringify(window.DEFAULT_CARDS));
 
-// Configuração de tema (não depende de login)
+// ConfiguraÃ§Ã£o de tema (nÃ£o depende de login)
 if(localStorage.getItem('theme') === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
 if(window.innerWidth <= 768) {
     document.getElementById('main-content').addEventListener('scroll', () => {
@@ -348,18 +65,18 @@ if(window.innerWidth <= 768) {
     });
 }
 
-// Ponto central de controle: observa o estado de autenticação
+// Ponto central de controle: observa o estado de autenticaÃ§Ã£o
 onAuthStateChanged(auth, (user) => {
     if (user) {
-        // Verifica se o e-mail está na whitelist
+        // Verifica se o e-mail estÃ¡ na whitelist
         if (user.email !== ALLOWED_EMAIL) {
             signOut(auth);
-            document.getElementById('loginError').innerText = '❌ Acesso negado. Este e-mail não tem permissão.';
+            document.getElementById('loginError').innerText = 'âŒ Acesso negado. Este e-mail nÃ£o tem permissÃ£o.';
             document.getElementById('googleLoginBtn').style.display = 'flex';
             document.getElementById('loginSpinner').style.display = 'none';
             return;
         }
-        // Usuário autorizado: esconde tela de login e inicia o app
+        // UsuÃ¡rio autorizado: esconde tela de login e inicia o app
         updateUserInfo(user);
         document.getElementById('lockScreen').style.opacity = '0';
         setTimeout(() => document.getElementById('lockScreen').style.display = 'none', 350);
@@ -370,7 +87,7 @@ onAuthStateChanged(auth, (user) => {
         document.getElementById('monthPicker').value = d;
         initApp();
     } else {
-        // Usuário deslogado: garante que a tela de login está visível
+        // UsuÃ¡rio deslogado: garante que a tela de login estÃ¡ visÃ­vel
         if (unsubscribe) { unsubscribe(); unsubscribe = null; }
         document.getElementById('lockScreen').style.display = 'flex';
         setTimeout(() => document.getElementById('lockScreen').style.opacity = '1', 10);
@@ -431,17 +148,17 @@ window.loginWithGoogle = async () => {
 window.lockApp = async () => {
     if (unsubscribe) { unsubscribe(); unsubscribe = null; }
     await signOut(auth);
-    // onAuthStateChanged exibirá a tela de login automaticamente
+    // onAuthStateChanged exibirÃ¡ a tela de login automaticamente
 };
 
-// Exibe info do usuário na sidebar
+// Exibe info do usuÃ¡rio na sidebar
 function updateUserInfo(user) {
     const nameEl = document.getElementById('userDisplayName');
     const emailEl = document.getElementById('userEmail');
     const photoEl = document.getElementById('userPhoto');
     const initialsEl = document.getElementById('userInitials');
 
-    const name = user.displayName || 'Usuário';
+    const name = user.displayName || 'UsuÃ¡rio';
     if (nameEl) nameEl.innerText = name;
     if (emailEl) emailEl.innerText = user.email;
 
@@ -540,14 +257,14 @@ function updateScreen(data) {
     if (!data) data = getDefaultData();
     if (!data.goals) data.goals = getDefaultData().goals;
 
-    // Carrega config de cartões do Firestore ou usa defaults
+    // Carrega config de cartÃµes do Firestore ou usa defaults
     if (data.cardsConfig && data.cardsConfig.length > 0) {
         window.cardsConfig = data.cardsConfig;
     } else {
         window.cardsConfig = JSON.parse(JSON.stringify(window.DEFAULT_CARDS));
     }
 
-    // Renderiza seções de cartões dinamicamente
+    // Renderiza seÃ§Ãµes de cartÃµes dinamicamente
     renderCardsView();
 
     document.getElementById('salary').value = data.salary || 0;
@@ -558,7 +275,7 @@ function updateScreen(data) {
     else if(data.extraIncome) ei = data.extraIncome.reduce((acc, item) => acc + (parseFloat(item.value)||0), 0);
     document.getElementById('extraIncomeTotal').value = ei || 0;
 
-    // Carrega faturas e itens de cada cartão dinamicamente
+    // Carrega faturas e itens de cada cartÃ£o dinamicamente
     window.cardsConfig.forEach(card => {
         const billEl = document.getElementById(card.id + 'TotalBill');
         if (billEl) billEl.value = data[card.id + 'TotalBill'] || 0;
@@ -569,7 +286,7 @@ function updateScreen(data) {
     const mainData = (data.main || []).filter(i => !i.locked);
     renderGoals(data.goals);
     renderTable('mainTable', mainData, 'main');
-    syncCardAutoRows(); // Adiciona linhas travadas de cada cartão
+    syncCardAutoRows(); // Adiciona linhas travadas de cada cartÃ£o
     calculateAll();
 }
 
@@ -580,12 +297,12 @@ function getDefaultData() {
         salary: 0, emergency: 0,
         cardsConfig: JSON.parse(JSON.stringify(window.cardsConfig)),
         goals: [
-            { id: 'g1', name: 'Reserva 40k', icon: '💰', target: 40000, current: 0 },
-            { id: 'g2', name: 'Manutenção Argo', icon: '🚗', target: 2000, current: 0 }
+            { id: 'g1', name: 'Reserva 40k', icon: 'ðŸ’°', target: 40000, current: 0 },
+            { id: 'g2', name: 'ManutenÃ§Ã£o Argo', icon: 'ðŸš—', target: 2000, current: 0 }
         ],
         main: [
-            { icon: '🏋️', name: 'Academia', value: 0, isMine: true, category: 'Saúde' },
-            { icon: '💡', name: 'Luz', value: 0, isMine: true, category: 'Energia' }
+            { icon: 'ðŸ‹ï¸', name: 'Academia', value: 0, isMine: true, category: 'SaÃºde' },
+            { icon: 'ðŸ’¡', name: 'Luz', value: 0, isMine: true, category: 'Energia' }
         ],
         ...cardDefaults,
         extraIncome: [], paidDebtors: [], partialPayments: {}
@@ -618,7 +335,7 @@ function renderGoals(goalsArray) {
             </div>
             <div class="goal-inputs">
                 <div class="goal-input-group">
-                    <label>Já Tenho</label>
+                    <label>JÃ¡ Tenho</label>
                     <input type="number" class="sys-input" value="${g.current}" oninput="scheduleSave()" onfocus="window.isEditing=true" onblur="window.isEditing=false">
                 </div>
                 <div class="goal-input-group">
@@ -632,7 +349,7 @@ function renderGoals(goalsArray) {
 }
 
 window.addGoal = () => {
-    const newGoal = { id: 'g'+Date.now(), name: 'Nova Meta', icon: '🎯', target: 1000, current: 0 };
+    const newGoal = { id: 'g'+Date.now(), name: 'Nova Meta', icon: 'ðŸŽ¯', target: 1000, current: 0 };
     const currentData = captureScreenData();
     currentData.goals.push(newGoal);
     renderGoals(currentData.goals);
@@ -642,7 +359,7 @@ window.addGoal = () => {
 window.removeGoal = (id) => {
     Swal.fire({
         title: 'Apagar meta?', text: "Tem certeza que deseja remover este projeto?", icon: 'warning',
-        showCancelButton: true, confirmButtonText: 'Sim', cancelButtonText: 'Não',
+        showCancelButton: true, confirmButtonText: 'Sim', cancelButtonText: 'NÃ£o',
         customClass: { popup: 'meu-popup-sweet', confirmButton: 'meu-botao-sweet-confirm', cancelButton: 'meu-botao-sweet-cancel' }, buttonsStyling: false
     }).then((result) => {
         if (result.isConfirmed) {
@@ -674,7 +391,7 @@ function captureScreenData() {
         goals: [], main: []
     };
 
-    // Captura faturas e itens de cada cartão dinamicamente
+    // Captura faturas e itens de cada cartÃ£o dinamicamente
     window.cardsConfig.forEach(card => {
         const billEl = document.getElementById(card.id + 'TotalBill');
         data[card.id + 'TotalBill'] = billEl ? billEl.value : 0;
@@ -698,7 +415,7 @@ function captureScreenData() {
         data.goals.push({ id, name, icon, target, current });
     });
 
-    // Captura gastos fixos (somente não-travados) com categoria
+    // Captura gastos fixos (somente nÃ£o-travados) com categoria
     document.querySelectorAll('#mainTable tbody tr').forEach(tr => {
         const locked = tr.querySelector('.val-input').hasAttribute('readonly');
         if (!locked) {
@@ -744,7 +461,7 @@ window.scheduleSave = (force=false) => {
 
 window.resetMonthData = async () => {
     const result = await Swal.fire({
-        title: 'Limpar mês?', text: "Você vai apagar TODOS os dados deste mês.", icon: 'warning',
+        title: 'Limpar mÃªs?', text: "VocÃª vai apagar TODOS os dados deste mÃªs.", icon: 'warning',
         showCancelButton: true, confirmButtonText: 'Sim, limpar!', cancelButtonText: 'Cancelar',
         customClass: { popup: 'meu-popup-sweet', confirmButton: 'meu-botao-sweet-confirm', cancelButton: 'meu-botao-sweet-cancel' }, buttonsStyling: false
     });
@@ -818,17 +535,17 @@ window.calculateAll = () => {
     window.lastDebts = allDebts;
     updateDebtors(allDebts);
 
-    // Gráfico por categoria
+    // GrÃ¡fico por categoria
     const catColors = {
-        'Moradia':'#6366f1','Energia':'#f59e0b','Água':'#06b6d4','Telecom':'#8b5cf6',
-        'Saúde':'#10b981','Transporte':'#f97316','Alimentação':'#ef4444','Educação':'#3b82f6',
+        'Moradia':'#6366f1','Energia':'#f59e0b','Ãgua':'#06b6d4','Telecom':'#8b5cf6',
+        'SaÃºde':'#10b981','Transporte':'#f97316','AlimentaÃ§Ã£o':'#ef4444','EducaÃ§Ã£o':'#3b82f6',
         'Lazer':'#ec4899','Assinatura':'#14b8a6','Investimento':'#84cc16','Outros':'#94a3b8',
     };
     const chartLabels = [], chartData = [], chartColors = [];
     Object.entries(categoryTotals).forEach(([cat, val]) => {
         chartLabels.push(cat); chartData.push(val); chartColors.push(catColors[cat] || '#94a3b8');
     });
-    if (cardsShareTotal > 0) { chartLabels.push('Cartões'); chartData.push(cardsShareTotal); chartColors.push('hsl(35,92%,55%)'); }
+    if (cardsShareTotal > 0) { chartLabels.push('CartÃµes'); chartData.push(cardsShareTotal); chartColors.push('hsl(35,92%,55%)'); }
     if (emergency > 0) { chartLabels.push('Reserva'); chartData.push(emergency); chartColors.push('hsl(263,70%,50%)'); }
     const livre = Math.max(0, totalIncome - totalExpenses - emergency);
     if (livre > 0) { chartLabels.push('Livre'); chartData.push(livre); chartColors.push('hsl(162,75%,45%)'); }
@@ -856,7 +573,7 @@ window.calculateAll = () => {
 };
 
 function updateAutoRow(cardId, value) {
-    // Legacy compat — now uses direct ID lookup in calculateAll
+    // Legacy compat â€” now uses direct ID lookup in calculateAll
     const input = document.getElementById(cardId + '_auto');
     if (input) input.value = value.toFixed(2);
 }
@@ -897,12 +614,12 @@ function getCardBadge(cardName) {
     // Fallback legado
     if(cardName==='BB') return `<span style="background:#fcd34d; color:#854d0e; padding:4px 8px; border-radius:6px; font-size:0.7rem; font-weight:900; display:inline-block;">BB</span>`;
     if(cardName==='MP') return `<span style="background:#3b82f6; color:#fff; padding:4px 8px; border-radius:6px; font-size:0.7rem; font-weight:900; display:inline-block;">MP</span>`;
-    if(cardName==='Passaí') return `<span style="background:#f97316; color:#fff; padding:4px 8px; border-radius:6px; font-size:0.7rem; font-weight:900; display:inline-block;">PASSAÍ</span>`;
+    if(cardName==='PassaÃ­') return `<span style="background:#f97316; color:#fff; padding:4px 8px; border-radius:6px; font-size:0.7rem; font-weight:900; display:inline-block;">PASSAÃ</span>`;
     if(cardName==='Nubank') return `<span style="background:#a855f7; color:#fff; padding:4px 8px; border-radius:6px; font-size:0.7rem; font-weight:900; display:inline-block;">NUBANK</span>`;
     return `<span style="background:var(--border); color:var(--text-main); padding:4px 8px; border-radius:6px; font-size:0.7rem; font-weight:900; display:inline-block;">${cardName.substring(0,6)}</span>`;
 }
 
-window.addMainRow = () => { addMainRowHTML(document.querySelector("#mainTable tbody"), {icon:'💸',name:'',value:'',isMine:true}); scheduleSave(); }
+window.addMainRow = () => { addMainRowHTML(document.querySelector("#mainTable tbody"), {icon:'ðŸ’¸',name:'',value:'',isMine:true}); scheduleSave(); }
 
 window.addSplitRow = (id) => { addSplitRowHTML(document.querySelector(`#${id} tbody`), {name:'',date:'',desc:'',inst:'',value:''}); scheduleSave(); }
 
@@ -977,7 +694,7 @@ window.abaterValor = async (name) => {
     const currentVal = (window.partialPayments && window.partialPayments[name]) ? window.partialPayments[name] : 0;
     const { value: amount } = await Swal.fire({
         title: 'Abater Valor Avulso',
-        html: `Defina um valor extra que <b>${name}</b> já pagou.<br><br><small>Coloque 0 para remover o abatimento.</small>`,
+        html: `Defina um valor extra que <b>${name}</b> jÃ¡ pagou.<br><br><small>Coloque 0 para remover o abatimento.</small>`,
         input: 'number',
         inputValue: currentVal > 0 ? currentVal : '',
         inputAttributes: { step: '0.01' },
@@ -1019,7 +736,7 @@ function updateDebtors(all) {
                 if(isItemPaid) { r+=it.val; debtorTotalPaid+=it.val; } else { tr+=it.val; debtorTotalPending+=it.val; }
 
                 const badge = getCardBadge(it.card);
-                const dt = it.date ? `<span style="color:var(--text-muted); font-weight:800; font-size:0.75rem; background:var(--border-light); padding:4px 8px; border-radius:6px; margin-top:5px; display:inline-block;">🗓 ${it.date}</span>` : '';
+                const dt = it.date ? `<span style="color:var(--text-muted); font-weight:800; font-size:0.75rem; background:var(--border-light); padding:4px 8px; border-radius:6px; margin-top:5px; display:inline-block;">ðŸ—“ ${it.date}</span>` : '';
                 const parc = it.inst ? `<span style="font-size:0.8rem; color:var(--text-muted); font-weight:700;">${it.inst}</span>` : '';
 
                 itemsHTML += `
@@ -1062,7 +779,7 @@ function updateDebtors(all) {
                     <div style="flex: 1;">
                         <span style="font-size:1.3rem; display: block; font-weight: 800; color:var(--text-main);">${p.name}</span>
                         <div style="font-size:0.75rem; color:var(--primary); font-weight:900; text-transform: uppercase; letter-spacing: 1px;">
-                            ${allItemsPaid ? '✔ Tudo Pago' : (debtorTotalPaid > 0 ? `Abatido: ${fmt(debtorTotalPaid)}` : 'Em Aberto')}
+                            ${allItemsPaid ? 'âœ” Tudo Pago' : (debtorTotalPaid > 0 ? `Abatido: ${fmt(debtorTotalPaid)}` : 'Em Aberto')}
                         </div>
                     </div>
                     <div style="text-align:right">
@@ -1106,9 +823,9 @@ window.openPDFPreview = () => {
     const colPrimary = [79, 70, 229]; const colSuccess = [16, 185, 129]; const colDanger = [239, 68, 68]; const colWarning = [245, 158, 11]; const colDark = [15, 23, 42]; const colGray = [100, 116, 139];
 
     doc.setFillColor(...colPrimary); doc.rect(0, 0, 8, 297, 'F'); 
-    doc.setFont("helvetica", "bold"); doc.setFontSize(24); doc.setTextColor(...colDark); doc.text("Relatório PRO", 20, 22);
+    doc.setFont("helvetica", "bold"); doc.setFontSize(24); doc.setTextColor(...colDark); doc.text("RelatÃ³rio PRO", 20, 22);
     doc.setFont("helvetica", "normal"); doc.setFontSize(10); doc.setTextColor(...colGray);
-    doc.text(`Referência: ${document.getElementById('monthPicker').value}  |  Gerado em: ${new Date().toLocaleDateString('pt-BR')}`, 20, 30);
+    doc.text(`ReferÃªncia: ${document.getElementById('monthPicker').value}  |  Gerado em: ${new Date().toLocaleDateString('pt-BR')}`, 20, 30);
     doc.setDrawColor(226, 232, 240); doc.line(20, 36, 190, 36);
 
     let y = 48;
@@ -1128,13 +845,13 @@ window.openPDFPreview = () => {
 
     drawCard(20, "RECEITA TOTAL", salary+extra, colSuccess);
     drawCard(65, "GASTOS FIXOS", fixedSum, colWarning);
-    drawCard(110, "FATURA CARTÕES", totalCards, [139, 92, 246]);
+    drawCard(110, "FATURA CARTÃ•ES", totalCards, [139, 92, 246]);
     drawCard(155, "SALDO FINAL", saldoFinal, saldoFinal >= 0 ? colPrimary : colDanger);
 
     y += 38; 
     const tableStyles = { theme: 'grid', headStyles: { fontStyle: 'bold', fontSize: 9, halign: 'left' }, bodyStyles: { fontSize: 9, textColor: 50 }, alternateRowStyles: { fillColor: [248, 250, 252] }, columnStyles: { 0: { cellWidth: 'auto' }, 1: { cellWidth: 40, halign: 'right', fontStyle: 'bold' } }, margin: { left: 20, right: 20 } };
 
-    const incomeRows = [['Salário Base', fmt(salary)]];
+    const incomeRows = [['SalÃ¡rio Base', fmt(salary)]];
     if (extra > 0) incomeRows.push(['Renda Extra', fmt(extra)]);
     
     doc.setFontSize(12); doc.setTextColor(...colSuccess); doc.setFont("helvetica", "bold"); doc.text("Entradas & Rendas", 20, y);
@@ -1164,9 +881,9 @@ window.openPDFPreview = () => {
         });
 
         if(totalBill > 0 || rows.length > 0) {
-            if(!hasCards) { if(y > 250) { doc.addPage(); y=20; doc.setFillColor(...colPrimary); doc.rect(0, 0, 8, 297, 'F'); } doc.setTextColor(139, 92, 246); doc.text("Detalhamento de Cartões", 20, y); y += 5; hasCards = true; }
+            if(!hasCards) { if(y > 250) { doc.addPage(); y=20; doc.setFillColor(...colPrimary); doc.rect(0, 0, 8, 297, 'F'); } doc.setTextColor(139, 92, 246); doc.text("Detalhamento de CartÃµes", 20, y); y += 5; hasCards = true; }
             doc.setFontSize(10); doc.setTextColor(...colDark); doc.text(`${card.name} (Total: ${fmt(totalBill)})`, 20, y+4);
-            if(rows.length > 0) { doc.autoTable({ startY: y+6, head: [['Item / Responsável', 'Valor']], body: rows, ...tableStyles, headStyles: { ...tableStyles.headStyles, fillColor: [139, 92, 246] }, margin: { left: 25 } }); y = doc.lastAutoTable.finalY + 10; } else y += 15;
+            if(rows.length > 0) { doc.autoTable({ startY: y+6, head: [['Item / ResponsÃ¡vel', 'Valor']], body: rows, ...tableStyles, headStyles: { ...tableStyles.headStyles, fillColor: [139, 92, 246] }, margin: { left: 25 } }); y = doc.lastAutoTable.finalY + 10; } else y += 15;
         }
     });
 
@@ -1185,7 +902,7 @@ window.openPDFPreview = () => {
             const dt = it.date ? `Dia ${it.date} | ` : '';
             const parc = it.inst ? `(${it.inst})` : '';
             const statusStr = isItemPaid ? "[PAGO]" : "[PENDENTE]";
-            details += `• ${dt}${it.card}: ${it.desc} ${parc} - ${fmt(it.val)} ${statusStr}\n`;
+            details += `â€¢ ${dt}${it.card}: ${it.desc} ${parc} - ${fmt(it.val)} ${statusStr}\n`;
         });
         const allItemsPaid = (debtorTotalPending === 0 && p.items.length > 0);
         debtors.push([
@@ -1202,7 +919,7 @@ window.openPDFPreview = () => {
     }
 
     const pageCount = doc.internal.getNumberOfPages();
-    for(let i = 1; i <= pageCount; i++) { doc.setPage(i); doc.setFontSize(8); doc.setTextColor(150); doc.text(`Página ${i} de ${pageCount} - Financeiro Pro`, 105, 290, { align: 'center' }); }
+    for(let i = 1; i <= pageCount; i++) { doc.setPage(i); doc.setFontSize(8); doc.setTextColor(150); doc.text(`PÃ¡gina ${i} de ${pageCount} - Financeiro Pro`, 105, 290, { align: 'center' }); }
     document.getElementById('pdfPreviewFrame').src = doc.output('bloburl'); document.getElementById('pdfModal').style.display = 'flex'; document.getElementById('btnDownloadPDF').onclick = () => doc.save(`Relatorio_Pro_${currentDocId}.pdf`);
 }
 
@@ -1244,7 +961,7 @@ window.exportToCSV = async () => {
 
 window.closePDFModal = () => document.getElementById('pdfModal').style.display = 'none';
 
-// HISTÓRICO
+// HISTÃ“RICO
 window.fetchHistoryData = async (range, btnElement = null) => {
     if(btnElement) { document.querySelectorAll('.chart-btn').forEach(b => b.classList.remove('active')); btnElement.classList.add('active'); }
     
@@ -1278,7 +995,7 @@ window.fetchHistoryData = async (range, btnElement = null) => {
                 if(!x.locked) {
                     expFixed += v;
                     if(v > 0) {
-                        const icon = x.icon || '💸';
+                        const icon = x.icon || 'ðŸ’¸';
                         iconCounts[icon] = (iconCounts[icon] || 0) + v;
                     }
                 }
@@ -1289,7 +1006,7 @@ window.fetchHistoryData = async (range, btnElement = null) => {
             
             // Add my part of cards to icon counts
             if(expCards > 0) {
-                iconCounts['💳 Cartões'] = (iconCounts['💳 Cartões'] || 0) + expCards;
+                iconCounts['ðŸ’³ CartÃµes'] = (iconCounts['ðŸ’³ CartÃµes'] || 0) + expCards;
             }
         }
         dataIncome.push(inc); dataExpense.push(expFixed + expCards); dataCards.push(expCards); dataFixed.push(expFixed);
@@ -1311,9 +1028,9 @@ window.fetchHistoryData = async (range, btnElement = null) => {
         trendEl.style.color = trend > 0 ? 'var(--danger)' : 'var(--success)';
         
         const statusEl = document.getElementById('insightStatus');
-        if(trend > 10) { statusEl.innerText = 'ALERTA 📈'; statusEl.style.color = 'var(--danger)'; }
-        else if(trend < -10) { statusEl.innerText = 'ECONOMIA 📉'; statusEl.style.color = 'var(--success)'; }
-        else { statusEl.innerText = 'ESTÁVEL ⚖️'; statusEl.style.color = 'var(--primary)'; }
+        if(trend > 10) { statusEl.innerText = 'ALERTA ðŸ“ˆ'; statusEl.style.color = 'var(--danger)'; }
+        else if(trend < -10) { statusEl.innerText = 'ECONOMIA ðŸ“‰'; statusEl.style.color = 'var(--success)'; }
+        else { statusEl.innerText = 'ESTÃVEL âš–ï¸'; statusEl.style.color = 'var(--primary)'; }
     }
 
     Chart.defaults.color = localStorage.getItem('theme') === 'dark' ? '#94a3b8' : '#64748b';
@@ -1325,7 +1042,7 @@ window.fetchHistoryData = async (range, btnElement = null) => {
         type: 'bar', 
         data: { labels: labels, datasets: [
             { label: 'Entradas', data: dataIncome, backgroundColor: 'hsl(162, 75%, 45%)', borderRadius: 10, barPercentage: 0.5 }, 
-            { label: 'Saídas', data: dataExpense, backgroundColor: 'hsl(0, 84%, 60%)', borderRadius: 10, barPercentage: 0.5 }
+            { label: 'SaÃ­das', data: dataExpense, backgroundColor: 'hsl(0, 84%, 60%)', borderRadius: 10, barPercentage: 0.5 }
         ]}, 
         options: { responsive:true, maintainAspectRatio:false, scales: { y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.03)', drawBorder: false } }, x: { grid: { display: false } } }, plugins: { legend: { position: 'top', labels: { font: { family: "'Outfit', sans-serif", weight: '700' } } } }, animation: { duration: 1200 } } 
     });
@@ -1335,7 +1052,7 @@ window.fetchHistoryData = async (range, btnElement = null) => {
     historyCategoryChart = new Chart(ctxCat, {
         type: 'line',
         data: { labels: labels, datasets: [
-            { label: 'Cartões', data: dataCards, borderColor: 'hsl(35, 92%, 55%)', backgroundColor: 'rgba(245, 158, 11, 0.05)', fill: true, tension: 0.4, borderWidth: 4, pointRadius: 4 },
+            { label: 'CartÃµes', data: dataCards, borderColor: 'hsl(35, 92%, 55%)', backgroundColor: 'rgba(245, 158, 11, 0.05)', fill: true, tension: 0.4, borderWidth: 4, pointRadius: 4 },
             { label: 'Fixos', data: dataFixed, borderColor: 'hsl(243, 75%, 59%)', backgroundColor: 'rgba(79, 70, 229, 0.05)', fill: true, tension: 0.4, borderWidth: 4, pointRadius: 4 }
         ]},
         options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.03)', drawBorder: false } }, x: { grid: { display: false } } }, plugins: { legend: { position: 'top', labels: { font: { family: "'Outfit', sans-serif", weight: '700' } } } }, animation: { duration: 1500 } }
@@ -1358,7 +1075,7 @@ window.fetchHistoryData = async (range, btnElement = null) => {
                 tooltip: {
                     callbacks: {
                         label: function(context) {
-                            return ` Média: ${fmt(context.raw)}`;
+                            return ` MÃ©dia: ${fmt(context.raw)}`;
                         }
                     }
                 }
@@ -1373,7 +1090,7 @@ function fmtNumber(n) { return n.toLocaleString('pt-BR', { minimumFractionDigits
 
 window.copyPreviousMonth = async function() {
     const result = await Swal.fire({
-        title: 'Importar Mês Anterior?', text: "Puxar parcelas e devedores do mês passado.", icon: 'question',
+        title: 'Importar MÃªs Anterior?', text: "Puxar parcelas e devedores do mÃªs passado.", icon: 'question',
         showCancelButton: true, confirmButtonText: 'Sim, importar', cancelButtonText: 'Cancelar',
         customClass: { popup: 'meu-popup-sweet', confirmButton: 'meu-botao-sweet-confirm', cancelButton: 'meu-botao-sweet-cancel' }, buttonsStyling: false
     });
@@ -1400,21 +1117,21 @@ window.copyPreviousMonth = async function() {
                 }).filter(i => i !== null);
             };
             
-            // Processa itens de todos os cartões dinamicamente
+            // Processa itens de todos os cartÃµes dinamicamente
             const cardsConf = data.cardsConfig || window.DEFAULT_CARDS;
             cardsConf.forEach(c => { if (data[c.id]) data[c.id] = processItems(data[c.id]); });
-            // Garante cardsConfig na cópia
+            // Garante cardsConfig na cÃ³pia
             if (!data.cardsConfig) data.cardsConfig = JSON.parse(JSON.stringify(window.DEFAULT_CARDS));
-            // Remove auto-rows da cópia
+            // Remove auto-rows da cÃ³pia
             if (data.main) data.main = data.main.filter(i => !i.locked);
 
             updateScreen(data); setTimeout(() => { saveDataSync(currentDocId); toggleSkeleton(false); }, 500);
-        } else { toggleSkeleton(false); Swal.fire({ title: 'Ops', text: 'Mês anterior vazio.', icon: 'info' }); }
+        } else { toggleSkeleton(false); Swal.fire({ title: 'Ops', text: 'MÃªs anterior vazio.', icon: 'info' }); }
     }
 };
 
 // ============================================================
-// CARTÕES DINÂMICOS
+// CARTÃ•ES DINÃ‚MICOS
 // ============================================================
 
 function renderCardsView() {
@@ -1439,7 +1156,7 @@ function buildCardSection(card) {
             <div class="card-info" style="flex:1;">
                 <h2 style="display:flex; align-items:center; gap:10px;">
                     ${card.name}
-                    <button class="btn-del-card" onclick="removeCard('${card.id}')" title="Remover cartão">
+                    <button class="btn-del-card" onclick="removeCard('${card.id}')" title="Remover cartÃ£o">
                         <span class="material-icons-round" style="font-size:1.1rem;">delete_outline</span>
                     </button>
                 </h2>
@@ -1448,7 +1165,7 @@ function buildCardSection(card) {
             </div>
         </div>
         <div class="sec-body" style="background:var(--bg-body);">
-            <div class="table-wrap"><table id="${card.id}Table"><thead><tr><th>Quem</th><th>Dia</th><th>Descrição</th><th>Parc.</th><th>Valor (R$)</th><th></th></tr></thead><tbody></tbody></table></div>
+            <div class="table-wrap"><table id="${card.id}Table"><thead><tr><th>Quem</th><th>Dia</th><th>DescriÃ§Ã£o</th><th>Parc.</th><th>Valor (R$)</th><th></th></tr></thead><tbody></tbody></table></div>
             <button class="btn-add" onclick="addSplitRow('${card.id}Table')"><span class="material-icons-round">add</span> Item ${card.name}</button>
         </div>
     </div>`;
@@ -1456,24 +1173,24 @@ function buildCardSection(card) {
 
 window.addCard = async () => {
     const colorPresets = [
-        { c1: '#FCD34D', c2: '#F59E0B', label: '🟡 Amarelo' },
-        { c1: '#3B82F6', c2: '#1D4ED8', label: '🔵 Azul' },
-        { c1: '#F97316', c2: '#EA580C', label: '🟠 Laranja' },
-        { c1: '#A855F7', c2: '#7C3AED', label: '🟣 Roxo' },
-        { c1: '#10B981', c2: '#059669', label: '🟢 Verde' },
-        { c1: '#EF4444', c2: '#DC2626', label: '🔴 Vermelho' },
-        { c1: '#EC4899', c2: '#DB2777', label: '🩷 Rosa' },
-        { c1: '#06B6D4', c2: '#0891B2', label: '🩵 Ciano' },
+        { c1: '#FCD34D', c2: '#F59E0B', label: 'ðŸŸ¡ Amarelo' },
+        { c1: '#3B82F6', c2: '#1D4ED8', label: 'ðŸ”µ Azul' },
+        { c1: '#F97316', c2: '#EA580C', label: 'ðŸŸ  Laranja' },
+        { c1: '#A855F7', c2: '#7C3AED', label: 'ðŸŸ£ Roxo' },
+        { c1: '#10B981', c2: '#059669', label: 'ðŸŸ¢ Verde' },
+        { c1: '#EF4444', c2: '#DC2626', label: 'ðŸ”´ Vermelho' },
+        { c1: '#EC4899', c2: '#DB2777', label: 'ðŸ©· Rosa' },
+        { c1: '#06B6D4', c2: '#0891B2', label: 'ðŸ©µ Ciano' },
     ];
     const colorOpts = colorPresets.map((p, i) => `<option value="${i}">${p.label}</option>`).join('');
 
     const { value: formValues } = await Swal.fire({
-        title: 'Novo Cartão',
+        title: 'Novo CartÃ£o',
         html: `<div style="text-align:left; display:flex; flex-direction:column; gap:14px;">
-            <div><label style="font-size:0.8rem; font-weight:700; color:var(--text-muted); display:block; margin-bottom:6px;">NOME DO CARTÃO</label>
+            <div><label style="font-size:0.8rem; font-weight:700; color:var(--text-muted); display:block; margin-bottom:6px;">NOME DO CARTÃƒO</label>
             <input id="swal-card-name" class="swal2-input" placeholder="Ex: Nubank, C6 Bank..." style="margin:0; width:100%; box-sizing:border-box;"></div>
-            <div><label style="font-size:0.8rem; font-weight:700; color:var(--text-muted); display:block; margin-bottom:6px;">ÍCONE (EMOJI)</label>
-            <input id="swal-card-emoji" class="swal2-input" placeholder="💳" maxlength="2" value="💳" style="margin:0; width:100%; box-sizing:border-box; font-size:1.5rem; text-align:center;"></div>
+            <div><label style="font-size:0.8rem; font-weight:700; color:var(--text-muted); display:block; margin-bottom:6px;">ÃCONE (EMOJI)</label>
+            <input id="swal-card-emoji" class="swal2-input" placeholder="ðŸ’³" maxlength="2" value="ðŸ’³" style="margin:0; width:100%; box-sizing:border-box; font-size:1.5rem; text-align:center;"></div>
             <div><label style="font-size:0.8rem; font-weight:700; color:var(--text-muted); display:block; margin-bottom:6px;">COR</label>
             <select id="swal-card-color" style="width:100%; padding:12px; border-radius:12px; border:2px solid var(--border); background:var(--bg-body); color:var(--text-main); font-size:0.95rem; font-family:'Inter',sans-serif;">${colorOpts}</select></div>
         </div>`,
@@ -1482,8 +1199,8 @@ window.addCard = async () => {
         buttonsStyling: false,
         preConfirm: () => {
             const name = document.getElementById('swal-card-name').value.trim();
-            if (!name) { Swal.showValidationMessage('Digite o nome do cartão'); return false; }
-            const emoji = document.getElementById('swal-card-emoji').value.trim() || '💳';
+            if (!name) { Swal.showValidationMessage('Digite o nome do cartÃ£o'); return false; }
+            const emoji = document.getElementById('swal-card-emoji').value.trim() || 'ðŸ’³';
             const idx = parseInt(document.getElementById('swal-card-color').value);
             const { c1, c2 } = colorPresets[idx];
             return { name, emoji, color1: c1, color2: c2 };
@@ -1503,7 +1220,7 @@ window.removeCard = async (cardId) => {
     const card = window.cardsConfig.find(c => c.id === cardId);
     if (!card) return;
     const result = await Swal.fire({
-        title: `Remover ${card.name}?`, text: 'Todos os itens desta fatura serão perdidos.', icon: 'warning',
+        title: `Remover ${card.name}?`, text: 'Todos os itens desta fatura serÃ£o perdidos.', icon: 'warning',
         showCancelButton: true, confirmButtonText: 'Sim, remover', cancelButtonText: 'Cancelar',
         customClass: { popup: 'meu-popup-sweet', confirmButton: 'meu-botao-sweet-confirm', cancelButton: 'meu-botao-sweet-cancel' },
         buttonsStyling: false,
@@ -1520,20 +1237,20 @@ function syncCardAutoRows() {
     const tbody = document.querySelector('#mainTable tbody');
     if (!tbody) return;
 
-    // Remove auto-rows de cartões que não existem mais
+    // Remove auto-rows de cartÃµes que nÃ£o existem mais
     const validIds = new Set(window.cardsConfig.map(c => c.id + '_auto'));
     tbody.querySelectorAll('tr').forEach(tr => {
         const vi = tr.querySelector('.val-input');
         if (vi?.hasAttribute('readonly') && vi?.id && !validIds.has(vi.id)) tr.remove();
     });
 
-    // Adiciona auto-rows para cartões que ainda não têm (na frente)
+    // Adiciona auto-rows para cartÃµes que ainda nÃ£o tÃªm (na frente)
     const existingIds = new Set([...tbody.querySelectorAll('.val-input[readonly]')].map(el => el.id));
     [...window.cardsConfig].reverse().forEach(card => {
         const autoId = card.id + '_auto';
         if (!existingIds.has(autoId)) {
             const tr = document.createElement('tr');
-            tr.innerHTML = `<td><select class="sys-select" onchange="scheduleSave()"><option value="💳">💳</option></select></td>
+            tr.innerHTML = `<td><select class="sys-select" onchange="scheduleSave()"><option value="ðŸ’³">ðŸ’³</option></select></td>
                             <td><input type="text" class="sys-input" value="${card.name}" readonly style="background:transparent; color:var(--text-muted); opacity:0.8; cursor:default;"></td>
                             <td><input type="number" class="val-input" value="0" step="0.01" id="${autoId}" readonly style="background:transparent; color:var(--text-muted); opacity:0.8;"></td>
                             <td style="text-align:center"><input type="checkbox" checked onchange="scheduleSave()"></td>
@@ -1544,31 +1261,4 @@ function syncCardAutoRows() {
     });
 }
 
-</script>
 
-
-<nav class="bottom-nav" id="bottomNav">
-    <a onclick="switchView('dashboard', this)" class="active">
-        <span class="material-icons-round">dashboard</span>
-        Resumo
-    </a>
-    <a onclick="switchView('income', this)">
-        <span class="material-icons-round">trending_down</span>
-        Fixos
-    </a>
-    <a onclick="switchView('cards', this)">
-        <span class="material-icons-round">credit_card</span>
-        Cartões
-    </a>
-    <a onclick="switchView('debts', this)">
-        <span class="material-icons-round">group</span>
-        Devedores
-    </a>
-    <a onclick="switchView('goals', this)">
-        <span class="material-icons-round">flag</span>
-        Metas
-    </a>
-</nav>
-
-</body>
-</html>
